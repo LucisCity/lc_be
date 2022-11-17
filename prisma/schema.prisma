@@ -1,0 +1,57 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["interactiveTransactions"]
+}
+
+generator nestgraphql {
+  provider = "node node_modules/prisma-nestjs-graphql"
+  output   = "../libs/prisma/src/@generated/prisma-nestjs-graphql"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  BANNED
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+model User {
+  id          Int          @id @default(autoincrement())
+  role        UserRole     @default(USER)
+  status      UserStatus   @default(ACTIVE)
+  email       String       @unique @db.VarChar(255)
+  ref_code    String       @db.VarChar(255)
+  invite_by   String?      @db.VarChar(255)
+  google_id   String?      @unique @db.VarChar(45)
+  facebook_id String?      @unique @db.VarChar(45)
+  password    String?      @db.VarChar(255)
+  profile     UserProfile?
+  created_at  DateTime     @default(now())
+  updated_at  DateTime     @updatedAt
+}
+
+model UserProfile {
+  user_id      Int     @id
+  user_name    String? @unique() @db.VarChar(45)
+  display_name String? @db.VarChar(45)
+  given_name   String? @db.VarChar(45)
+  family_name  String? @db.VarChar(45)
+  phone        String? @db.VarChar(45)
+  avatar       String? @db.VarChar(1024)
+  cover        String? @db.VarChar(512)
+  country_code String? @db.VarChar(45)
+  user         User    @relation(fields: [user_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("user_profiles")
+}

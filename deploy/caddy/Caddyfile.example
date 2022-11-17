@@ -1,0 +1,9 @@
+example.com {
+    #tls /etc/caddy/cer.pem /etc/caddy/cer.key
+    root /public /home/dev/public
+    reverse_proxy /graphql api:3000
+    reverse_proxy /admin/graphql admin:30001 {
+        rewrite /graphql
+    }
+    reverse_proxy * frontend:3000
+}

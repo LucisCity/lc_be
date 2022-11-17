@@ -1,0 +1,50 @@
+version: '3.1'
+
+services:
+  lc_db:
+    image: postgres:14
+    container_name: "lc_db"
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - ${DB_PORT}:5432
+    volumes:
+      - lc_db_data:/var/lib/postgresql/data
+      
+  lc_redis:
+    image: "redis:6.2"
+    container_name: "lc_redis"
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    ports:
+      - ${REDIS_PORT}:6379
+    volumes:
+      - lc_redis:/data
+
+  lc_api:
+    depends_on:
+      - "lc_db"
+      - "lc_redis"
+    build:
+      context: ../
+      dockerfile: deploy/Dockerfile
+    image: lc_api:1.0
+    container_name: "lc_api"
+    restart: always
+    volumes:
+      - lc_api_logs:/app/logs/
+    ports:
+      - ${APP_PORT}:13030
+
+networks:
+  default:
+    name: lc_network
+    driver: bridge
+
+volumes:
+  lc_db_data:
+  lc_redis:
+  lc_api_logs:

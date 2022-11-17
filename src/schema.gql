@@ -1,0 +1,20 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type AuthGql {
+  token: String!
+}
+
+type Query {
+  """Auth resolver"""
+  temp: String!
+}
+
+type Mutation {
+  """Login"""
+  login(email: String!, password: String!): AuthGql!
+
+  """Register"""
+  register(email: String!, password: String!, ref_code: String): String!
+}
