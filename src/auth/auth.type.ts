@@ -32,3 +32,18 @@ export class RegisterInput {
   @Field(() => String, { nullable: true })
   'ref_code': string;
 }
+
+export type FbDebugResponse = {
+  app_id: number;
+  type: string;
+  application: string;
+  expires_at: number;
+  is_valid: boolean;
+  issued_at: number;
+  metadata: {
+    sso: string;
+  };
+  scopes: string[];
+  user_id: string;
+  error: any;
+};

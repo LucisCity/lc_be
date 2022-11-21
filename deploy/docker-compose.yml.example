@@ -37,7 +37,7 @@ services:
     volumes:
       - lc_api_logs:/app/logs/
     ports:
-      - ${APP_PORT}:13030
+      - ${APP_PORT}:9000
 
 networks:
   default:
