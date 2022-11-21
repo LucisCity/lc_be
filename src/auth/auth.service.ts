@@ -2,12 +2,13 @@ import { AppError } from '@libs/helper/errors/base.error';
 import { PasswordUtils } from '@libs/helper/password.util';
 import { randString } from '@libs/helper/string.helper';
 import { PrismaService } from '@libs/prisma';
-import { HttpService, Injectable, Logger } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { OAuth2Client } from 'google-auth-library';
 import { firstValueFrom } from 'rxjs';
-import { FbDebugResponse, RegisterInput } from './auth.type';
-
+import { FbDebugResponse, LoginLogInput, RegisterInput } from './auth.type';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -15,12 +16,12 @@ export class AuthService {
   private readonly FB_APP_ID = process.env.FB_APP_ID;
   private readonly FB_APP_TOKEN = process.env.FB_APP_TOKEN;
   private readonly gClient = new OAuth2Client(this.GOOGLE_CLIENT_ID);
-  private readonly userSv: any;
 
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
     private http: HttpService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async login(email: string, pass: string) {
@@ -41,6 +42,7 @@ export class AuthService {
       id: user.id,
       role: user.role,
     });
+    this.eventEmitter.emit('user.loggedin', {});
 
     return {
       token: jwtToken,
@@ -101,8 +103,8 @@ export class AuthService {
     }
 
     // Valid, is owner
-    let userInfo = await this.userSv.user(
-      {
+    let userInfo = await this.prisma.user.findFirst({
+      where: {
         OR: [
           {
             google_id: sub,
@@ -112,28 +114,35 @@ export class AuthService {
           },
         ],
       },
-      true,
-    );
+      include: {
+        profile: true,
+      },
+    });
     let is_login = false;
     if (!userInfo) {
       is_login = true;
       // create new if not exist user
-      userInfo = await this.userSv.create({
-        google_id: sub,
-        email,
-        code: randString(10),
-        profile: {
-          create: {
-            avatar: picture,
-            given_name,
-            family_name,
-            display_name:
-              family_name && given_name
-                ? family_name + ' ' + given_name
-                : !family_name
-                ? given_name
-                : family_name,
+      userInfo = await this.prisma.user.create({
+        data: {
+          google_id: sub,
+          email,
+          ref_code: randString(10),
+          profile: {
+            create: {
+              avatar: picture,
+              given_name,
+              family_name,
+              display_name:
+                family_name && given_name
+                  ? family_name + ' ' + given_name
+                  : !family_name
+                  ? given_name
+                  : family_name,
+            },
           },
+        },
+        include: {
+          profile: true,
         },
       });
     }
@@ -142,19 +151,11 @@ export class AuthService {
       id: userInfo.id,
       timestamp,
     });
-
-    const user_infor = await this.prisma.user.findUnique({
-      where: {
-        id: userInfo.id,
-      },
-      include: {
-        profile: true,
-      },
-    });
+    this.eventEmitter.emit('user.loggedin', {});
 
     return {
       token: jwtToken,
-      user: user_infor,
+      user: userInfo,
     };
   }
 
@@ -213,32 +214,40 @@ export class AuthService {
     }
 
     // Valid, is owner
-    let userInfo = await this.userSv.user(
-      {
+    let userInfo = await this.prisma.user.findFirst({
+      where: {
         facebook_id,
       },
-      true,
-    );
+      include: {
+        profile: true,
+      },
+    });
+
     let is_login = false;
     if (!userInfo) {
       is_login = true;
       // create new if not exist user
-      userInfo = await this.userSv.create({
-        facebook_id,
-        email,
-        code: randString(10),
-        profile: {
-          create: {
-            avatar,
-            given_name: firstName,
-            family_name: lastName,
-            display_name:
-              firstName && lastName
-                ? firstName + ' ' + lastName
-                : !firstName
-                ? lastName
-                : firstName,
+      userInfo = await this.prisma.user.create({
+        data: {
+          facebook_id,
+          email,
+          ref_code: randString(10),
+          profile: {
+            create: {
+              avatar,
+              given_name: firstName,
+              family_name: lastName,
+              display_name:
+                firstName && lastName
+                  ? firstName + ' ' + lastName
+                  : !firstName
+                  ? lastName
+                  : firstName,
+            },
           },
+        },
+        include: {
+          profile: true,
         },
       });
     }
@@ -249,18 +258,16 @@ export class AuthService {
       timestamp,
     });
 
-    const user_infor = await this.prisma.user.findUnique({
-      where: {
-        id: userInfo.id,
-      },
-      include: {
-        profile: true,
-      },
-    });
+    this.eventEmitter.emit('user.loggedin', {});
 
     return {
       token: jwtToken,
-      user: user_infor,
+      user: userInfo,
     };
+  }
+
+  @OnEvent('user.loggedin')
+  handleOrderCreatedEvent(payload: LoginLogInput) {
+    // Todo
   }
 }

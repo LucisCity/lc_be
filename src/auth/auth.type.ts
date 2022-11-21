@@ -47,3 +47,5 @@ export type FbDebugResponse = {
   user_id: string;
   error: any;
 };
+
+export type LoginLogInput = {};

@@ -6,12 +6,12 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
     if (process.env.NODE_ENV === 'development') {
       super({
-        // log: [
-        //   { emit: 'event', level: 'query' },
-        //   { emit: 'stdout', level: 'info' },
-        //   { emit: 'stdout', level: 'warn' },
-        //   { emit: 'stdout', level: 'error' },
-        // ],
+        log: [
+          // { emit: 'event', level: 'query' },
+          // { emit: 'stdout', level: 'info' },
+          { emit: 'stdout', level: 'warn' },
+          { emit: 'stdout', level: 'error' },
+        ],
         errorFormat: 'colorless',
       });
       this.enableQueryLogger();
@@ -21,7 +21,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   }
 
   async onModuleInit() {
-    console.log('onModuleInit prisma');
     await this.$connect();
     // this.shimDataType();
   }
