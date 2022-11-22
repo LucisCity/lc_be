@@ -52,116 +52,122 @@ export class AuthService {
 
   async register(input: RegisterInput) {
     // const isStrong = PasswordUtils.validate(pass);
-    const hashPass = await PasswordUtils.hashPassword(input.password);
-    const user = await this.prisma.user.create({
-      data: {
-        role: 'USER',
-        email: input.email,
-        ref_code: randString(10),
-        invite_by: input.ref_code,
-        password: hashPass,
-        profile: {
-          create: {
-            given_name: input.email.split('@')[0],
-          },
-        },
-      },
-    });
-    return user;
-  }
-
-  async loginGoogle(token: string, code?: string) {
-    let payload: any;
     try {
-      const result = await this.gClient.verifyIdToken({
-        idToken: token,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
-      payload = result.getPayload();
-    } catch (err) {
-      this.logger.debug(err);
-      throw new AppError('Bad request', 'BAD_REQUEST');
-    }
-
-    // console.log('payload:', payload)
-    // const domain = payload['hd'];
-    const {
-      sub,
-      email,
-      email_verified,
-      name,
-      picture,
-      given_name,
-      family_name,
-      locale,
-    } = payload;
-    if (!sub) {
-      throw new AppError('Something went wrong', '500');
-    }
-    if (!email || !email_verified) {
-      throw new AppError('Please provide email!', 'INPUT_NOT_VALID');
-    }
-
-    // Valid, is owner
-    let userInfo = await this.prisma.user.findFirst({
-      where: {
-        OR: [
-          {
-            google_id: sub,
-          },
-          {
-            email,
-          },
-        ],
-      },
-      include: {
-        profile: true,
-      },
-    });
-    let is_login = false;
-    if (!userInfo) {
-      is_login = true;
-      // create new if not exist user
-      userInfo = await this.prisma.user.create({
+      const hashPass = await PasswordUtils.hashPassword(input.password);
+      const user = await this.prisma.user.create({
         data: {
-          google_id: sub,
-          email,
+          role: 'USER',
+          email: input.email,
           ref_code: randString(10),
+          invite_by: input.ref_code,
+          password: hashPass,
           profile: {
             create: {
-              avatar: picture,
-              given_name,
-              family_name,
-              display_name:
-                family_name && given_name
-                  ? family_name + ' ' + given_name
-                  : !family_name
-                  ? given_name
-                  : family_name,
+              given_name: input.email.split('@')[0],
             },
           },
+        },
+      });
+      return user;
+    } catch (err) {
+      this.logger.warn(err);
+      throw new AppError('ACCOUNT EXIST', 'ACCOUNT_EXIST');
+    }
+  }
+
+  async loginGoogle(token: string) {
+    try {
+      const response = await firstValueFrom(
+        this.http.get(
+          `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`,
+        ),
+      );
+      // console.log('response: ', response);
+
+      // const result = await this.gClient.verifyIdToken({
+      //   idToken: token,
+      //   audience: process.env.GOOGLE_CLIENT_ID,
+      // });
+      // payload = result.getPayload();
+      const {
+        sub,
+        email,
+        email_verified,
+        // name,
+        picture,
+        given_name,
+        family_name,
+        // locale,
+      } = response.data;
+      if (!sub) {
+        throw new AppError('Something went wrong', '500');
+      }
+      if (!email || !email_verified) {
+        throw new AppError('Please provide email!', 'INPUT_NOT_VALID');
+      }
+
+      // Valid, is owner
+      let userInfo = await this.prisma.user.findFirst({
+        where: {
+          OR: [
+            {
+              google_id: sub,
+            },
+            {
+              email,
+            },
+          ],
         },
         include: {
           profile: true,
         },
       });
-    }
-    const timestamp = Date.now();
-    const jwtToken = this.jwt.sign({
-      id: userInfo.id,
-      timestamp,
-    });
-    this.eventEmitter.emit('user.loggedin', {});
+      if (!userInfo) {
+        // create new if not exist user
+        userInfo = await this.prisma.user.create({
+          data: {
+            google_id: sub,
+            email,
+            ref_code: randString(10),
+            profile: {
+              create: {
+                avatar: picture,
+                given_name,
+                family_name,
+                display_name:
+                  family_name && given_name
+                    ? family_name + ' ' + given_name
+                    : !family_name
+                    ? given_name
+                    : family_name,
+              },
+            },
+          },
+          include: {
+            profile: true,
+          },
+        });
+      }
+      const timestamp = Date.now();
+      const jwtToken = this.jwt.sign({
+        id: userInfo.id,
+        timestamp,
+      });
+      this.eventEmitter.emit('user.loggedin', {});
 
-    return {
-      token: jwtToken,
-      user: userInfo,
-    };
+      return {
+        token: jwtToken,
+        user: userInfo,
+      };
+    } catch (err) {
+      this.logger.debug(err);
+      throw new AppError('Bad request', 'BAD_REQUEST');
+    }
   }
 
-  async loginFacebook(accessToken: string, code?: string) {
-    console.log('accessToken:', accessToken);
-    console.log('this.FB_APP_SECRET:', this.FB_APP_TOKEN);
+  async loginFacebook(accessToken: string) {
+    // console.log('accessToken:', accessToken);
+    // console.log('this.FB_APP_SECRET:', this.FB_APP_TOKEN);
     let response: any;
     try {
       response = await firstValueFrom(
@@ -223,9 +229,7 @@ export class AuthService {
       },
     });
 
-    let is_login = false;
     if (!userInfo) {
-      is_login = true;
       // create new if not exist user
       userInfo = await this.prisma.user.create({
         data: {

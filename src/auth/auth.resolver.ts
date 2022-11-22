@@ -25,7 +25,29 @@ export class AuthResolver {
     description: 'Register',
   })
   async register(@Args() input: RegisterInput) {
-    const result = await this.authService.register(input);
+    await this.authService.register(input);
+    return 'Success';
+  }
+
+  @Mutation(() => AuthGql, {
+    description: 'Google login',
+  })
+  async loginGoogle(
+    @Args('token') token: string,
+    // @Args('invite_code', { type: () => String, nullable: true }) invite_code: string,
+  ): Promise<any> {
+    const result = await this.authService.loginGoogle(token);
+    return result;
+  }
+
+  @Mutation(() => AuthGql, {
+    description: 'Facebook login',
+  })
+  async loginFacebook(
+    @Args('accessToken') accessToken: string,
+    // @Args('invite_code', { type: () => String, nullable: true }) invite_code: string,
+  ): Promise<any> {
+    const result = await this.authService.loginFacebook(accessToken);
     return result;
   }
 }
