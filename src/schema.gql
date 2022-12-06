@@ -43,6 +43,7 @@ enum UserRole {
 }
 
 enum UserStatus {
+  PENDING
   ACTIVE
   BANNED
 }
@@ -75,4 +76,13 @@ type Mutation {
 
   """Facebook login"""
   loginFacebook(accessToken: String!): AuthGql!
+
+  """Verify email"""
+  verifyEmail(token: String!): String!
+
+  """Forgot password"""
+  forgotPassword(email: String!): Boolean!
+
+  """Forgot password"""
+  resetPassword(token: String!, password: String!): Boolean!
 }

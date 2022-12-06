@@ -40,6 +40,7 @@
     "@nestjs/schedule": "^2.1.0",
     "@nestjs/throttler": "^3.1.0",
     "@prisma/client": "^4.4.0",
+    "@sendgrid/mail": "^7.7.0",
     "@sentry/node": "^7.15.0",
     "@sentry/tracing": "^7.15.0",
     "apollo-server-express": "^3.10.2",

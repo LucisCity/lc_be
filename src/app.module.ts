@@ -10,6 +10,7 @@ import { AppService } from './app.service';
 import { PrismaModule } from '@libs/prisma';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { EmailModule } from '@libs/helper/email';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { UserModule } from './user/user.module';
       }),
     }),
     PrismaModule,
+    EmailModule,
     AuthModule,
     UserModule,
   ],

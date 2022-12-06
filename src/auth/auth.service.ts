@@ -5,23 +5,22 @@ import { PrismaService } from '@libs/prisma';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { OAuth2Client } from 'google-auth-library';
 import { firstValueFrom } from 'rxjs';
 import { FbDebugResponse, LoginLogInput, RegisterInput } from './auth.type';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { EmailService, EventType, VerifyInput } from '@libs/helper/email';
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
-  private readonly GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-  private readonly FB_APP_ID = process.env.FB_APP_ID;
   private readonly FB_APP_TOKEN = process.env.FB_APP_TOKEN;
-  private readonly gClient = new OAuth2Client(this.GOOGLE_CLIENT_ID);
+  // private readonly gClient = new OAuth2Client(this.GOOGLE_CLIENT_ID);
 
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
     private http: HttpService,
     private eventEmitter: EventEmitter2,
+    private mailService: EmailService,
   ) {}
 
   async login(email: string, pass: string) {
@@ -54,7 +53,7 @@ export class AuthService {
     // const isStrong = PasswordUtils.validate(pass);
     try {
       const hashPass = await PasswordUtils.hashPassword(input.password);
-      const user = await this.prisma.user.create({
+      await this.prisma.user.create({
         data: {
           role: 'USER',
           email: input.email,
@@ -68,7 +67,21 @@ export class AuthService {
           },
         },
       });
-      return user;
+
+      // Send email verify
+      const payload: VerifyInput = {
+        token: this.jwt.sign(
+          { email: input.email },
+          {
+            expiresIn: `${process.env.VERIFY_JWT_EXPIRE ?? '2h'}`,
+          },
+        ),
+        userName: input.email.split('@')[0],
+        email: input.email,
+      };
+      this.eventEmitter.emit(EventType.verifyEmail, payload);
+
+      return true;
     } catch (err) {
       this.logger.warn(err);
       throw new AppError('ACCOUNT EXIST', 'ACCOUNT_EXIST');
@@ -270,8 +283,108 @@ export class AuthService {
     };
   }
 
-  @OnEvent('user.loggedin')
-  handleOrderCreatedEvent(payload: LoginLogInput) {
-    // Todo
+  async verifyEmail(token: string) {
+    try {
+      const payload: { email: string } = this.jwt.verify(token);
+      if (!payload || !payload.email) {
+        throw new AppError('Token invalid', 'TOKEN_INVALID');
+      }
+
+      const user = await this.prisma.user.findUnique({
+        where: {
+          email: payload.email,
+        },
+      });
+      if (!user) {
+        throw new AppError('Token invalid', 'TOKEN_INVALID');
+      }
+      await this.prisma.user.update({
+        where: {
+          email: payload.email,
+        },
+        data: {
+          status: 'ACTIVE',
+        },
+      });
+    } catch (err) {
+      if (err.name === 'JsonWebTokenError') {
+        throw new AppError('Token invalid', 'TOKEN_INVALID');
+      }
+      throw err;
+    }
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email,
+      },
+      include: {
+        profile: true,
+      },
+    });
+    if (!user) {
+      throw new AppError('Bad request', 'BAD_REQUEST');
+    }
+
+    // Send email verify
+    const payload: VerifyInput = {
+      token: this.jwt.sign(
+        {
+          id: user.id,
+        },
+        {
+          expiresIn: `${process.env.VERIFY_JWT_EXPIRE ?? '2h'}`,
+        },
+      ),
+      userName: user.profile.user_name ?? email.split('@')[0],
+      email: email,
+    };
+    this.eventEmitter.emit(EventType.forgot, payload);
+
+    return true;
+  }
+
+  async resetPassword(token: string, newPass: string) {
+    const data: { id: string } = this.jwt.verify(token);
+    if (!data) {
+      throw new AppError('Token invalid', 'TOKEN_INVALID');
+    }
+    console.log('data: ', data);
+    await this._resetPassword(newPass, data.id);
+  }
+
+  async _resetPassword(newPass: string, userId: string) {
+    // check strong pass
+    if (PasswordUtils.validate(newPass) !== true) {
+      throw new AppError(
+        'New password invalid, password must length from 8-32, contain letter and digit ',
+        'NEW_PASS_INVALID',
+      );
+    }
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+    if (!user) {
+      throw new AppError('Bad request', 'BAD_REQUEST');
+    }
+    const newHashPass = await PasswordUtils.hashPassword(newPass);
+    if (newHashPass === user.password) {
+      throw new AppError(
+        'New password must not same old password',
+        'NEW_PASS_SAME_OLD_PASS',
+      );
+    }
+
+    await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        password: newHashPass,
+      },
+    });
   }
 }

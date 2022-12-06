@@ -50,4 +50,31 @@ export class AuthResolver {
     const result = await this.authService.loginFacebook(accessToken);
     return result;
   }
+
+  @Mutation(() => String, {
+    description: 'Verify email',
+  })
+  async verifyEmail(@Args('token') token: string) {
+    await this.authService.verifyEmail(token);
+    return 'Success';
+  }
+
+  @Mutation(() => Boolean, {
+    description: 'Forgot password',
+  })
+  async forgotPassword(@Args('email') email: string): Promise<boolean> {
+    const result = await this.authService.forgotPassword(email);
+    return result;
+  }
+
+  @Mutation(() => Boolean, {
+    description: 'Forgot password',
+  })
+  async resetPassword(
+    @Args('token') token: string,
+    @Args('password') password: string,
+  ): Promise<boolean> {
+    await this.authService.resetPassword(token, password);
+    return true;
+  }
 }
