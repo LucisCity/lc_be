@@ -3,6 +3,7 @@ import { EventType, Sender, VerifyInput } from './email.type';
 import * as Sengrid from '@sendgrid/mail';
 import { OnEvent } from '@nestjs/event-emitter';
 import { verify_email_template } from './email-template';
+import { resetPasswordTemplate } from './email-template/reset_password.templates';
 
 @Global()
 @Injectable()
@@ -66,8 +67,6 @@ export class EmailService {
   }
 
   async sendForgotMail(input: VerifyInput): Promise<boolean> {
-    console.log('verifyEmail: ', input);
-
     if (!process.env.SENDER_MAIL || !process.env.SENDER_NAME) {
       this.logger.error('SENDER_MAIL or SENDER_NAME not set');
       return;
@@ -75,8 +74,8 @@ export class EmailService {
     const sender = new Sender();
     sender.email = process.env.SENDER_MAIL;
     sender.name = process.env.SENDER_NAME;
-    sender.subject = 'Verify Email Address';
-    const content = verify_email_template(
+    sender.subject = 'Reset password';
+    const content = resetPasswordTemplate(
       input.userName,
       `${process.env.WEB_URL}/reset-password?${input.token}`,
     );
