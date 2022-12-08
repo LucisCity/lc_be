@@ -6,104 +6,94 @@ export const verify_email_template = (
   link: string,
 ): string => {
   return `
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Email</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&family=Saira:wght@300;400;600;900&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-
-  <style>
-    @media (max-width: 540px) {
-      a {
-        padding: 120px 0px;
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Email</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+      <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&family=Saira:wght@300;400;600;900&display=swap"
+        rel="stylesheet"
+      />
+    </head>
+  
+    <style>
+      @media (max-width: 540px) {
+        a {
+          padding: 120px 0px;
+        }
       }
-    }
-  </style>
-
-  <body
-    style="
-      background: #e9eaec;
-      font-family: 'Roboto', sans-serif;
-      padding: 20px 12px;
-    "
-  >
-    <div
-      class="container"
+    </style>
+  
+    <body
       style="
-        max-width: 600px;
-        margin: 20px auto;
-        border: 1px solid #c1c1c1;
-        padding: 30px;
-        background: #fff;
+        background: #e9eaec;
+        font-family: 'Roboto', sans-serif;
+        padding: 20px 12px;
       "
     >
       <div
-        class="im_banner"
+        class="container"
         style="
-          min-height: 180px;
-          background-repeat: no-repeat;
-          background-size: cover;
-          background-position: center;
-          background-image: url(https://yt3.ggpht.com/V_UCjMY57-4VtfZNsk5kOpBrDnmw-zHgvOfKi2lUosq1shsjXCXrSzgqjCcTppVDfDeP_iTxRA=w1707-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj);
+          max-width: 600px;
+          margin: 20px auto;
+          border: 1px solid #c1c1c1;
+          padding: 30px;
+          background: #fff;
         "
-      ></div>
-      <div class="heading" style="padding-top: 30px">
-        <span style="font-size: 14px; line-height: 20px"
-          >Hello <b>${receiver},</b></span
-        >
-        <div style="font-size: 14px; line-height: 20px; padding-top: 8px">
-          <p style="margin: 12px 0px 0px 0px">
-            <span style="color: #222 !important"
-              >Please click the button below to verify your email address.</span
-            >
-          </p>
-          <div
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              padding: 26px 0px;
-            "
+      >
+        <div class="heading" style="padding-top: 30px">
+          <span style="font-size: 14px; line-height: 20px"
+            >Hello <b>${receiver},</b></span
           >
-            <a
-              href="${link}"
+          <div style="font-size: 14px; line-height: 20px; padding-top: 8px">
+            <p style="margin: 12px 0px 0px 0px">
+              <span style="color: #222 !important"
+                >Please click the button below to verify your email address.</span
+              >
+            </p>
+            <div
               style="
-                background: #0f0f0f;
-                padding: 8px 20px;
-                border-radius: 16px;
-                border: none;
-                outline: none;
-                color: #fff;
-                font-size: 13px;
-                line-height: 20px;
-                font-weight: 600;
-                cursor: pointer;
-                box-shadow: rgba(27, 31, 35, 0.15);
-                text-align: center;
-                margin: 0px auto;
-                text-decoration: none;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 26px 0px;
               "
             >
-              Verify Email
-            </a>
+              <a
+                href="${link}"
+                style="
+                  background: #0f0f0f;
+                  padding: 8px 20px;
+                  border-radius: 16px;
+                  border: none;
+                  outline: none;
+                  color: #fff;
+                  font-size: 13px;
+                  line-height: 20px;
+                  font-weight: 600;
+                  cursor: pointer;
+                  box-shadow: rgba(27, 31, 35, 0.15);
+                  text-align: center;
+                  margin: 0px auto;
+                  text-decoration: none;
+                "
+              >
+                Verify Email
+              </a>
+            </div>
+            <span style="color: #222">Best regards,</span><br />
+            <span style="color: #222">Lucis Support Team</span><br /><br/>
+            ${lucis_signature()}
           </div>
-          <span style="color: #222">Best regards,</span><br />
-          <span style="color: #222">Lucis Support Team</span><br /><br/>
-          ${lucis_signature()}
         </div>
       </div>
-    </div>
-  </body>
-</html>
+    </body>
+  </html>  
 `;
 };
 
