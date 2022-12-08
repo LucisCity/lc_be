@@ -77,7 +77,7 @@ export class EmailService {
     sender.subject = 'Reset password';
     const content = resetPasswordTemplate(
       input.userName,
-      `${process.env.WEB_URL}/reset-password?${input.token}`,
+      `${process.env.WEB_URL}/reset-password?token=${input.token}`,
     );
     await this.send(sender, input.email, content);
     return true;
