@@ -28,6 +28,9 @@ export class AuthService {
       where: {
         email,
       },
+      include: {
+        profile: true,
+      },
     });
     if (!user || !user.password) {
       this.logger.debug('login: user not found');

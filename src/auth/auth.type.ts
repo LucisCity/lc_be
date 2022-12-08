@@ -1,7 +1,17 @@
 import { IsStrongPass } from '@libs/helper/pipe/password.pipe';
+import { UserProfile } from '@libs/prisma/@generated/prisma-nestjs-graphql/user-profile/user-profile.model';
 import { User } from '@libs/prisma/@generated/prisma-nestjs-graphql/user/user.model';
 import { ArgsType, Field, ObjectType, OmitType } from '@nestjs/graphql';
 import { IsEmail, Validate } from 'class-validator';
+
+@ObjectType()
+export class ProfileGql extends OmitType(UserProfile, [
+  'created_at',
+  'updated_at',
+  'country_code',
+  'phone',
+  'user',
+]) {}
 
 @ObjectType()
 export class UserGql extends OmitType(User, [
@@ -14,7 +24,10 @@ export class UserGql extends OmitType(User, [
   'profile',
   'role',
   'status',
-]) {}
+]) {
+  @Field(() => ProfileGql, { nullable: false })
+  'profile': ProfileGql;
+}
 
 @ObjectType()
 export class AuthGql {
@@ -62,4 +75,6 @@ export type FbDebugResponse = {
   error: any;
 };
 
-export type LoginLogInput = {};
+export interface LoginLogInput {
+  ip?: string;
+}
