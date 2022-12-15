@@ -14,6 +14,7 @@ datasource db {
 }
 
 enum UserStatus {
+  PENDING
   ACTIVE
   BANNED
 }
@@ -24,10 +25,10 @@ enum UserRole {
 }
 
 model User {
-  id          Int          @id @default(autoincrement())
+  id          String       @id @default(cuid()) @db.VarChar(45)
   role        UserRole     @default(USER)
-  status      UserStatus   @default(ACTIVE)
-  email       String       @unique @db.VarChar(255)
+  status      UserStatus   @default(PENDING)
+  email       String?      @unique @db.VarChar(255)
   ref_code    String       @db.VarChar(255)
   invite_by   String?      @db.VarChar(255)
   google_id   String?      @unique @db.VarChar(45)
@@ -36,10 +37,12 @@ model User {
   profile     UserProfile?
   created_at  DateTime     @default(now())
   updated_at  DateTime     @updatedAt
+
+  @@map("user")
 }
 
 model UserProfile {
-  user_id      Int     @id
+  user_id      String  @id
   user_name    String? @unique() @db.VarChar(45)
   display_name String? @db.VarChar(45)
   given_name   String? @db.VarChar(45)
@@ -53,5 +56,17 @@ model UserProfile {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  @@map("user_profiles")
+  @@map("user_profile")
+}
+
+model LoginLog {
+  uid     String @id @default(cuid()) @db.VarChar(45)
+  user_id String
+  device  String
+  ip      String
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("login_log")
 }

@@ -25,7 +25,56 @@ export class AuthResolver {
     description: 'Register',
   })
   async register(@Args() input: RegisterInput) {
-    const result = await this.authService.register(input);
+    await this.authService.register(input);
+    return 'Success';
+  }
+
+  @Mutation(() => AuthGql, {
+    description: 'Google login',
+  })
+  async loginGoogle(
+    @Args('token') token: string,
+    // @Args('invite_code', { type: () => String, nullable: true }) invite_code: string,
+  ): Promise<any> {
+    const result = await this.authService.loginGoogle(token);
     return result;
+  }
+
+  @Mutation(() => AuthGql, {
+    description: 'Facebook login',
+  })
+  async loginFacebook(
+    @Args('accessToken') accessToken: string,
+    // @Args('invite_code', { type: () => String, nullable: true }) invite_code: string,
+  ): Promise<any> {
+    const result = await this.authService.loginFacebook(accessToken);
+    return result;
+  }
+
+  @Mutation(() => String, {
+    description: 'Verify email',
+  })
+  async verifyEmail(@Args('token') token: string) {
+    await this.authService.verifyEmail(token);
+    return 'Success';
+  }
+
+  @Mutation(() => Boolean, {
+    description: 'Forgot password',
+  })
+  async forgotPassword(@Args('email') email: string): Promise<boolean> {
+    const result = await this.authService.forgotPassword(email);
+    return result;
+  }
+
+  @Mutation(() => Boolean, {
+    description: 'Forgot password',
+  })
+  async resetPassword(
+    @Args('token') token: string,
+    @Args('password') password: string,
+  ): Promise<boolean> {
+    await this.authService.resetPassword(token, password);
+    return true;
   }
 }

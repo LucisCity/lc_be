@@ -4,10 +4,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from '@libs/prisma';
 import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
+import { EmailModule } from '@libs/helper/email';
 
 @Module({
   imports: [
@@ -18,6 +21,7 @@ import { AuthModule } from './auth/auth.module';
     }),
     CacheModule.register({ isGlobal: true, ttl: 5 * 60 }),
     ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot(),
     GraphQLModule.forRootAsync({
       driver: ApolloDriver,
       imports: [ConfigModule],
@@ -31,7 +35,9 @@ import { AuthModule } from './auth/auth.module';
       }),
     }),
     PrismaModule,
+    EmailModule,
     AuthModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],
