@@ -90,6 +90,9 @@ type AuthGql {
 type Query {
   """Auth resolver"""
   temp: String!
+
+  """Get list referral user"""
+  getListReferralUser(userId: String!): [User!]!
 }
 
 type Mutation {

@@ -10,7 +10,7 @@ export class UserService {
   constructor(private prisma: PrismaService) {}
 
   async create(user: Prisma.UserCreateInput) {
-    const userInfo = await this.prisma.user.create({
+    return await this.prisma.user.create({
       data: {
         ...user,
         profile: user.profile ?? {
@@ -21,7 +21,19 @@ export class UserService {
         profile: true,
       },
     });
-    return userInfo;
+  }
+
+  async getReferralUser(userId: string) {
+    try {
+      return await this.prisma.user.findMany({
+        where: { invited_by: userId },
+        include: {
+          referral_log: true,
+        },
+      });
+    } catch (err) {
+      throw err;
+    }
   }
 
   //   async updateProfile(

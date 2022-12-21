@@ -30,7 +30,7 @@ model User {
   status      UserStatus    @default(PENDING)
   email       String?       @unique @db.VarChar(255)
   ref_code    String        @db.VarChar(10) @unique
-  invited_by  String?       @db.VarChar(10)
+  invited_by  String?       @db.VarChar(45)
   google_id   String?       @unique @db.VarChar(45)
   facebook_id String?       @unique @db.VarChar(45)
   password    String?       @db.VarChar(255)
