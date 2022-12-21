@@ -34,9 +34,10 @@ export class AuthResolver {
   })
   async loginGoogle(
     @Args('token') token: string,
+    @Args('refCode', { type: () => String, nullable: true }) refCode?: string,
     // @Args('invite_code', { type: () => String, nullable: true }) invite_code: string,
   ): Promise<any> {
-    const result = await this.authService.loginGoogle(token);
+    const result = await this.authService.loginGoogle(token, refCode);
     return result;
   }
 
@@ -45,9 +46,10 @@ export class AuthResolver {
   })
   async loginFacebook(
     @Args('accessToken') accessToken: string,
+    @Args('refCode', { type: () => String, nullable: true }) refCode?: string,
     // @Args('invite_code', { type: () => String, nullable: true }) invite_code: string,
   ): Promise<any> {
-    const result = await this.authService.loginFacebook(accessToken);
+    const result = await this.authService.loginFacebook(accessToken, refCode);
     return result;
   }
 

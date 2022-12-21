@@ -103,10 +103,10 @@ type Mutation {
   register(email: String!, password: String!, ref_code: String): String!
 
   """Google login"""
-  loginGoogle(token: String!): AuthGql!
+  loginGoogle(token: String!, refCode: String): AuthGql!
 
   """Facebook login"""
-  loginFacebook(accessToken: String!): AuthGql!
+  loginFacebook(accessToken: String!, refCode: String): AuthGql!
 
   """Verify email"""
   verifyEmail(token: String!): String!

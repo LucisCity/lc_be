@@ -155,7 +155,7 @@ export class AuthService {
             google_id: sub,
             email,
             ref_code: randString(10),
-            invited_by: refCode,
+            invited_by: inviter.id,
             profile: {
               create: {
                 avatar: picture,
@@ -267,7 +267,7 @@ export class AuthService {
           facebook_id,
           email,
           ref_code: randString(10),
-          invited_by: refCode,
+          invited_by: inviter.id,
           profile: {
             create: {
               avatar,

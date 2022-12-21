@@ -29,6 +29,7 @@ export class UserService {
         where: { invited_by: userId },
         include: {
           referral_log: true,
+          profile: true,
         },
       });
     } catch (err) {
