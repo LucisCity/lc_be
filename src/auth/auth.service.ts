@@ -9,10 +9,13 @@ import { firstValueFrom } from 'rxjs';
 import { FbDebugResponse, LoginLogInput, RegisterInput } from './auth.type';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { EmailService, EventType, VerifyInput } from '@libs/helper/email';
+import { ReferralType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/referral-type.enum';
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   private readonly FB_APP_TOKEN = process.env.FB_APP_TOKEN;
+
   // private readonly gClient = new OAuth2Client(this.GOOGLE_CLIENT_ID);
 
   constructor(
@@ -56,12 +59,12 @@ export class AuthService {
     // const isStrong = PasswordUtils.validate(pass);
     try {
       const hashPass = await PasswordUtils.hashPassword(input.password);
-      await this.prisma.user.create({
+      const user = await this.prisma.user.create({
         data: {
           role: 'USER',
           email: input.email,
           ref_code: randString(10),
-          invite_by: input.ref_code,
+          invited_by: input.ref_code,
           password: hashPass,
           profile: {
             create: {
@@ -70,6 +73,10 @@ export class AuthService {
           },
         },
       });
+
+      if (input.ref_code) {
+        await this.addReferral(input.ref_code, user.id);
+      }
 
       // Send email verify
       const payload: VerifyInput = {
@@ -91,7 +98,7 @@ export class AuthService {
     }
   }
 
-  async loginGoogle(token: string) {
+  async loginGoogle(token: string, refCode?: string) {
     try {
       const response = await firstValueFrom(
         this.http.get(
@@ -145,6 +152,7 @@ export class AuthService {
             google_id: sub,
             email,
             ref_code: randString(10),
+            invited_by: refCode,
             profile: {
               create: {
                 avatar: picture,
@@ -163,6 +171,9 @@ export class AuthService {
             profile: true,
           },
         });
+        if (refCode) {
+          await this.addReferral(refCode, userInfo.id);
+        }
       }
       const timestamp = Date.now();
       const jwtToken = this.jwt.sign({
@@ -181,7 +192,7 @@ export class AuthService {
     }
   }
 
-  async loginFacebook(accessToken: string) {
+  async loginFacebook(accessToken: string, refCode?: string) {
     // console.log('accessToken:', accessToken);
     // console.log('this.FB_APP_SECRET:', this.FB_APP_TOKEN);
     let response: any;
@@ -252,6 +263,7 @@ export class AuthService {
           facebook_id,
           email,
           ref_code: randString(10),
+          invited_by: refCode,
           profile: {
             create: {
               avatar,
@@ -270,6 +282,10 @@ export class AuthService {
           profile: true,
         },
       });
+
+      if (refCode) {
+        await this.addReferral(refCode, userInfo.id);
+      }
     }
 
     const timestamp = Date.now();
@@ -389,5 +405,32 @@ export class AuthService {
         password: newHashPass,
       },
     });
+  }
+
+  private async addReferral(refCode: string, userId: string) {
+    try {
+      const inviter = await this.prisma.user.findFirst({
+        where: {
+          ref_code: refCode,
+        },
+      });
+
+      if (!inviter) {
+        return false;
+      }
+
+      await this.prisma.referralLog.create({
+        data: {
+          user_id: userId,
+          invited_by: inviter.id,
+          type: ReferralType.REGISTER,
+          isClaim: false,
+        },
+      });
+      return true;
+    } catch (err) {
+      console.log(err);
+      return false;
+    }
   }
 }

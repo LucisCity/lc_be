@@ -25,19 +25,20 @@ enum UserRole {
 }
 
 model User {
-  id          String       @id @default(cuid()) @db.VarChar(45)
-  role        UserRole     @default(USER)
-  status      UserStatus   @default(PENDING)
-  email       String?      @unique @db.VarChar(255)
-  ref_code    String       @db.VarChar(255)
-  invite_by   String?      @db.VarChar(255)
-  google_id   String?      @unique @db.VarChar(45)
-  facebook_id String?      @unique @db.VarChar(45)
-  password    String?      @db.VarChar(255)
+  id          String        @id @default(cuid()) @db.VarChar(45)
+  role        UserRole      @default(USER)
+  status      UserStatus    @default(PENDING)
+  email       String?       @unique @db.VarChar(255)
+  ref_code    String        @db.VarChar(10) @unique
+  invited_by  String?       @db.VarChar(10)
+  google_id   String?       @unique @db.VarChar(45)
+  facebook_id String?       @unique @db.VarChar(45)
+  password    String?       @db.VarChar(255)
   profile     UserProfile?
-  created_at  DateTime     @default(now())
-  updated_at  DateTime     @updatedAt
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
 
+  referral_log ReferralLog?
   @@map("user")
 }
 
@@ -69,4 +70,23 @@ model LoginLog {
   updated_at DateTime @updatedAt
 
   @@map("login_log")
+}
+
+enum ReferralType {
+  REGISTER
+  BUY_GALAXY_CARD
+}
+
+model ReferralLog {
+  user_id    String         @id
+  user       User           @relation(fields: [user_id], references: [id])
+  invited_by String         @db.VarChar(45)
+
+  type       ReferralType?
+  isClaim    Boolean        @default(false) @db.Boolean
+
+  created_at DateTime       @default(now())
+  updated_at DateTime       @updatedAt
+
+  @@map("referral_log")
 }

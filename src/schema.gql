@@ -2,19 +2,40 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type ReferralLog {
+  user_id: ID!
+  user: User!
+  invited_by: String!
+  type: ReferralType
+  isClaim: Boolean!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+enum ReferralType {
+  REGISTER
+  BUY_GALAXY_CARD
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
 type User {
   id: ID!
   role: UserRole!
   status: UserStatus!
   email: String
   ref_code: String!
-  invite_by: String
+  invited_by: String
   google_id: String
   facebook_id: String
   password: String
   profile: UserProfile
   created_at: DateTime!
   updated_at: DateTime!
+  referral_log: ReferralLog
 }
 
 enum UserRole {
@@ -27,11 +48,6 @@ enum UserStatus {
   ACTIVE
   BANNED
 }
-
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
 
 type UserProfile {
   user_id: ID!
@@ -62,6 +78,7 @@ type UserGql {
   id: ID!
   email: String
   ref_code: String!
+  referral_log: ReferralLog
   profile: ProfileGql!
 }
 

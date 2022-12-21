@@ -19,7 +19,7 @@ export class UserGql extends OmitType(User, [
   'updated_at',
   'facebook_id',
   'google_id',
-  'invite_by',
+  'invited_by',
   'password',
   'profile',
   'role',
