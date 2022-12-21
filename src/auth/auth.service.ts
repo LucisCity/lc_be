@@ -10,6 +10,7 @@ import { FbDebugResponse, LoginLogInput, RegisterInput } from './auth.type';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { EmailService, EventType, VerifyInput } from '@libs/helper/email';
 import { ReferralType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/referral-type.enum';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -59,12 +60,13 @@ export class AuthService {
     // const isStrong = PasswordUtils.validate(pass);
     try {
       const hashPass = await PasswordUtils.hashPassword(input.password);
+      const inviter = await this.getInviter(input.ref_code);
       const user = await this.prisma.user.create({
         data: {
           role: 'USER',
           email: input.email,
           ref_code: randString(10),
-          invited_by: input.ref_code,
+          invited_by: inviter?.id ?? null,
           password: hashPass,
           profile: {
             create: {
@@ -74,8 +76,8 @@ export class AuthService {
         },
       });
 
-      if (input.ref_code) {
-        await this.addReferral(input.ref_code, user.id);
+      if (inviter) {
+        await this.addReferral(inviter, user.id);
       }
 
       // Send email verify
@@ -146,6 +148,7 @@ export class AuthService {
         },
       });
       if (!userInfo) {
+        const inviter = await this.getInviter(refCode);
         // create new if not exist user
         userInfo = await this.prisma.user.create({
           data: {
@@ -171,8 +174,8 @@ export class AuthService {
             profile: true,
           },
         });
-        if (refCode) {
-          await this.addReferral(refCode, userInfo.id);
+        if (inviter) {
+          await this.addReferral(inviter, userInfo.id);
         }
       }
       const timestamp = Date.now();
@@ -257,6 +260,7 @@ export class AuthService {
     });
 
     if (!userInfo) {
+      const inviter = await this.getInviter(refCode);
       // create new if not exist user
       userInfo = await this.prisma.user.create({
         data: {
@@ -283,8 +287,8 @@ export class AuthService {
         },
       });
 
-      if (refCode) {
-        await this.addReferral(refCode, userInfo.id);
+      if (inviter) {
+        await this.addReferral(inviter, userInfo.id);
       }
     }
 
@@ -407,18 +411,8 @@ export class AuthService {
     });
   }
 
-  private async addReferral(refCode: string, userId: string) {
+  private async addReferral(inviter: User, userId: string) {
     try {
-      const inviter = await this.prisma.user.findFirst({
-        where: {
-          ref_code: refCode,
-        },
-      });
-
-      if (!inviter) {
-        return false;
-      }
-
       await this.prisma.referralLog.create({
         data: {
           user_id: userId,
@@ -432,5 +426,14 @@ export class AuthService {
       console.log(err);
       return false;
     }
+  }
+
+  private async getInviter(refCode: string) {
+    if (refCode) {
+      return await this.prisma.user.findFirst({
+        where: { ref_code: refCode },
+      });
+    }
+    return null;
   }
 }
