@@ -43,16 +43,17 @@ model User {
 }
 
 model UserProfile {
-  user_id      String  @id
-  user_name    String? @unique() @db.VarChar(45)
-  display_name String? @db.VarChar(45)
-  given_name   String? @db.VarChar(45)
-  family_name  String? @db.VarChar(45)
-  phone        String? @db.VarChar(45)
-  avatar       String? @db.VarChar(1024)
-  cover        String? @db.VarChar(512)
-  country_code String? @db.VarChar(45)
-  user         User    @relation(fields: [user_id], references: [id])
+  user_id       String    @id
+  user_name     String?   @unique() @db.VarChar(45)
+  display_name  String?   @db.VarChar(45)
+  given_name    String?   @db.VarChar(45)
+  family_name   String?   @db.VarChar(45)
+  phone         String?   @db.VarChar(45)
+  avatar        String?   @db.VarChar(1024)
+  date_of_birth DateTime? @db.Date
+  cover         String?   @db.VarChar(512)
+  country_code  String?   @db.VarChar(45)
+  user          User      @relation(fields: [user_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

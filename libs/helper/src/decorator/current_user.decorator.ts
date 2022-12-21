@@ -17,5 +17,5 @@ export const CurrentUser = createParamDecorator(
 );
 
 export type AppAuthUser = {
-  id: number;
+  id: string;
 };

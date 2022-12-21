@@ -57,6 +57,7 @@ type UserProfile {
   family_name: String
   phone: String
   avatar: String
+  date_of_birth: DateTime
   cover: String
   country_code: String
   user: User!
@@ -71,6 +72,7 @@ type ProfileGql {
   given_name: String
   family_name: String
   avatar: String
+  date_of_birth: DateTime
   cover: String
 }
 
@@ -87,9 +89,20 @@ type AuthGql {
   user: UserGql!
 }
 
+type AccountInfo {
+  user_id: ID!
+  user_name: String
+  display_name: String
+  given_name: String
+  family_name: String
+  date_of_birth: DateTime
+  email: String
+}
+
 type Query {
   """Auth resolver"""
   temp: String!
+  getAccountInfo: AccountInfo
 
   """Get list referral user"""
   getListReferralUser(userId: String!): [User!]!

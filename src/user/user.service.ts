@@ -2,6 +2,8 @@ import { AppError } from '@libs/helper/errors/base.error';
 import { PrismaService } from '@libs/prisma';
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { UserProfile } from "@libs/prisma/@generated/prisma-nestjs-graphql/user-profile/user-profile.model";
+import { AccountInfo } from "./user.dto/user.dto";
 
 @Injectable()
 export class UserService {
@@ -121,4 +123,17 @@ export class UserService {
   //     });
   //     return true;
   //   }
+
+  async getAccountInfo(userId: string): Promise<AccountInfo> {
+    const profile = await this.prisma.userProfile.findFirst({
+      where: {
+        user_id: userId,
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    return {email: profile.user.email, ...profile};
+  }
 }
