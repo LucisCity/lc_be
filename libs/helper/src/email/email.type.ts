@@ -31,7 +31,13 @@ export type VerifyInput = {
   token: string;
 };
 
+export type ChangePassInput = {
+  email: string;
+  userName: string;
+};
+
 export enum EventType {
   verifyEmail = 'user.verify',
   forgot = 'user.forgot',
+  changePass = 'user.changePass',
 }
