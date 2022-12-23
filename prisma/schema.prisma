@@ -91,3 +91,50 @@ model ReferralLog {
 
   @@map("referral_log")
 }
+
+model Contract {
+  id            String       @id @default(cuid()) @db.VarChar(45)
+  address       String       @db.VarChar(45)
+  admin         String?      @db.VarChar(45)
+  admin_prv_key String?      @db.Text
+  abi           String?      @db.Text
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("contract")
+}
+
+model PoolWallet {
+  id            String       @id @default(cuid()) @db.VarChar(45)
+  address       String       @db.VarChar(45)
+  prv           String?      @db.Text
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("pool_wallet")
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  CONFIRMING
+  SUCCEED
+  FAILED
+}
+
+model BlockchainTransaction {
+  id               String               @id @default(cuid()) @db.VarChar(45)
+  tx_hash          String               @db.VarChar(255)
+  status           TransactionStatus    @default(PENDING)
+  message_error    String?              @db.Text
+  abi              String?              @db.Text
+
+  created_at       DateTime             @default(now())
+  updated_at       DateTime             @updatedAt
+
+  @@unique([tx_hash])
+  @@index([status])
+  @@map("blockchain_transaction")
+}

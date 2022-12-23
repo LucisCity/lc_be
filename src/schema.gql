@@ -102,10 +102,10 @@ type AccountInfo {
 type Query {
   """Auth resolver"""
   temp: String!
-  getAccountInfo: AccountInfo
 
   """Get list referral user"""
-  getListReferralUser(userId: String!): [User!]!
+  getListReferralUser: [User!]!
+  getAccountInfo: AccountInfo
 }
 
 type Mutation {

@@ -1,11 +1,14 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { UserService } from './user.service';
-import { UserProfile } from "@libs/prisma/@generated/prisma-nestjs-graphql/user-profile/user-profile.model";
-import { AppAuthUser, CurrentUser } from "@libs/helper/decorator/current_user.decorator";
-import { UseGuards } from "@nestjs/common";
-import { GqlAuthGuard } from "@libs/helper/guards/auth.guard";
-import { AppError } from "@libs/helper/errors/base.error";
-import { AccountInfo } from "./user.dto/user.dto";
+import { UserProfile } from '@libs/prisma/@generated/prisma-nestjs-graphql/user-profile/user-profile.model';
+import {
+  AppAuthUser,
+  CurrentUser,
+} from '@libs/helper/decorator/current_user.decorator';
+import { UseGuards } from '@nestjs/common';
+import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
+import { AppError } from '@libs/helper/errors/base.error';
+import { AccountInfo } from './user.dto/user.dto';
 import { User } from '@libs/prisma/@generated/prisma-nestjs-graphql/user/user.model';
 
 @Resolver()
@@ -16,9 +19,7 @@ export class UserResolver {
   @Query(() => [User], {
     description: 'Get list referral user',
   })
-  async getListReferralUser(
-    @CurrentUser() user: AppAuthUser,
-  ): Promise<User[]> {
+  async getListReferralUser(@CurrentUser() user: AppAuthUser): Promise<User[]> {
     return await this.userService.getReferralUser(user.id);
   }
 
