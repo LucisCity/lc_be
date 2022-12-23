@@ -2,6 +2,8 @@ import { PrismaService } from '@libs/prisma';
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { AccountInfo, AccountInfoUpdateInput } from './user.dto/user.dto';
+import { AppError } from '@libs/helper/errors/base.error';
+import { error } from 'password-validator/typings/constants';
 
 @Injectable()
 export class UserService {
@@ -35,6 +37,27 @@ export class UserService {
     } catch (err) {
       throw err;
     }
+  }
+
+  async claimReferral(inviteeId: string) {
+    const invitee = await this.prisma.referralLog.findUnique({
+      where: { user_id: inviteeId },
+    });
+
+    if (!invitee) {
+      throw new AppError('Invitee not exist!', 'INVITEE_NOT_EXIST');
+    }
+
+    if (invitee.isClaim) {
+      throw new AppError('Referral claimed!', 'CLAIMED');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.referralLog.update({
+        where: { user_id: inviteeId },
+        data: { isClaim: true },
+      });
+    });
   }
 
   //   async updateProfile(
