@@ -6,8 +6,8 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { firstValueFrom } from 'rxjs';
-import { FbDebugResponse, LoginLogInput, RegisterInput } from './auth.type';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { FbDebugResponse, RegisterInput } from './auth.type';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EmailService, EventType, VerifyInput } from '@libs/helper/email';
 import { ReferralType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/referral-type.enum';
 import { User } from '@prisma/client';
@@ -25,7 +25,8 @@ export class AuthService {
     private http: HttpService,
     private eventEmitter: EventEmitter2,
     private mailService: EmailService,
-  ) {}
+  ) {
+  }
 
   async login(email: string, pass: string) {
     const user = await this.prisma.user.findFirst({
@@ -70,7 +71,7 @@ export class AuthService {
           password: hashPass,
           profile: {
             create: {
-              given_name: input.email.split('@')[0],
+              user_name: input.email.split('@')[0],
             },
           },
         },
@@ -83,7 +84,7 @@ export class AuthService {
       // Send email verify
       const payload: VerifyInput = {
         token: this.jwt.sign(
-          { email: input.email },
+          {email: input.email},
           {
             expiresIn: `${process.env.VERIFY_JWT_EXPIRE ?? '2h'}`,
           },
@@ -165,8 +166,8 @@ export class AuthService {
                   family_name && given_name
                     ? family_name + ' ' + given_name
                     : !family_name
-                    ? given_name
-                    : family_name,
+                      ? given_name
+                      : family_name,
               },
             },
           },
@@ -203,9 +204,9 @@ export class AuthService {
       response = await firstValueFrom(
         this.http.get(
           'https://graph.facebook.com/debug_token?input_token=' +
-            accessToken +
-            '&access_token=' +
-            this.FB_APP_TOKEN,
+          accessToken +
+          '&access_token=' +
+          this.FB_APP_TOKEN,
         ),
       );
       response = response.data;
@@ -226,7 +227,7 @@ export class AuthService {
       response = await firstValueFrom(
         this.http.get(
           'https://graph.facebook.com/me?fields=id,name,gender,cover,picture,email&access_token=' +
-            accessToken,
+          accessToken,
         ),
       );
       response = response.data;
@@ -277,8 +278,8 @@ export class AuthService {
                 firstName && lastName
                   ? firstName + ' ' + lastName
                   : !firstName
-                  ? lastName
-                  : firstName,
+                    ? lastName
+                    : firstName,
             },
           },
         },
@@ -431,7 +432,7 @@ export class AuthService {
   private async getInviter(refCode: string) {
     if (refCode) {
       return await this.prisma.user.findFirst({
-        where: { ref_code: refCode },
+        where: {ref_code: refCode},
       });
     }
     return null;

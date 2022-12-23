@@ -105,6 +105,8 @@ type Query {
 
   """Get list referral user"""
   getListReferralUser: [User!]!
+
+  """get account info"""
   getAccountInfo: AccountInfo
 }
 
@@ -129,4 +131,15 @@ type Mutation {
 
   """Forgot password"""
   resetPassword(token: String!, password: String!): Boolean!
+
+  """update account info"""
+  updateAccountInfo(input: AccountInfoUpdateInput!): Boolean
+}
+
+input AccountInfoUpdateInput {
+  user_name: String
+  display_name: String
+  given_name: String
+  family_name: String
+  date_of_birth: DateTime
 }

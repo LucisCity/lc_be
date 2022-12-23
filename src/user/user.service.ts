@@ -1,15 +1,14 @@
-import { AppError } from '@libs/helper/errors/base.error';
 import { PrismaService } from '@libs/prisma';
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { UserProfile } from "@libs/prisma/@generated/prisma-nestjs-graphql/user-profile/user-profile.model";
-import { AccountInfo } from "./user.dto/user.dto";
+import { AccountInfo, AccountInfoUpdateInput } from "./user.dto/user.dto";
 
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {
+  }
 
   async create(user: Prisma.UserCreateInput) {
     return await this.prisma.user.create({
@@ -28,7 +27,7 @@ export class UserService {
   async getReferralUser(userId: string) {
     try {
       return await this.prisma.user.findMany({
-        where: { invited_by: userId },
+        where: {invited_by: userId},
         include: {
           referral_log: true,
           profile: true,
@@ -135,5 +134,20 @@ export class UserService {
     });
 
     return {email: profile.user.email, ...profile};
+  }
+
+  async updateAccountInfo(userId: string, input: AccountInfoUpdateInput) {
+    await this.prisma.userProfile.update({
+      where: {
+        user_id: userId,
+      },
+      data: {
+        given_name: input.given_name,
+        user_name: input.user_name,
+        display_name: input.display_name,
+        family_name: input.family_name,
+        date_of_birth: input.date_of_birth,
+      }
+    });
   }
 }
