@@ -33,7 +33,7 @@ export class UserService {
   async getReferralUser(userId: string) {
     try {
       return await this.prisma.user.findMany({
-        where: { invited_by: userId },
+        where: {invited_by: userId},
         include: {
           referral_log: true,
           profile: true,

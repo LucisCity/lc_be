@@ -134,9 +134,6 @@ type Mutation {
 
   """update account info"""
   updateAccountInfo(input: AccountInfoUpdateInput!): Boolean
-
-  """update account info"""
-  changePassword(oldPass: String!, newPass: String!): Boolean
 }
 
 input AccountInfoUpdateInput {
