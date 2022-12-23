@@ -39,6 +39,8 @@ model User {
   updated_at  DateTime      @updatedAt
 
   referral_log ReferralLog?
+  wallet       Wallet?
+
   @@map("user")
 }
 
@@ -137,4 +139,41 @@ model BlockchainTransaction {
   @@unique([tx_hash])
   @@index([status])
   @@map("blockchain_transaction")
+}
+
+model Wallet {
+  user_id               String               @id
+  user                  User                 @relation(fields: [user_id], references: [id])
+  balance               BigInt               @db.BigInt
+
+  transaction_log       TransactionLog[]
+
+  created_at            DateTime             @default(now())
+  updated_at            DateTime             @updatedAt
+
+  @@map("wallet")
+}
+
+
+model TransactionType {
+  code                      String               @db.VarChar(100)
+  description               String               @db.Text
+  transaction_log           TransactionLog[]
+
+  @@unique([code])
+  @@map("transaction_type")
+}
+model TransactionLog {
+  id                String               @id
+  type              String               @db.VarChar(100)
+  transaction_type  TransactionType      @relation(fields: [type], references: [code])
+  user_id           String
+  wallet            Wallet               @relation(fields: [user_id], references: [user_id])
+  description       String
+
+
+  created_at       DateTime             @default(now())
+  updated_at       DateTime             @updatedAt
+
+  @@map("transaction_log")
 }
