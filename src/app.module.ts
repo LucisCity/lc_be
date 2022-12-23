@@ -11,6 +11,7 @@ import { PrismaModule } from '@libs/prisma';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { EmailModule } from '@libs/helper/email';
+import { TasksModule } from './tasks/tasks.module';
 
 @Module({
   imports: [
@@ -38,6 +39,8 @@ import { EmailModule } from '@libs/helper/email';
     EmailModule,
     AuthModule,
     UserModule,
+    ScheduleModule.forRoot(),
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [AppService],

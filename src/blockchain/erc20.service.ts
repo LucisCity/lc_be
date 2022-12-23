@@ -1,6 +1,6 @@
 import { Contract, ethers } from 'ethers';
 import { KMath } from '@libs/helper/math.helper';
-import { BlockchainService } from '@libs/helper/blockchain/blockchain.service';
+import { BlockchainService } from './blockchain.service';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -18,14 +18,6 @@ export class Erc20Service {
 
   public getContract() {
     return this.contract;
-  }
-
-  public async getTransactionReceipt(txHash: string) {
-    const txReceipt = await this.provider.getTransactionReceipt(txHash);
-    if (txReceipt && txReceipt.blockNumber) {
-      return txReceipt;
-    }
-    return null;
   }
 
   public async totalSupply() {

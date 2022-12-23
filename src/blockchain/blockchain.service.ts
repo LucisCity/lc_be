@@ -17,6 +17,14 @@ export class BlockchainService {
     return this.provider;
   }
 
+  public async getTransactionReceipt(txHash: string) {
+    const txReceipt = await this.provider.getTransactionReceipt(txHash);
+    if (txReceipt && txReceipt.blockNumber) {
+      return txReceipt;
+    }
+    return null;
+  }
+
   /***
    * @param to
    * @param amount want to send. Exp: 0.1 bnb
