@@ -12,6 +12,8 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { EmailModule } from '@libs/helper/email';
 import { TasksModule } from './tasks/tasks.module';
+import { PubsubModule } from '@libs/pubsub';
+import { NotificationModule } from '@libs/notification';
 
 @Module({
   imports: [
@@ -33,6 +35,10 @@ import { TasksModule } from './tasks/tasks.module';
         introspection: true, // always true for admin, front-end not allowed to use,
         autoSchemaFile: process.cwd() + '/src/schema.gql',
         dateScalarMode: 'date',
+        subscriptions: {
+          'graphql-ws': true,
+          'subscriptions-transport-ws': false,
+        },
       }),
     }),
     PrismaModule,
@@ -41,6 +47,8 @@ import { TasksModule } from './tasks/tasks.module';
     UserModule,
     ScheduleModule.forRoot(),
     TasksModule,
+    PubsubModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

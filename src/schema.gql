@@ -2,6 +2,27 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type UserProfile {
+  user_id: ID!
+  user_name: String
+  display_name: String
+  given_name: String
+  family_name: String
+  phone: String
+  avatar: String
+  date_of_birth: DateTime
+  cover: String
+  country_code: String
+  user: User!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
 type ReferralLog {
   user_id: ID!
   user: User!
@@ -17,10 +38,9 @@ enum ReferralType {
   BUY_GALAXY_CARD
 }
 
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
+type UserCount {
+  notification: Int!
+}
 
 type TransactionTypeCount {
   transaction_log: Int!
@@ -73,10 +93,12 @@ type User {
   facebook_id: String
   password: String
   profile: UserProfile
+  notification: [Notification!]
   created_at: DateTime!
   updated_at: DateTime!
   referral_log: ReferralLog
   wallet: Wallet
+  _count: UserCount!
 }
 
 enum UserRole {
@@ -90,20 +112,26 @@ enum UserStatus {
   BANNED
 }
 
-type UserProfile {
-  user_id: ID!
-  user_name: String
-  display_name: String
-  given_name: String
-  family_name: String
-  phone: String
-  avatar: String
-  date_of_birth: DateTime
-  cover: String
-  country_code: String
+type Notification {
+  id: ID!
+  user_id: String!
+  title: String
+  content: String
+  is_seen: Boolean!
+  link: String
   user: User!
   created_at: DateTime!
   updated_at: DateTime!
+}
+
+type NotificationGql {
+  id: ID!
+  user_id: String!
+  title: String
+  content: String
+  is_seen: Boolean!
+  link: String
+  created_at: DateTime!
 }
 
 type ProfileGql {
@@ -121,8 +149,10 @@ type UserGql {
   id: ID!
   email: String
   ref_code: String!
+  notification: [Notification!]
   referral_log: ReferralLog
   wallet: Wallet
+  _count: UserCount!
   profile: ProfileGql!
 }
 
@@ -171,6 +201,9 @@ type Query {
 
   """get account info"""
   getAccountInfo: AccountInfo
+
+  """get all notis"""
+  getNotifications(page: Int, limit: Int): [NotificationGql!]
 }
 
 type Mutation {
@@ -209,6 +242,9 @@ type Mutation {
 
   """set pool wallet"""
   setPoolWallet(address: String!, privateKey: String!): Boolean!
+
+  """mark all notis as read"""
+  markAllNotisRead: Boolean
 }
 
 input AccountInfoUpdateInput {
@@ -217,4 +253,8 @@ input AccountInfoUpdateInput {
   given_name: String
   family_name: String
   date_of_birth: DateTime
+}
+
+type Subscription {
+  pushNotification(userId: String!): NotificationGql!
 }

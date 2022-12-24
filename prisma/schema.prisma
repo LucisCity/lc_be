@@ -35,6 +35,7 @@ model User {
   facebook_id String?       @unique @db.VarChar(45)
   password    String?       @db.VarChar(255)
   profile     UserProfile?
+  notification Notification[]
   created_at  DateTime      @default(now())
   updated_at  DateTime      @updatedAt
 
@@ -177,4 +178,18 @@ model TransactionLog {
   updated_at       DateTime             @updatedAt
 
   @@map("transaction_log")
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  user_id    String
+  title      String?  @db.VarChar(512)
+  content    String?  @db.Text
+  is_seen    Boolean  @default(false)
+  link       String?  @db.VarChar(512)
+  user       User     @relation(fields: [user_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("notification")
 }
