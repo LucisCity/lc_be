@@ -72,9 +72,7 @@ export class AuthService {
           invited_by: inviter?.id ?? null,
           password: hashPass,
           profile: {
-            create: {
-              user_name: input.email.split('@')[0],
-            },
+            create: {},
           },
           wallet: {
             create: {},
@@ -102,7 +100,8 @@ export class AuthService {
       return true;
     } catch (err) {
       this.logger.warn(err);
-      throw new AppError('ACCOUNT EXIST', 'ACCOUNT_EXIST');
+      throw err;
+      // throw new AppError('ACCOUNT EXIST', 'ACCOUNT_EXIST');
     }
   }
 

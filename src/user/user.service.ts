@@ -1,7 +1,11 @@
 import { PrismaService } from '@libs/prisma';
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { AccountInfo, AccountInfoUpdateInput } from './user.dto/user.dto';
+import {
+  AccountInfo,
+  AccountInfoUpdateInput,
+  ReferralDataResponse,
+} from './user.dto/user.dto';
 import { AppError } from '@libs/helper/errors/base.error';
 import { PasswordUtils } from '@libs/helper/password.util';
 import { ChangePassInput, EventType, VerifyInput } from '@libs/helper/email';
@@ -10,7 +14,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
-
+  private rewardReferral = process.env.REWARD_REFERRAL ?? '5';
   constructor(
     private prisma: PrismaService,
     private eventEmitter: EventEmitter2,
@@ -30,15 +34,16 @@ export class UserService {
     });
   }
 
-  async getReferralUser(userId: string) {
+  async getReferralUser(userId: string): Promise<ReferralDataResponse[]> {
     try {
-      return await this.prisma.user.findMany({
+      const list = await this.prisma.user.findMany({
         where: { invited_by: userId },
         include: {
           referral_log: true,
           profile: true,
         },
       });
+      return list.map((item) => ({ ...item, reward: this.rewardReferral }));
     } catch (err) {
       throw err;
     }
@@ -67,21 +72,21 @@ export class UserService {
       throw new AppError('Referral claimed!', 'CLAIMED');
     }
 
-    await this.prisma.$transaction(async (tx) => {
+    const response = await this.prisma.$transaction(async (tx) => {
       await tx.referralLog.update({
         where: { user_id: inviteeId },
         data: { isClaim: true },
       });
       // find invited person
-      const wallet = await tx.wallet.findUnique({
+      let wallet = await tx.wallet.findUnique({
         where: { user_id: invitee.invited_by },
       });
 
       if (!wallet) {
-        await tx.wallet.create({
+        wallet = await tx.wallet.create({
           data: {
             user_id: invitee.invited_by,
-            balance: new Prisma.Decimal(5),
+            balance: new Prisma.Decimal(this.rewardReferral),
           },
         });
         await tx.transactionLog.create({
@@ -98,19 +103,20 @@ export class UserService {
             type: 'CLAIM_REFERRAL',
             user_id: invitee.invited_by,
             description: 'Claim reward for referral',
-            amount: new Prisma.Decimal(5),
+            amount: new Prisma.Decimal(this.rewardReferral),
           },
         });
-        await tx.wallet.update({
+        wallet = await tx.wallet.update({
           where: { user_id: invitee.invited_by },
           data: {
             balance: wallet.balance.add(new Prisma.Decimal(transaction.amount)),
           },
         });
       }
+      return wallet;
     });
 
-    return true;
+    return response;
   }
 
   //   async updateProfile(

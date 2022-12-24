@@ -141,12 +141,33 @@ type AccountInfo {
   email: String
 }
 
+type ReferralDataResponse {
+  id: ID!
+  role: UserRole!
+  status: UserStatus!
+  email: String
+  ref_code: String!
+  invited_by: String
+  google_id: String
+  facebook_id: String
+  password: String
+  profile: UserProfile
+  created_at: DateTime!
+  updated_at: DateTime!
+  referral_log: ReferralLog
+  wallet: Wallet
+  reward: String
+}
+
 type Query {
   """Auth resolver"""
   temp: String!
 
   """Get list referral user"""
-  getListReferralUser: [User!]!
+  getListReferralUser: [ReferralDataResponse!]!
+
+  """get balance"""
+  getBalance: Wallet!
 
   """get account info"""
   getAccountInfo: AccountInfo
@@ -181,7 +202,7 @@ type Mutation {
   changePassword(oldPass: String!, newPass: String!): Boolean
 
   """claim referral"""
-  claimReferral(inviteeId: String!): Boolean
+  claimReferral(inviteeId: String!): Wallet
 
   """Send tx transaction"""
   sendTransaction(txHash: String!, abi: String): Boolean!
