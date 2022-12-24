@@ -44,6 +44,16 @@ export class UserService {
     }
   }
 
+  async getBalance(userId: string) {
+    try {
+      return await this.prisma.wallet.findUnique({
+        where: { user_id: userId },
+      });
+    } catch (err) {
+      throw err;
+    }
+  }
+
   async claimReferral(inviteeId: string) {
     const invitee = await this.prisma.referralLog.findUnique({
       where: { user_id: inviteeId },

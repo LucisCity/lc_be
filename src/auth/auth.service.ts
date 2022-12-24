@@ -34,6 +34,7 @@ export class AuthService {
       },
       include: {
         profile: true,
+        wallet: true,
       },
     });
     if (!user || !user.password) {
@@ -150,6 +151,7 @@ export class AuthService {
         },
         include: {
           profile: true,
+          wallet: true,
         },
       });
       if (!userInfo) {
@@ -180,6 +182,7 @@ export class AuthService {
           },
           include: {
             profile: true,
+            wallet: true,
           },
         });
         if (inviter) {
@@ -264,6 +267,7 @@ export class AuthService {
       },
       include: {
         profile: true,
+        wallet: true,
       },
     });
 
@@ -295,6 +299,7 @@ export class AuthService {
         },
         include: {
           profile: true,
+          wallet: true,
         },
       });
 

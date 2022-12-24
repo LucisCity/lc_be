@@ -9,6 +9,7 @@ import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
 import { AppError } from '@libs/helper/errors/base.error';
 import { AccountInfo, AccountInfoUpdateInput } from './user.dto/user.dto';
 import { User } from '@libs/prisma/@generated/prisma-nestjs-graphql/user/user.model';
+import { Wallet } from '@libs/prisma/@generated/prisma-nestjs-graphql/wallet/wallet.model';
 
 @Resolver()
 export class UserResolver {
@@ -20,6 +21,14 @@ export class UserResolver {
   })
   async getListReferralUser(@CurrentUser() user: AppAuthUser): Promise<User[]> {
     return await this.userService.getReferralUser(user.id);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => Wallet, {
+    description: 'get balance',
+  })
+  async getBalance(@CurrentUser() user: AppAuthUser): Promise<Wallet> {
+    return await this.userService.getBalance(user.id);
   }
 
   @UseGuards(GqlAuthGuard)
