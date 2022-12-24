@@ -32,6 +32,10 @@ import { EmailModule } from '@libs/helper/email';
         introspection: true, // always true for admin, front-end not allowed to use,
         autoSchemaFile: process.cwd() + '/src/schema.gql',
         dateScalarMode: 'date',
+        subscriptions: {
+          'graphql-ws': true,
+          'subscriptions-transport-ws': false,
+        },
       }),
     }),
     PrismaModule,
