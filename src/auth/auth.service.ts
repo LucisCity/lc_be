@@ -68,7 +68,7 @@ export class AuthService {
         data: {
           role: 'USER',
           email: input.email,
-          ref_code: randString(10),
+          ref_code: randString(6),
           invited_by: inviter?.id ?? null,
           password: hashPass,
           profile: {
@@ -160,7 +160,7 @@ export class AuthService {
           data: {
             google_id: sub,
             email,
-            ref_code: randString(10),
+            ref_code: randString(6),
             invited_by: inviter.id,
             profile: {
               create: {
@@ -277,7 +277,7 @@ export class AuthService {
         data: {
           facebook_id,
           email,
-          ref_code: randString(10),
+          ref_code: randString(6),
           invited_by: inviter.id,
           profile: {
             create: {
