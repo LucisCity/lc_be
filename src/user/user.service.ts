@@ -6,15 +6,13 @@ import { AppError } from '@libs/helper/errors/base.error';
 import { PasswordUtils } from '@libs/helper/password.util';
 import { ChangePassInput, EventType, VerifyInput } from '@libs/helper/email';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NotificationGql } from '@libs/notification/notification.dto';
 
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
 
-  constructor(
-    private prisma: PrismaService,
-    private eventEmitter: EventEmitter2,
-  ) {}
+  constructor(private prisma: PrismaService, private eventEmitter: EventEmitter2) {}
 
   async create(user: Prisma.UserCreateInput) {
     return await this.prisma.user.create({
@@ -33,7 +31,7 @@ export class UserService {
   async getReferralUser(userId: string) {
     try {
       return await this.prisma.user.findMany({
-        where: {invited_by: userId},
+        where: { invited_by: userId },
         include: {
           referral_log: true,
           profile: true,
@@ -44,53 +42,7 @@ export class UserService {
     }
   }
 
-  //   async updateProfile(
-  //     userId: number,
-  //     data: Prisma.UserProfileUpdateInput,
-  //   ): Promise<UpdateProfileResponse> {
-  //     const password = data.password;
-  //     delete data.password;
-  //     const userProfile = await this.prisma.userProfile.update({
-  //       where: {
-  //         user_id: userId,
-  //       },
-  //       data: data,
-  //       include: {
-  //         user: true,
-  //       },
-  //     });
-  //     let passwordSaved = false;
-  //     if (password && password.set) {
-  //       // check exist password
-  //       if (userProfile.user.password) {
-  //         throw new AppError('Password existed', 'PASSWORD_EXIST');
-  //       }
-  //       // check strong pass
-  //       if (PasswordUtils.validate(password.set) !== true) {
-  //         throw new AppError(
-  //           'New password invalid, password must length from 8-32, contain letter and digit ',
-  //           'NEW_PASS_INVALID',
-  //         );
-  //       }
-  //       const hashPass = await PasswordUtils.hashPassword(password.set);
-  //       await this.prisma.user.update({
-  //         where: {
-  //           id: userId,
-  //         },
-  //         data: {
-  //           password: hashPass,
-  //         },
-  //       });
-  //       passwordSaved = true;
-  //     }
-  //     return { updated_profile: userProfile, password_saved: passwordSaved };
-  //   }
-
-  async changePassword(
-    userId: string,
-    oldPass: string,
-    newPass: string,
-  ): Promise<boolean> {
+  async changePassword(userId: string, oldPass: string, newPass: string): Promise<boolean> {
     const user = await this.prisma.user.findUnique({
       where: {
         id: userId,
@@ -103,17 +55,11 @@ export class UserService {
       throw new AppError('Bad request', 'BAD_REQUEST');
     }
     if (oldPass === newPass) {
-      throw new AppError(
-        'New password must be different from old password',
-        'NEW_PASS_SAME_OLD_PASS',
-      );
+      throw new AppError('New password must be different from old password', 'NEW_PASS_SAME_OLD_PASS');
     }
     // check old password
     if (!(await PasswordUtils.comparePassword(oldPass, user.password))) {
-      throw new AppError(
-        'Wrong old password, please try again',
-        'WRONG_OLD_PASS',
-      );
+      throw new AppError('Wrong old password, please try again', 'WRONG_OLD_PASS');
     }
     // check strong pass
     if (PasswordUtils.validate(newPass) !== true) {
@@ -171,11 +117,33 @@ export class UserService {
       });
     } catch (e) {
       if (e.code === 'P2002') {
-        throw new AppError(
-          'username not available, please try another username',
-          'USERNAME_DUPLICATED',
-        );
+        throw new AppError('username not available, please try another username', 'USERNAME_DUPLICATED');
       }
     }
+  }
+
+  async getNotifications(userId: string, page?: number, limit?: number) {
+    return await this.prisma.notification.findMany({
+      where: {
+        user_id: userId,
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+  }
+
+  async markAllNotisRead(userId: string) {
+    await this.prisma.notification.updateMany({
+      where: {
+        user_id: userId,
+      },
+      data: {
+        is_seen: true,
+      },
+    });
+    return true;
   }
 }

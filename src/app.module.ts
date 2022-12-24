@@ -11,6 +11,8 @@ import { PrismaModule } from '@libs/prisma';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { EmailModule } from '@libs/helper/email';
+import { PubsubModule } from '@libs/pubsub';
+import { NotificationModule } from '@libs/notification';
 
 @Module({
   imports: [
@@ -42,6 +44,8 @@ import { EmailModule } from '@libs/helper/email';
     EmailModule,
     AuthModule,
     UserModule,
+    PubsubModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

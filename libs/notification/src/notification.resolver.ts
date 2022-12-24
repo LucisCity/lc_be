@@ -1,7 +1,6 @@
 import { Args, Resolver, Subscription } from '@nestjs/graphql';
 import { PubsubService } from '@libs/pubsub';
-import { AppAuthUser, CurrentUser } from '@libs/helper/decorator/current_user.decorator';
-import { NotificationGql } from '@libs/notification/notification.dto';
+import { NotificationGql } from './notification.dto';
 
 @Resolver()
 export class NotificationResolver {
@@ -9,9 +8,9 @@ export class NotificationResolver {
 
   @Subscription(() => NotificationGql, {
     name: 'pushNotification',
-    filter: (payload, variables) => payload.user.id == variables.userId,
+    filter: (payload, variables) => payload.pushNotification.user_id == variables.userId,
   })
-  pushNotification(@CurrentUser() user: AppAuthUser) {
+  pushNotification(@Args('userId') userId: String) {
     return this.pubsubService.pubSub.asyncIterator('pushNotification');
   }
 }

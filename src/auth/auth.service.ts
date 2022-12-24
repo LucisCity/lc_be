@@ -11,6 +11,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EmailService, EventType, VerifyInput } from '@libs/helper/email';
 import { ReferralType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/referral-type.enum';
 import { User } from '@prisma/client';
+import { NotificationService } from '@libs/notification';
 
 @Injectable()
 export class AuthService {
@@ -25,8 +26,8 @@ export class AuthService {
     private http: HttpService,
     private eventEmitter: EventEmitter2,
     private mailService: EmailService,
-  ) {
-  }
+    private notificationService: NotificationService,
+  ) {}
 
   async login(email: string, pass: string) {
     const user = await this.prisma.user.findFirst({
@@ -84,7 +85,7 @@ export class AuthService {
       // Send email verify
       const payload: VerifyInput = {
         token: this.jwt.sign(
-          {email: input.email},
+          { email: input.email },
           {
             expiresIn: `${process.env.VERIFY_JWT_EXPIRE ?? '2h'}`,
           },
@@ -104,9 +105,7 @@ export class AuthService {
   async loginGoogle(token: string, refCode?: string) {
     try {
       const response = await firstValueFrom(
-        this.http.get(
-          `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`,
-        ),
+        this.http.get(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`),
       );
       // console.log('response: ', response);
 
@@ -163,11 +162,7 @@ export class AuthService {
                 given_name,
                 family_name,
                 display_name:
-                  family_name && given_name
-                    ? family_name + ' ' + given_name
-                    : !family_name
-                      ? given_name
-                      : family_name,
+                  family_name && given_name ? family_name + ' ' + given_name : !family_name ? given_name : family_name,
               },
             },
           },
@@ -203,10 +198,7 @@ export class AuthService {
     try {
       response = await firstValueFrom(
         this.http.get(
-          'https://graph.facebook.com/debug_token?input_token=' +
-          accessToken +
-          '&access_token=' +
-          this.FB_APP_TOKEN,
+          'https://graph.facebook.com/debug_token?input_token=' + accessToken + '&access_token=' + this.FB_APP_TOKEN,
         ),
       );
       response = response.data;
@@ -226,8 +218,7 @@ export class AuthService {
     try {
       response = await firstValueFrom(
         this.http.get(
-          'https://graph.facebook.com/me?fields=id,name,gender,cover,picture,email&access_token=' +
-          accessToken,
+          'https://graph.facebook.com/me?fields=id,name,gender,cover,picture,email&access_token=' + accessToken,
         ),
       );
       response = response.data;
@@ -243,8 +234,7 @@ export class AuthService {
     const firstName = response.first_name ?? response.name;
     const lastName = response.last_name;
     // let gender = response.gender// === 'male'
-    const avatar =
-      response.picture && response.picture.data && response.picture.data.url;
+    const avatar = response.picture && response.picture.data && response.picture.data.url;
 
     if (!facebook_id) {
       throw new AppError('Info not enough', 'INPUT_NOT_VALID');
@@ -274,12 +264,7 @@ export class AuthService {
               avatar,
               given_name: firstName,
               family_name: lastName,
-              display_name:
-                firstName && lastName
-                  ? firstName + ' ' + lastName
-                  : !firstName
-                    ? lastName
-                    : firstName,
+              display_name: firstName && lastName ? firstName + ' ' + lastName : !firstName ? lastName : firstName,
             },
           },
         },
@@ -396,10 +381,7 @@ export class AuthService {
     }
     const newHashPass = await PasswordUtils.hashPassword(newPass);
     if (newHashPass === user.password) {
-      throw new AppError(
-        'New password must not same old password',
-        'NEW_PASS_SAME_OLD_PASS',
-      );
+      throw new AppError('New password must not same old password', 'NEW_PASS_SAME_OLD_PASS');
     }
 
     await this.prisma.user.update({
@@ -422,6 +404,11 @@ export class AuthService {
           isClaim: false,
         },
       });
+      await this.notificationService.createAndPushNoti(
+        inviter.id,
+        'Someone just used your referral code',
+        `An user just used your referral code to join Lucis City`,
+      );
       return true;
     } catch (err) {
       console.log(err);
@@ -432,7 +419,7 @@ export class AuthService {
   private async getInviter(refCode: string) {
     if (refCode) {
       return await this.prisma.user.findFirst({
-        where: {ref_code: refCode},
+        where: { ref_code: refCode },
       });
     }
     return null;

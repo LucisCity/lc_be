@@ -1,4 +1,4 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { UserService } from './user.service';
 import { AppAuthUser, CurrentUser } from '@libs/helper/decorator/current_user.decorator';
 import { UseGuards } from '@nestjs/common';
@@ -6,6 +6,7 @@ import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
 import { AppError } from '@libs/helper/errors/base.error';
 import { AccountInfo, AccountInfoUpdateInput } from './user.dto/user.dto';
 import { User } from '@libs/prisma/@generated/prisma-nestjs-graphql/user/user.model';
+import { NotificationGql } from '@libs/notification/notification.dto';
 
 @Resolver()
 export class UserResolver {
@@ -47,5 +48,21 @@ export class UserResolver {
   ): Promise<boolean> {
     await this.userService.changePassword(user.id, oldPass, newPass);
     return true;
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => [NotificationGql], { nullable: true, description: 'get all notis' })
+  async getNotifications(
+    @CurrentUser() user: AppAuthUser,
+    @Args('page', { nullable: true, type: () => Int }) page: number,
+    @Args('limit', { nullable: true, type: () => Int }) limit: number,
+  ): Promise<NotificationGql[]> {
+    return this.userService.getNotifications(user.id, page, limit);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => Boolean, { nullable: true, description: 'mark all notis as read' })
+  async markAllNotisRead(@CurrentUser() user: AppAuthUser): Promise<boolean> {
+    return this.userService.markAllNotisRead(user.id);
   }
 }
