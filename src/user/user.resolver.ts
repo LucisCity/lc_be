@@ -45,6 +45,16 @@ export class UserResolver {
   }
 
   @UseGuards(GqlAuthGuard)
+  @Mutation(() => Boolean, { nullable: true, description: 'change password' })
+  async changePassword(
+    @CurrentUser() user: AppAuthUser,
+    @Args('oldPass') oldPass: string,
+    @Args('newPass') newPass: string,
+  ): Promise<boolean> {
+    await this.userService.changePassword(user.id, oldPass, newPass);
+    return true;
+  }
+  @UseGuards(GqlAuthGuard)
   @Mutation(() => Boolean, { nullable: true, description: 'claim referral' })
   async claimReferral(
     @CurrentUser() user: AppAuthUser,
