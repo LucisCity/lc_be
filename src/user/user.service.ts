@@ -57,7 +57,45 @@ export class UserService {
         where: { user_id: inviteeId },
         data: { isClaim: true },
       });
+      // find invited person
+      const wallet = await tx.wallet.findUnique({
+        where: { user_id: invitee.invited_by },
+      });
+
+      if (!wallet) {
+        await tx.wallet.create({
+          data: {
+            user_id: invitee.invited_by,
+            balance: new Prisma.Decimal(5),
+          },
+        });
+        await tx.transactionLog.create({
+          data: {
+            type: 'CLAIM_REFERRAL',
+            user_id: invitee.invited_by,
+            description: 'Claim reward for referral',
+            amount: new Prisma.Decimal(5),
+          },
+        });
+      } else {
+        const transaction = await tx.transactionLog.create({
+          data: {
+            type: 'CLAIM_REFERRAL',
+            user_id: invitee.invited_by,
+            description: 'Claim reward for referral',
+            amount: new Prisma.Decimal(5),
+          },
+        });
+        await tx.wallet.update({
+          where: { user_id: invitee.invited_by },
+          data: {
+            balance: wallet.balance.add(new Prisma.Decimal(transaction.amount)),
+          },
+        });
+      }
     });
+
+    return true;
   }
 
   //   async updateProfile(

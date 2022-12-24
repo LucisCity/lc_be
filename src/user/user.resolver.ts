@@ -1,29 +1,29 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { UserService } from './user.service';
-import { AppAuthUser, CurrentUser } from "@libs/helper/decorator/current_user.decorator";
-import { UseGuards } from "@nestjs/common";
-import { GqlAuthGuard } from "@libs/helper/guards/auth.guard";
-import { AppError } from "@libs/helper/errors/base.error";
-import { AccountInfo, AccountInfoUpdateInput } from "./user.dto/user.dto";
+import {
+  AppAuthUser,
+  CurrentUser,
+} from '@libs/helper/decorator/current_user.decorator';
+import { UseGuards } from '@nestjs/common';
+import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
+import { AppError } from '@libs/helper/errors/base.error';
+import { AccountInfo, AccountInfoUpdateInput } from './user.dto/user.dto';
 import { User } from '@libs/prisma/@generated/prisma-nestjs-graphql/user/user.model';
 
 @Resolver()
 export class UserResolver {
-  constructor(private userService: UserService) {
-  }
+  constructor(private userService: UserService) {}
 
   @UseGuards(GqlAuthGuard)
   @Query(() => [User], {
     description: 'Get list referral user',
   })
-  async getListReferralUser(
-    @CurrentUser() user: AppAuthUser,
-  ): Promise<User[]> {
+  async getListReferralUser(@CurrentUser() user: AppAuthUser): Promise<User[]> {
     return await this.userService.getReferralUser(user.id);
   }
 
   @UseGuards(GqlAuthGuard)
-  @Query(() => AccountInfo, {nullable: true, description: "get account info"})
+  @Query(() => AccountInfo, { nullable: true, description: 'get account info' })
   async getAccountInfo(@CurrentUser() user: AppAuthUser): Promise<AccountInfo> {
     if (!user.id) {
       throw new AppError('Bad request');
@@ -32,7 +32,10 @@ export class UserResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => Boolean, {nullable: true, description: "update account info"})
+  @Mutation(() => Boolean, {
+    nullable: true,
+    description: 'update account info',
+  })
   async updateAccountInfo(
     @CurrentUser() user: AppAuthUser,
     @Args('input') input: AccountInfoUpdateInput,
@@ -41,4 +44,13 @@ export class UserResolver {
     return true;
   }
 
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => Boolean, { nullable: true, description: 'claim referral' })
+  async claimReferral(
+    @CurrentUser() user: AppAuthUser,
+    @Args('inviteeId') inviteeId: string,
+  ): Promise<boolean> {
+    await this.userService.claimReferral(inviteeId);
+    return true;
+  }
 }

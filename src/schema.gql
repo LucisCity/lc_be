@@ -39,10 +39,14 @@ type TransactionLog {
   transaction_type: TransactionType!
   user_id: String!
   wallet: Wallet!
-  description: String!
+  amount: Decimal!
+  description: String
   created_at: DateTime!
   updated_at: DateTime!
 }
+
+"""An arbitrary-precision Decimal type"""
+scalar Decimal
 
 type WalletCount {
   transaction_log: Int!
@@ -51,7 +55,7 @@ type WalletCount {
 type Wallet {
   user_id: ID!
   user: User!
-  balance: String!
+  balance: Decimal!
   transaction_log: [TransactionLog!]
   created_at: DateTime!
   updated_at: DateTime!
@@ -172,6 +176,9 @@ type Mutation {
 
   """update account info"""
   updateAccountInfo(input: AccountInfoUpdateInput!): Boolean
+
+  """claim referral"""
+  claimReferral(inviteeId: String!): Boolean
 
   """Send tx transaction"""
   sendTransaction(txHash: String!, abi: String): Boolean!
