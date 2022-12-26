@@ -25,18 +25,18 @@ enum UserRole {
 }
 
 model User {
-  id          String        @id @default(cuid()) @db.VarChar(45)
-  role        UserRole      @default(USER)
-  status      UserStatus    @default(PENDING)
-  email       String?       @unique @db.VarChar(255)
-  ref_code    String        @db.VarChar(10) @unique
-  invited_by  String?       @db.VarChar(45)
-  google_id   String?       @unique @db.VarChar(45)
-  facebook_id String?       @unique @db.VarChar(45)
-  password    String?       @db.VarChar(255)
+  id          String       @id @default(cuid()) @db.VarChar(45)
+  role        UserRole     @default(USER)
+  status      UserStatus   @default(PENDING)
+  email       String?      @unique @db.VarChar(255)
+  ref_code    String       @unique @db.VarChar(10)
+  invited_by  String?      @db.VarChar(45)
+  google_id   String?      @unique @db.VarChar(45)
+  facebook_id String?      @unique @db.VarChar(45)
+  password    String?      @db.VarChar(255)
   profile     UserProfile?
-  created_at  DateTime      @default(now())
-  updated_at  DateTime      @updatedAt
+  created_at  DateTime     @default(now())
+  updated_at  DateTime     @updatedAt
 
   referral_log ReferralLog?
   wallet       Wallet?
@@ -81,25 +81,25 @@ enum ReferralType {
 }
 
 model ReferralLog {
-  user_id    String         @id
-  user       User           @relation(fields: [user_id], references: [id])
-  invited_by String         @db.VarChar(45)
+  user_id    String @id
+  user       User   @relation(fields: [user_id], references: [id])
+  invited_by String @db.VarChar(45)
 
-  type       ReferralType?
-  isClaim    Boolean        @default(false) @db.Boolean
+  type    ReferralType?
+  isClaim Boolean       @default(false) @db.Boolean
 
-  created_at DateTime       @default(now())
-  updated_at DateTime       @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("referral_log")
 }
 
 model Contract {
-  id            String       @id @default(cuid()) @db.VarChar(45)
-  address       String       @db.VarChar(45)
-  admin         String?      @db.VarChar(45)
-  admin_prv_key String?      @db.Text
-  abi           String?      @db.Text
+  id            String  @id @default(cuid()) @db.VarChar(45)
+  address       String  @db.VarChar(45)
+  admin         String? @db.VarChar(45)
+  admin_prv_key String? @db.Text
+  abi           String? @db.Text
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -108,9 +108,9 @@ model Contract {
 }
 
 model PoolWallet {
-  id            String       @id @default(cuid()) @db.VarChar(45)
-  address       String       @db.VarChar(45)
-  prv           String?      @db.Text
+  id      String  @id @default(cuid()) @db.VarChar(45)
+  address String  @db.VarChar(45)
+  prv     String? @db.Text
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -127,14 +127,14 @@ enum TransactionStatus {
 }
 
 model BlockchainTransaction {
-  id               String               @id @default(cuid()) @db.VarChar(45)
-  tx_hash          String               @db.VarChar(255)
-  status           TransactionStatus    @default(PENDING)
-  message_error    String?              @db.Text
-  abi              String?              @db.Text
+  id            String            @id @default(cuid()) @db.VarChar(45)
+  tx_hash       String            @db.VarChar(255)
+  status        TransactionStatus @default(PENDING)
+  message_error String?           @db.Text
+  abi           String?           @db.Text
 
-  created_at       DateTime             @default(now())
-  updated_at       DateTime             @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@unique([tx_hash])
   @@index([status])
@@ -142,39 +142,65 @@ model BlockchainTransaction {
 }
 
 model Wallet {
-  user_id               String               @id
-  user                  User                 @relation(fields: [user_id], references: [id])
-  balance               Decimal              @default(0)
+  user_id String  @id
+  user    User    @relation(fields: [user_id], references: [id])
+  balance Decimal @default(0)
 
-  transaction_log       TransactionLog[]
+  transaction_log TransactionLog[]
 
-  created_at            DateTime             @default(now())
-  updated_at            DateTime             @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("wallet")
 }
 
-
 model TransactionType {
-  code                      String               @db.VarChar(100)
-  description               String               @db.Text
-  transaction_log           TransactionLog[]
+  code            String           @db.VarChar(100)
+  description     String           @db.Text
+  transaction_log TransactionLog[]
 
   @@unique([code])
   @@map("transaction_type")
 }
+
 model TransactionLog {
-  id                String               @id @default(cuid()) @db.VarChar(45)
-  type              String               @db.VarChar(100)
-  transaction_type  TransactionType      @relation(fields: [type], references: [code])
-  user_id           String               @db.VarChar(45)
-  wallet            Wallet               @relation(fields: [user_id], references: [user_id])
-  amount            Decimal
-  description       String?
+  id               String          @id @default(cuid()) @db.VarChar(45)
+  type             String          @db.VarChar(100)
+  transaction_type TransactionType @relation(fields: [type], references: [code])
+  user_id          String          @db.VarChar(45)
+  wallet           Wallet          @relation(fields: [user_id], references: [user_id])
+  amount           Decimal
+  description      String?
 
-
-  created_at       DateTime             @default(now())
-  updated_at       DateTime             @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("transaction_log")
+}
+
+model Project {
+  id               String    @id @default(cuid()) @db.VarChar(45)
+  title            String    @db.VarChar(512)
+  price            Int
+  rate             Decimal   @db.Decimal(2, 1)
+  total_rate       Int
+  address          String    @db.VarChar(1024)
+  location         String    @db.VarChar(30) // lat,long
+  favorites        Int?
+  hightlight       String
+  reason_invest    String
+  policy_link      String
+  medias           Json
+  enable           Boolean   @default(false)
+  open_sale_at     DateTime
+  take_profit_at   DateTime
+  wait_transfer_at DateTime?
+  ended            Boolean?
+  profit_period    Int // in day
+  offers           Json
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("project")
 }

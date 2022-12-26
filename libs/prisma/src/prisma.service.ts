@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { INestApplication, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
 @Injectable()
@@ -25,23 +25,17 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     // this.shimDataType();
   }
 
-  //   async enableShutdownHooks(app: INestApplication) {
-  //     this.$on('beforeExit', async () => {
-  //       await app.close();
-  //     });
-  //   }
+  async enableShutdownHooks(app: INestApplication) {
+    this.$on('beforeExit', async () => {
+      await app.close();
+    });
+  }
 
   async enableQueryLogger() {
     //@ts-ignore
     this.$on('query', (event: any) => {
       Logger.log(
-        '\nQuery: ' +
-          event.query +
-          '\n**** Params: ' +
-          event.params +
-          '\n**** Duration: ' +
-          event.duration +
-          'ms',
+        '\nQuery: ' + event.query + '\n**** Params: ' + event.params + '\n**** Duration: ' + event.duration + 'ms',
       );
     });
   }

@@ -1,0 +1,188 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type ReferralLog {
+  user_id: ID!
+  user: User!
+  invited_by: String!
+  type: ReferralType
+  isClaim: Boolean!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+enum ReferralType {
+  REGISTER
+  BUY_GALAXY_CARD
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type TransactionTypeCount {
+  transaction_log: Int!
+}
+
+type TransactionType {
+  code: String!
+  description: String!
+  transaction_log: [TransactionLog!]
+  _count: TransactionTypeCount!
+}
+
+type TransactionLog {
+  id: ID!
+  type: String!
+  transaction_type: TransactionType!
+  user_id: String!
+  wallet: Wallet!
+  amount: Decimal!
+  description: String
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+"""An arbitrary-precision Decimal type"""
+scalar Decimal
+
+type WalletCount {
+  transaction_log: Int!
+}
+
+type Wallet {
+  user_id: ID!
+  user: User!
+  balance: Decimal!
+  transaction_log: [TransactionLog!]
+  created_at: DateTime!
+  updated_at: DateTime!
+  _count: WalletCount!
+}
+
+type User {
+  id: ID!
+  role: UserRole!
+  status: UserStatus!
+  email: String
+  ref_code: String!
+  invited_by: String
+  google_id: String
+  facebook_id: String
+  password: String
+  profile: UserProfile
+  created_at: DateTime!
+  updated_at: DateTime!
+  referral_log: ReferralLog
+  wallet: Wallet
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  BANNED
+}
+
+type UserProfile {
+  user_id: ID!
+  user_name: String
+  display_name: String
+  given_name: String
+  family_name: String
+  phone: String
+  avatar: String
+  date_of_birth: DateTime
+  cover: String
+  country_code: String
+  user: User!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+type ProfileGql {
+  user_id: ID!
+  user_name: String
+  display_name: String
+  given_name: String
+  family_name: String
+  avatar: String
+  date_of_birth: DateTime
+  cover: String
+}
+
+type UserGql {
+  id: ID!
+  email: String
+  ref_code: String!
+  referral_log: ReferralLog
+  wallet: Wallet
+  profile: ProfileGql!
+}
+
+type AuthGql {
+  token: String!
+  user: UserGql!
+}
+
+type Query {
+  """Admin"""
+  user(userId: Float!): String!
+}
+
+type Mutation {
+  """Upload new project"""
+  uploadProject(input: ProjectCreateInputGql!): Boolean
+
+  """Admin login"""
+  login(email: String!, password: String!): AuthGql!
+
+  """Admin register"""
+  register(email: String!, password: String!): Boolean!
+}
+
+input ProjectCreateInputGql {
+  title: String!
+  price: Int!
+  address: String!
+  favorites: Int
+  hightlight: String!
+  reason_invest: String!
+  policy_link: String!
+  profit_period: Int!
+  created_at: DateTime
+  updated_at: DateTime
+  location: String!
+  open_sale_at: DateTime!
+  take_profit_at: DateTime!
+  medias: [ProjectMedia!]!
+  offers: [ProjectOffer!]!
+}
+
+input ProjectMedia {
+  """Width of image"""
+  width: Int!
+
+  """Height of image"""
+  height: Int!
+
+  """Media url"""
+  url: String!
+
+  """Thumbnail url"""
+  thumbnail: String!
+}
+
+input ProjectOffer {
+  """Title"""
+  title: String!
+
+  """Icon"""
+  icon: String!
+}

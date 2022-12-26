@@ -1,6 +1,6 @@
 {
   "collection": "@nestjs/schematics",
-  "sourceRoot": "src",
+  "sourceRoot": "apps/lc-be/src",
   "projects": {
     "helper": {
       "type": "library",
@@ -19,9 +19,30 @@
       "compilerOptions": {
         "tsConfigPath": "libs/prisma/tsconfig.lib.json"
       }
+    },
+    "lc-be": {
+      "type": "application",
+      "root": "apps/lc-be",
+      "entryFile": "main",
+      "sourceRoot": "apps/lc-be/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/lc-be/tsconfig.app.json"
+      }
+    },
+    "admin": {
+      "type": "application",
+      "root": "apps/admin",
+      "entryFile": "main",
+      "sourceRoot": "apps/admin/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/admin/tsconfig.app.json"
+      }
     }
   },
   "compilerOptions": {
-    "webpack": true
-  }
+    "webpack": true,
+    "tsConfigPath": "apps/lc-be/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/lc-be"
 }

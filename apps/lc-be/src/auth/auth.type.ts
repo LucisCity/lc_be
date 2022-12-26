@@ -5,13 +5,7 @@ import { ArgsType, Field, ObjectType, OmitType } from '@nestjs/graphql';
 import { IsEmail, Validate } from 'class-validator';
 
 @ObjectType()
-export class ProfileGql extends OmitType(UserProfile, [
-  'created_at',
-  'updated_at',
-  'country_code',
-  'phone',
-  'user',
-]) {}
+export class ProfileGql extends OmitType(UserProfile, ['created_at', 'updated_at', 'country_code', 'phone', 'user']) {}
 
 @ObjectType()
 export class UserGql extends OmitType(User, [
