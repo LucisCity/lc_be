@@ -2,6 +2,23 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type Notification {
+  id: ID!
+  user_id: String!
+  title: String
+  content: String
+  is_seen: Boolean!
+  link: String
+  user: User!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
 type ReferralLog {
   user_id: ID!
   user: User!
@@ -16,11 +33,6 @@ enum ReferralType {
   REGISTER
   BUY_GALAXY_CARD
 }
-
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
 
 type TransactionTypeCount {
   transaction_log: Int!
@@ -62,6 +74,10 @@ type Wallet {
   _count: WalletCount!
 }
 
+type UserCount {
+  notification: Int!
+}
+
 type User {
   id: ID!
   role: UserRole!
@@ -73,10 +89,12 @@ type User {
   facebook_id: String
   password: String
   profile: UserProfile
+  notification: [Notification!]
   created_at: DateTime!
   updated_at: DateTime!
   referral_log: ReferralLog
   wallet: Wallet
+  _count: UserCount!
 }
 
 enum UserRole {
@@ -121,8 +139,10 @@ type UserGql {
   id: ID!
   email: String
   ref_code: String!
+  notification: [Notification!]
   referral_log: ReferralLog
   wallet: Wallet
+  _count: UserCount!
   profile: ProfileGql!
 }
 

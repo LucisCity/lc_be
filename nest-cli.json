@@ -37,6 +37,24 @@
       "compilerOptions": {
         "tsConfigPath": "apps/admin/tsconfig.app.json"
       }
+    },
+    "pubsub": {
+      "type": "library",
+      "root": "libs/pubsub",
+      "entryFile": "index",
+      "sourceRoot": "libs/pubsub/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/pubsub/tsconfig.lib.json"
+      }
+    },
+    "notification": {
+      "type": "library",
+      "root": "libs/notification",
+      "entryFile": "index",
+      "sourceRoot": "libs/notification/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/notification/tsconfig.lib.json"
+      }
     }
   },
   "compilerOptions": {

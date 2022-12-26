@@ -25,18 +25,19 @@ enum UserRole {
 }
 
 model User {
-  id          String       @id @default(cuid()) @db.VarChar(45)
-  role        UserRole     @default(USER)
-  status      UserStatus   @default(PENDING)
-  email       String?      @unique @db.VarChar(255)
-  ref_code    String       @unique @db.VarChar(10)
-  invited_by  String?      @db.VarChar(45)
-  google_id   String?      @unique @db.VarChar(45)
-  facebook_id String?      @unique @db.VarChar(45)
-  password    String?      @db.VarChar(255)
-  profile     UserProfile?
-  created_at  DateTime     @default(now())
-  updated_at  DateTime     @updatedAt
+  id           String         @id @default(cuid()) @db.VarChar(45)
+  role         UserRole       @default(USER)
+  status       UserStatus     @default(PENDING)
+  email        String?        @unique @db.VarChar(255)
+  ref_code     String         @unique @db.VarChar(10)
+  invited_by   String?        @db.VarChar(45)
+  google_id    String?        @unique @db.VarChar(45)
+  facebook_id  String?        @unique @db.VarChar(45)
+  password     String?        @db.VarChar(255)
+  profile      UserProfile?
+  notification Notification[]
+  created_at   DateTime       @default(now())
+  updated_at   DateTime       @updatedAt
 
   referral_log ReferralLog?
   wallet       Wallet?
@@ -182,8 +183,8 @@ model Project {
   id               String    @id @default(cuid()) @db.VarChar(45)
   title            String    @db.VarChar(512)
   price            Int
-  rate             Decimal   @db.Decimal(2, 1)
-  total_rate       Int
+  rate             Decimal?  @db.Decimal(2, 1)
+  total_rate       Int?
   address          String    @db.VarChar(1024)
   location         String    @db.VarChar(30) // lat,long
   favorites        Int?
@@ -203,4 +204,18 @@ model Project {
   updated_at DateTime @updatedAt
 
   @@map("project")
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  user_id    String
+  title      String?  @db.VarChar(512)
+  content    String?  @db.Text
+  is_seen    Boolean  @default(false)
+  link       String?  @db.VarChar(512)
+  user       User     @relation(fields: [user_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("notification")
 }

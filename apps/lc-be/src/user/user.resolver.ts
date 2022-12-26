@@ -1,25 +1,32 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { UserService } from './user.service';
-import {
-  AppAuthUser,
-  CurrentUser,
-} from '@libs/helper/decorator/current_user.decorator';
+import { AppAuthUser, CurrentUser } from '@libs/helper/decorator/current_user.decorator';
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
 import { AppError } from '@libs/helper/errors/base.error';
-import { AccountInfo, AccountInfoUpdateInput } from './user.dto/user.dto';
+import { AccountInfo, AccountInfoUpdateInput, ReferralDataResponse } from './user.dto/user.dto';
 import { User } from '@libs/prisma/@generated/prisma-nestjs-graphql/user/user.model';
+import { Wallet } from '@libs/prisma/@generated/prisma-nestjs-graphql/wallet/wallet.model';
+import { NotificationGql } from '@libs/notification/notification.dto';
 
 @Resolver()
 export class UserResolver {
   constructor(private userService: UserService) {}
 
   @UseGuards(GqlAuthGuard)
-  @Query(() => [User], {
+  @Query(() => [ReferralDataResponse], {
     description: 'Get list referral user',
   })
-  async getListReferralUser(@CurrentUser() user: AppAuthUser): Promise<User[]> {
+  async getListReferralUser(@CurrentUser() user: AppAuthUser): Promise<ReferralDataResponse[]> {
     return await this.userService.getReferralUser(user.id);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => Wallet, {
+    description: 'get balance',
+  })
+  async getBalance(@CurrentUser() user: AppAuthUser): Promise<Wallet> {
+    return await this.userService.getBalance(user.id);
   }
 
   @UseGuards(GqlAuthGuard)
@@ -55,12 +62,39 @@ export class UserResolver {
     return true;
   }
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => Boolean, { nullable: true, description: 'claim referral' })
-  async claimReferral(
+  @Mutation(() => Wallet, { nullable: true, description: 'claim referral' })
+  async claimReferral(@CurrentUser() user: AppAuthUser, @Args('inviteeId') inviteeId: string): Promise<Wallet> {
+    return await this.userService.claimReferral(inviteeId);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => [NotificationGql], { nullable: true, description: 'get all notis' })
+  async getNotifications(
     @CurrentUser() user: AppAuthUser,
-    @Args('inviteeId') inviteeId: string,
+    @Args('page', { nullable: true, type: () => Int }) page: number,
+    @Args('limit', { nullable: true, type: () => Int }) limit: number,
+  ): Promise<NotificationGql[]> {
+    return this.userService.getNotifications(user.id, page, limit);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => Int, { nullable: true, description: 'get unseen notis count' })
+  async countUnseenNotifications(@CurrentUser() user: AppAuthUser): Promise<number> {
+    return this.userService.countUnseenNotifications(user.id);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => Boolean, { nullable: true })
+  async seenNotification(
+    @CurrentUser() user: AppAuthUser,
+    @Args('id', { type: () => Int }) notiId: number,
   ): Promise<boolean> {
-    await this.userService.claimReferral(inviteeId);
-    return true;
+    return await this.userService.seenNotification(user.id, notiId);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => Boolean, { nullable: true, description: 'mark all notis as read' })
+  async markAllNotisSeen(@CurrentUser() user: AppAuthUser): Promise<boolean> {
+    return this.userService.markAllNotisSeen(user.id);
   }
 }

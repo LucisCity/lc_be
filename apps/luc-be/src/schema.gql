@@ -2,6 +2,27 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type UserProfile {
+  user_id: ID!
+  user_name: String
+  display_name: String
+  given_name: String
+  family_name: String
+  phone: String
+  avatar: String
+  date_of_birth: DateTime
+  cover: String
+  country_code: String
+  user: User!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
 type ReferralLog {
   user_id: ID!
   user: User!
@@ -16,11 +37,6 @@ enum ReferralType {
   REGISTER
   BUY_GALAXY_CARD
 }
-
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
 
 type TransactionTypeCount {
   transaction_log: Int!
@@ -62,6 +78,10 @@ type Wallet {
   _count: WalletCount!
 }
 
+type UserCount {
+  notification: Int!
+}
+
 type User {
   id: ID!
   role: UserRole!
@@ -73,10 +93,12 @@ type User {
   facebook_id: String
   password: String
   profile: UserProfile
+  notification: [Notification!]
   created_at: DateTime!
   updated_at: DateTime!
   referral_log: ReferralLog
   wallet: Wallet
+  _count: UserCount!
 }
 
 enum UserRole {
@@ -90,20 +112,31 @@ enum UserStatus {
   BANNED
 }
 
-type UserProfile {
-  user_id: ID!
-  user_name: String
-  display_name: String
-  given_name: String
-  family_name: String
-  phone: String
-  avatar: String
-  date_of_birth: DateTime
-  cover: String
-  country_code: String
+type Notification {
+  id: ID!
+  user_id: String!
+  title: String
+  content: String
+  is_seen: Boolean!
+  link: String
   user: User!
   created_at: DateTime!
   updated_at: DateTime!
+}
+
+type NotificationGql {
+  id: ID!
+  user_id: String!
+  title: String
+  content: String
+  is_seen: Boolean!
+  link: String
+  created_at: DateTime!
+}
+
+type UnseenNotifications {
+  user_id: String
+  count: Int
 }
 
 type ProfileGql {
@@ -121,8 +154,10 @@ type UserGql {
   id: ID!
   email: String
   ref_code: String!
+  notification: [Notification!]
   referral_log: ReferralLog
   wallet: Wallet
+  _count: UserCount!
   profile: ProfileGql!
 }
 
@@ -141,15 +176,44 @@ type AccountInfo {
   email: String
 }
 
+type ReferralDataResponse {
+  id: ID!
+  role: UserRole!
+  status: UserStatus!
+  email: String
+  ref_code: String!
+  invited_by: String
+  google_id: String
+  facebook_id: String
+  password: String
+  profile: UserProfile
+  notification: [Notification!]
+  created_at: DateTime!
+  updated_at: DateTime!
+  referral_log: ReferralLog
+  wallet: Wallet
+  _count: UserCount!
+  reward: String
+}
+
 type Query {
   """Auth resolver"""
   temp: String!
 
   """Get list referral user"""
-  getListReferralUser: [User!]!
+  getListReferralUser: [ReferralDataResponse!]!
+
+  """get balance"""
+  getBalance: Wallet!
 
   """get account info"""
   getAccountInfo: AccountInfo
+
+  """get all notis"""
+  getNotifications(page: Int, limit: Int): [NotificationGql!]
+
+  """get unseen notis count"""
+  countUnseenNotifications: Int
 }
 
 type Mutation {
@@ -181,7 +245,11 @@ type Mutation {
   changePassword(oldPass: String!, newPass: String!): Boolean
 
   """claim referral"""
-  claimReferral(inviteeId: String!): Boolean
+  claimReferral(inviteeId: String!): Wallet
+  seenNotification(id: Int!): Boolean
+
+  """mark all notis as read"""
+  markAllNotisSeen: Boolean
 
   """Send tx transaction"""
   sendTransaction(txHash: String!, abi: String): Boolean!
@@ -196,4 +264,9 @@ input AccountInfoUpdateInput {
   given_name: String
   family_name: String
   date_of_birth: DateTime
+}
+
+type Subscription {
+  pushNotification(userId: String!): NotificationGql!
+  unseenNotifications(userId: String!): UnseenNotifications!
 }

@@ -1,19 +1,22 @@
 import { PrismaService } from '@libs/prisma';
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { AccountInfo, AccountInfoUpdateInput } from './user.dto/user.dto';
+import { AccountInfo, AccountInfoUpdateInput, ReferralDataResponse } from './user.dto/user.dto';
 import { AppError } from '@libs/helper/errors/base.error';
 import { PasswordUtils } from '@libs/helper/password.util';
 import { ChangePassInput, EventType, VerifyInput } from '@libs/helper/email';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NotificationGql } from '@libs/notification/notification.dto';
+import { NotificationService } from '@libs/notification';
 
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
-
+  private rewardReferral = process.env.REWARD_REFERRAL ?? '5';
   constructor(
     private prisma: PrismaService,
     private eventEmitter: EventEmitter2,
+    private notification: NotificationService,
   ) {}
 
   async create(user: Prisma.UserCreateInput) {
@@ -30,14 +33,25 @@ export class UserService {
     });
   }
 
-  async getReferralUser(userId: string) {
+  async getReferralUser(userId: string): Promise<ReferralDataResponse[]> {
     try {
-      return await this.prisma.user.findMany({
+      const list = await this.prisma.user.findMany({
         where: { invited_by: userId },
         include: {
           referral_log: true,
           profile: true,
         },
+      });
+      return list.map((item) => ({ ...item, reward: this.rewardReferral }));
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  async getBalance(userId: string) {
+    try {
+      return await this.prisma.wallet.findUnique({
+        where: { user_id: userId },
       });
     } catch (err) {
       throw err;
@@ -57,21 +71,21 @@ export class UserService {
       throw new AppError('Referral claimed!', 'CLAIMED');
     }
 
-    await this.prisma.$transaction(async (tx) => {
+    const response = await this.prisma.$transaction(async (tx) => {
       await tx.referralLog.update({
         where: { user_id: inviteeId },
         data: { isClaim: true },
       });
       // find invited person
-      const wallet = await tx.wallet.findUnique({
+      let wallet = await tx.wallet.findUnique({
         where: { user_id: invitee.invited_by },
       });
 
       if (!wallet) {
-        await tx.wallet.create({
+        wallet = await tx.wallet.create({
           data: {
             user_id: invitee.invited_by,
-            balance: new Prisma.Decimal(5),
+            balance: new Prisma.Decimal(this.rewardReferral),
           },
         });
         await tx.transactionLog.create({
@@ -88,19 +102,20 @@ export class UserService {
             type: 'CLAIM_REFERRAL',
             user_id: invitee.invited_by,
             description: 'Claim reward for referral',
-            amount: new Prisma.Decimal(5),
+            amount: new Prisma.Decimal(this.rewardReferral),
           },
         });
-        await tx.wallet.update({
+        wallet = await tx.wallet.update({
           where: { user_id: invitee.invited_by },
           data: {
             balance: wallet.balance.add(new Prisma.Decimal(transaction.amount)),
           },
         });
       }
+      return wallet;
     });
 
-    return true;
+    return response;
   }
 
   //   async updateProfile(
@@ -145,11 +160,7 @@ export class UserService {
   //     return { updated_profile: userProfile, password_saved: passwordSaved };
   //   }
 
-  async changePassword(
-    userId: string,
-    oldPass: string,
-    newPass: string,
-  ): Promise<boolean> {
+  async changePassword(userId: string, oldPass: string, newPass: string): Promise<boolean> {
     const user = await this.prisma.user.findUnique({
       where: {
         id: userId,
@@ -162,17 +173,11 @@ export class UserService {
       throw new AppError('Bad request', 'BAD_REQUEST');
     }
     if (oldPass === newPass) {
-      throw new AppError(
-        'New password must be different from old password',
-        'NEW_PASS_SAME_OLD_PASS',
-      );
+      throw new AppError('New password must be different from old password', 'NEW_PASS_SAME_OLD_PASS');
     }
     // check old password
     if (!(await PasswordUtils.comparePassword(oldPass, user.password))) {
-      throw new AppError(
-        'Wrong old password, please try again',
-        'WRONG_OLD_PASS',
-      );
+      throw new AppError('Wrong old password, please try again', 'WRONG_OLD_PASS');
     }
     // check strong pass
     if (PasswordUtils.validate(newPass) !== true) {
@@ -230,11 +235,63 @@ export class UserService {
       });
     } catch (e) {
       if (e.code === 'P2002') {
-        throw new AppError(
-          'username not available, please try another username',
-          'USERNAME_DUPLICATED',
-        );
+        throw new AppError('username not available, please try another username', 'USERNAME_DUPLICATED');
       }
     }
+  }
+
+  async getNotifications(userId: string, page?: number, limit?: number) {
+    return await this.prisma.notification.findMany({
+      where: {
+        user_id: userId,
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+  }
+
+  async countUnseenNotifications(userId: string) {
+    return this.prisma.notification.count({
+      where: {
+        user_id: userId,
+        is_seen: false,
+      },
+    });
+  }
+  async seenNotification(userId: string, notiId: number) {
+    const responses = await this.prisma.$transaction([
+      this.prisma.notification.update({
+        where: {
+          id: notiId,
+        },
+        data: {
+          is_seen: true,
+        },
+      }),
+      this.prisma.notification.count({
+        where: {
+          user_id: userId,
+          is_seen: false,
+        },
+      }),
+    ]);
+    await this.notification.publishUnseenNotisCount(userId, responses[1]);
+    return true;
+  }
+
+  async markAllNotisSeen(userId: string) {
+    await this.prisma.notification.updateMany({
+      where: {
+        user_id: userId,
+      },
+      data: {
+        is_seen: true,
+      },
+    });
+    await this.notification.publishUnseenNotisCount(userId, 0);
+    return true;
   }
 }

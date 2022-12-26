@@ -1,5 +1,6 @@
 import { Field, InputType, ObjectType, PickType } from '@nestjs/graphql';
 import { UserProfile } from '@libs/prisma/@generated/prisma-nestjs-graphql/user-profile/user-profile.model';
+import { User } from '@libs/prisma/@generated/prisma-nestjs-graphql/user/user.model';
 
 @ObjectType()
 export class AccountInfo extends PickType(UserProfile, [
@@ -30,4 +31,10 @@ export class AccountInfoUpdateInput {
 
   @Field(() => Date, { nullable: true })
   date_of_birth!: Date | null;
+}
+
+@ObjectType()
+export class ReferralDataResponse extends User {
+  @Field(() => String, { nullable: true })
+  reward: string;
 }
