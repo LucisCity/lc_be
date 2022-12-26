@@ -38,10 +38,6 @@ enum ReferralType {
   BUY_GALAXY_CARD
 }
 
-type UserCount {
-  notification: Int!
-}
-
 type TransactionTypeCount {
   transaction_log: Int!
 }
@@ -80,6 +76,10 @@ type Wallet {
   created_at: DateTime!
   updated_at: DateTime!
   _count: WalletCount!
+}
+
+type UserCount {
+  notification: Int!
 }
 
 type User {
@@ -134,6 +134,11 @@ type NotificationGql {
   created_at: DateTime!
 }
 
+type UnseenNotifications {
+  user_id: String
+  count: Int
+}
+
 type ProfileGql {
   user_id: ID!
   user_name: String
@@ -182,10 +187,12 @@ type ReferralDataResponse {
   facebook_id: String
   password: String
   profile: UserProfile
+  notification: [Notification!]
   created_at: DateTime!
   updated_at: DateTime!
   referral_log: ReferralLog
   wallet: Wallet
+  _count: UserCount!
   reward: String
 }
 
@@ -204,6 +211,9 @@ type Query {
 
   """get all notis"""
   getNotifications(page: Int, limit: Int): [NotificationGql!]
+
+  """get unseen notis count"""
+  countUnseenNotifications: Int
 }
 
 type Mutation {
@@ -236,15 +246,16 @@ type Mutation {
 
   """claim referral"""
   claimReferral(inviteeId: String!): Wallet
+  seenNotification(id: Int!): Boolean
+
+  """mark all notis as read"""
+  markAllNotisSeen: Boolean
 
   """Send tx transaction"""
   sendTransaction(txHash: String!, abi: String): Boolean!
 
   """set pool wallet"""
   setPoolWallet(address: String!, privateKey: String!): Boolean!
-
-  """mark all notis as read"""
-  markAllNotisRead: Boolean
 }
 
 input AccountInfoUpdateInput {
@@ -257,4 +268,5 @@ input AccountInfoUpdateInput {
 
 type Subscription {
   pushNotification(userId: String!): NotificationGql!
+  unseenNotifications(userId: String!): UnseenNotifications!
 }

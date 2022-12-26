@@ -1,6 +1,6 @@
-import { Args, Resolver, Subscription } from '@nestjs/graphql';
+import { Args, Int, Resolver, Subscription } from '@nestjs/graphql';
 import { PubsubService } from '@libs/pubsub';
-import { NotificationGql } from './notification.dto';
+import { NotificationGql, UnseenNotifications } from './notification.dto';
 
 @Resolver()
 export class NotificationResolver {
@@ -12,5 +12,13 @@ export class NotificationResolver {
   })
   pushNotification(@Args('userId') userId: String) {
     return this.pubsubService.pubSub.asyncIterator('pushNotification');
+  }
+
+  @Subscription(() => UnseenNotifications, {
+    name: 'unseenNotifications',
+    filter: (payload, variables) => payload.unseenNotifications.user_id == variables.userId,
+  })
+  unseenNotifications(@Args('userId') userId: String) {
+    return this.pubsubService.pubSub.asyncIterator('unseenNotifications');
   }
 }

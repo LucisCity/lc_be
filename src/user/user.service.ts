@@ -1,16 +1,13 @@
 import { PrismaService } from '@libs/prisma';
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import {
-  AccountInfo,
-  AccountInfoUpdateInput,
-  ReferralDataResponse,
-} from './user.dto/user.dto';
+import { AccountInfo, AccountInfoUpdateInput, ReferralDataResponse } from './user.dto/user.dto';
 import { AppError } from '@libs/helper/errors/base.error';
 import { PasswordUtils } from '@libs/helper/password.util';
 import { ChangePassInput, EventType, VerifyInput } from '@libs/helper/email';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotificationGql } from '@libs/notification/notification.dto';
+import { NotificationService } from '@libs/notification';
 
 @Injectable()
 export class UserService {
@@ -19,6 +16,7 @@ export class UserService {
   constructor(
     private prisma: PrismaService,
     private eventEmitter: EventEmitter2,
+    private notification: NotificationService,
   ) {}
 
   async create(user: Prisma.UserCreateInput) {
@@ -255,7 +253,36 @@ export class UserService {
     });
   }
 
-  async markAllNotisRead(userId: string) {
+  async countUnseenNotifications(userId: string) {
+    return this.prisma.notification.count({
+      where: {
+        user_id: userId,
+        is_seen: false,
+      },
+    });
+  }
+  async seenNotification(userId: string, notiId: number) {
+    const responses = await this.prisma.$transaction([
+      this.prisma.notification.update({
+        where: {
+          id: notiId,
+        },
+        data: {
+          is_seen: true,
+        },
+      }),
+      this.prisma.notification.count({
+        where: {
+          user_id: userId,
+          is_seen: false,
+        },
+      }),
+    ]);
+    await this.notification.publishUnseenNotisCount(userId, responses[1]);
+    return true;
+  }
+
+  async markAllNotisSeen(userId: string) {
     await this.prisma.notification.updateMany({
       where: {
         user_id: userId,
@@ -264,6 +291,7 @@ export class UserService {
         is_seen: true,
       },
     });
+    await this.notification.publishUnseenNotisCount(userId, 0);
     return true;
   }
 }

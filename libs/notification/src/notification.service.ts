@@ -23,11 +23,28 @@ export class NotificationService {
       link: link,
     };
 
-    const newNoti: NotificationGql = await this.prisma.notification.create({
-      data: notiInput as any,
-    });
+    const responses = await this.prisma.$transaction([
+      this.prisma.notification.create({
+        data: notiInput as any,
+      }),
+      this.prisma.notification.count({
+        where: {
+          user_id: userId,
+          is_seen: false,
+        },
+      }),
+    ]);
 
     // this.logger.log(`newNoti ${JSON.stringify(newNoti)}`);
-    this.pubsubService.pubSub.publish('pushNotification', { pushNotification: newNoti });
+    await this.pubsubService.pubSub.publish('pushNotification', { pushNotification: responses[0] });
+    await this.pubsubService.pubSub.publish('unseenNotifications', {
+      unseenNotifications: { user_id: userId, count: responses[1] },
+    });
+  }
+
+  async publishUnseenNotisCount(userId: string, count: number) {
+    await this.pubsubService.pubSub.publish('unseenNotifications', {
+      unseenNotifications: { user_id: userId, count: count },
+    });
   }
 }
