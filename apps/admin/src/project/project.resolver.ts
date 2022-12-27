@@ -1,5 +1,4 @@
 import { AclAction, CanAclGuard, UseAcls } from '@libs/helper/acl';
-import { AppAuthUser, CurrentUser } from '@libs/helper/decorator/current_user.decorator';
 import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
 import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
@@ -17,8 +16,20 @@ export class ProjectResolver {
     nullable: true,
     description: 'Upload new project',
   })
-  async uploadProject(@CurrentUser() user: AppAuthUser, @Args('input') input: ProjectCreateInputGql): Promise<any> {
-    return this.service.uploadProject(input, user);
-    return true;
+  async uploadProject(@Args('input') input: ProjectCreateInputGql): Promise<any> {
+    return this.service.uploadProject(input);
   }
+
+  // @UseGuards(CanAclGuard)
+  // @UseAcls({ actions: [AclAction.Create], subject: 'ProjectEvent' })
+  // @UseGuards(GqlAuthGuard)
+  // @Mutation(() => Boolean, {
+  //   nullable: true,
+  //   description: 'Create project event',
+  // })
+  // async updateProjectEvent(
+  //   @Args('input', { type: () => [ProjectEventCreateManyInputGql] }) input: [ProjectEventCreateManyInputGql],
+  // ) {
+  //   return this.service.updateProjectEvent(input);
+  // }
 }

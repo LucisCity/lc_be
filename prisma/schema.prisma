@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["interactiveTransactions"]
+  provider = "prisma-client-js"
 }
 
 generator nestgraphql {
@@ -180,30 +179,43 @@ model TransactionLog {
 }
 
 model Project {
-  id               String    @id @default(cuid()) @db.VarChar(45)
-  title            String    @db.VarChar(512)
-  price            Int
-  rate             Decimal?  @db.Decimal(2, 1)
-  total_rate       Int?
+  id    String @id @default(cuid()) @db.VarChar(45)
+  title String @db.VarChar(512)
+  price Int
+
   address          String    @db.VarChar(1024)
   location         String    @db.VarChar(30) // lat,long
+  rate             Decimal?  @db.Decimal(2, 1)
+  total_rate       Int?
   favorites        Int?
   hightlight       String
   reason_invest    String
   policy_link      String
-  medias           Json
   enable           Boolean   @default(false)
   open_sale_at     DateTime
   take_profit_at   DateTime
   wait_transfer_at DateTime?
   ended            Boolean?
   profit_period    Int // in day
-  offers           Json
+
+  created_at DateTime        @default(now())
+  updated_at DateTime        @updatedAt
+  profile    ProjectProfile?
+
+  @@map("project")
+}
+
+model ProjectProfile {
+  project_id String  @unique
+  medias     Json
+  offers     Json
+  events     Json
+  project    Project @relation(fields: [project_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  @@map("project")
+  @@map("project_profile")
 }
 
 model Notification {

@@ -181,8 +181,17 @@ input ProjectCreateInputGql {
   location: String!
   open_sale_at: DateTime!
   take_profit_at: DateTime!
+  profile: ProjectProfileCreateInputGql!
+}
+
+input ProjectProfileCreateInputGql {
+  create: ProjectProfileCreateWithoutProjectInputGql
+}
+
+input ProjectProfileCreateWithoutProjectInputGql {
   medias: [ProjectMedia!]!
   offers: [ProjectOffer!]!
+  events: [ProjectEvent!]!
 }
 
 input ProjectMedia {
@@ -196,7 +205,7 @@ input ProjectMedia {
   url: String!
 
   """Thumbnail url"""
-  thumbnail: String!
+  thumbnail: String
 }
 
 input ProjectOffer {
@@ -205,4 +214,15 @@ input ProjectOffer {
 
   """Icon"""
   icon: String!
+}
+
+input ProjectEvent {
+  """Event start time"""
+  start_at: DateTime!
+
+  """Event title"""
+  title: String!
+
+  """Event description"""
+  description: String!
 }
