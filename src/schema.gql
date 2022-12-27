@@ -7,7 +7,7 @@ type ReferralLog {
   user: User!
   invited_by: String!
   type: ReferralType
-  isClaim: Boolean!
+  is_claim: Boolean!
   created_at: DateTime!
   updated_at: DateTime!
 }
