@@ -93,7 +93,7 @@ export class UserService {
             type: 'CLAIM_REFERRAL',
             user_id: invitee.invited_by,
             description: 'Claim reward for referral',
-            amount: new Prisma.Decimal(5),
+            amount: new Prisma.Decimal(this.rewardReferral),
           },
         });
       } else {

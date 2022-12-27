@@ -28,7 +28,7 @@ type ReferralLog {
   user: User!
   invited_by: String!
   type: ReferralType
-  isClaim: Boolean!
+  is_claim: Boolean!
   created_at: DateTime!
   updated_at: DateTime!
 }
@@ -49,6 +49,26 @@ type TransactionType {
   _count: TransactionTypeCount!
 }
 
+type BlockchainTransaction {
+  id: ID!
+  tx_hash: String!
+  status: TransactionStatus!
+  message_error: String
+  abi: String
+  transaction_log_id: String
+  transaction_log: TransactionLog
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  CONFIRMING
+  SUCCEED
+  FAILED
+}
+
 type TransactionLog {
   id: ID!
   type: String!
@@ -57,6 +77,7 @@ type TransactionLog {
   wallet: Wallet!
   amount: Decimal!
   description: String
+  blockchain_transaction: BlockchainTransaction
   created_at: DateTime!
   updated_at: DateTime!
 }
@@ -214,6 +235,9 @@ type Query {
 
   """get unseen notis count"""
   countUnseenNotifications: Int
+
+  """get OTP"""
+  getOneTimePassword(address: String!): String!
 }
 
 type Mutation {
@@ -256,6 +280,9 @@ type Mutation {
 
   """set pool wallet"""
   setPoolWallet(address: String!, privateKey: String!): Boolean!
+
+  """withdraw balance"""
+  withdrawBalance(address: String!, amount: String!, signatureOTP: String!): TransactionLog!
 }
 
 input AccountInfoUpdateInput {

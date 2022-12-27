@@ -145,6 +145,9 @@ model BlockchainTransaction {
   message_error String?           @db.Text
   abi           String?           @db.Text
 
+  transaction_log_id       String?                       @db.VarChar(45) @unique()
+  transaction_log          TransactionLog?              @relation(fields: [transaction_log_id], references: [id])
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -183,6 +186,8 @@ model TransactionLog {
   wallet           Wallet          @relation(fields: [user_id], references: [user_id])
   amount           Decimal
   description      String?
+
+  blockchain_transaction       BlockchainTransaction?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

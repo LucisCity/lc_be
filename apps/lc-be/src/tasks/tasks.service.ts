@@ -7,15 +7,9 @@ const EVERY_2_SECONDS = '*/2 * * * * *';
 @Injectable()
 export class TasksService {
   private readonly logger = new Logger(TasksService.name);
-  private readonly enableCron =
-    process.env.SCAN_BLOCKCHAIN_CRON_ENABLE === 'true';
-  constructor(
-    private prismaService: PrismaService,
-    private blockChainService: BlockchainService,
-  ) {
-    this.logger.log(
-      `Cron scan transaction from blockchain ${this.enableCron ? 'ON' : 'OFF'}`,
-    );
+  private readonly enableCron = process.env.SCAN_BLOCKCHAIN_CRON_ENABLE === 'true';
+  constructor(private prismaService: PrismaService, private blockChainService: BlockchainService) {
+    this.logger.log(`Cron scan transaction from blockchain ${this.enableCron ? 'ON' : 'OFF'}`);
   }
 
   @Cron(EVERY_2_SECONDS)
@@ -56,9 +50,7 @@ export class TasksService {
     for (const tx of txList) {
       try {
         // get first element
-        const txDetail = await this.blockChainService.getTransactionReceipt(
-          tx.tx_hash,
-        );
+        const txDetail = await this.blockChainService.getTransactionReceipt(tx.tx_hash);
         // check status transaction
         if (!txDetail) {
           await this.prismaService.blockchainTransaction.update({
@@ -73,12 +65,23 @@ export class TasksService {
         }
         if (txDetail.status === 1) {
           // succeed
+          if (txDetail.confirmations < 10) {
+            await this.prismaService.blockchainTransaction.update({
+              where: {
+                id: tx.id,
+              },
+              data: {
+                status: 'CONFIRMING',
+              },
+            });
+            return;
+          }
           await this.prismaService.blockchainTransaction.update({
             where: {
               id: tx.id,
             },
             data: {
-              status: 'CONFIRMING',
+              status: 'SUCCEED',
             },
           });
           // TODO: Add handler here
@@ -90,8 +93,7 @@ export class TasksService {
           },
           data: {
             status: 'FAILED',
-            message_error:
-              'Transaction revert: check on explorer (bscscan.com, etherscan.io,...)',
+            message_error: 'Transaction revert: check on explorer (bscscan.com, etherscan.io,...)',
           },
         });
       } catch (e) {

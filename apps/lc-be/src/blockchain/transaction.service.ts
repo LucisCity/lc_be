@@ -22,7 +22,7 @@ export class TransactionService {
 
   async getOneTimePassword(address: string) {
     const password = randString(10);
-    await this.cacheManager.set(address, password, 5 * 60);
+    await this.cacheManager.set(address, password);
     return password;
   }
 
@@ -60,22 +60,42 @@ export class TransactionService {
     erc20Service.setContract(usdtAddress, erc20ABI);
 
     const poolWallet = await this.prismaService.poolWallet.findFirst({ where: { type: 'USDT_POOL' } });
-    const balancePool = erc20Service.balanceOf(poolWallet.address);
-
-    if (BigNumber.from(balancePool).lt(BigNumber.from(amount))) {
+    const balancePool = await erc20Service.balanceOf(poolWallet.address);
+    console.log(balancePool);
+    if (ethers.utils.parseUnits(balancePool.toString()).lt(ethers.utils.parseUnits(amount))) {
       this.logger.error('Out of money');
       throw new AppError('Balance pool not enough!', 'BALANCE_POOL_NOT_ENOUGH');
     }
 
     const prk = await decrypt(poolWallet.prv);
-    const hash = await erc20Service.transfer(address, ethers.utils.formatUnits(amount, 'ether'), prk);
+    const hash = await erc20Service.transfer(address, ethers.utils.parseUnits(amount).toString(), prk);
     // add transaction hash to db
-    await this.addTransaction(hash);
+    const response = await this.prismaService.$transaction(async (tx) => {
+      await tx.wallet.update({
+        where: { user_id: userId },
+        data: { balance: wallet.balance.minus(amount) },
+      });
 
-    await this.prismaService.wallet.update({
-      where: { user_id: userId },
-      data: { balance: wallet.balance.minus(amount) },
+      return await tx.transactionLog.create({
+        data: {
+          type: 'WITHDRAW_BALANCE',
+          user_id: userId,
+          description: 'withdraw balance to real wallet',
+          amount: new Prisma.Decimal(amount),
+          blockchain_transaction: {
+            create: {
+              tx_hash: hash,
+            },
+          },
+        },
+        include: {
+          blockchain_transaction: true,
+          wallet: true,
+        },
+      });
     });
+
+    return response;
   }
 
   async setPoolWallet(address: string, privateKey: string) {

@@ -2,11 +2,12 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { TransactionService } from './transaction.service';
 import { AppAuthUser, CurrentUser } from '@libs/helper/decorator/current_user.decorator';
 import { UserRole } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/user-role.enum';
-import { UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Logger, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
-
+import { TransactionLog } from '@libs/prisma/@generated/prisma-nestjs-graphql/transaction-log/transaction-log.model';
 @Resolver()
 export class BlockchainResolver {
+  private readonly logger = new Logger(BlockchainResolver.name);
   constructor(private transactionService: TransactionService) {}
 
   @Mutation(() => Boolean, {
@@ -39,12 +40,13 @@ export class BlockchainResolver {
       await this.transactionService.setPoolWallet(address, privateKey);
       return true;
     } catch (e) {
+      this.logger.error(e);
       return false;
     }
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => Boolean, {
+  @Mutation(() => TransactionLog, {
     description: 'withdraw balance',
   })
   async withdrawBalance(
@@ -53,12 +55,7 @@ export class BlockchainResolver {
     @Args('amount') amount: string,
     @Args('signatureOTP') signatureOTP: string,
   ) {
-    try {
-      await this.transactionService.withdrawBalance(user.id, address, amount, signatureOTP);
-      return true;
-    } catch (e) {
-      return false;
-    }
+    return await this.transactionService.withdrawBalance(user.id, address, amount, signatureOTP);
   }
 
   @UseGuards(GqlAuthGuard)
