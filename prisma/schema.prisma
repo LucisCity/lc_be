@@ -107,13 +107,24 @@ model Contract {
   @@map("contract")
 }
 
-model PoolWallet {
-  id            String       @id @default(cuid()) @db.VarChar(45)
-  address       String       @db.VarChar(45)
-  prv           String?      @db.Text
+model PoolWalletType {
+  code                      String               @db.VarChar(100)
+  description               String               @db.Text
+  pool_wallet               PoolWallet[]
 
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  @@unique([code])
+  @@map("pool_wallet_type")
+}
+
+model PoolWallet {
+  id                    String                  @id @default(cuid()) @db.VarChar(45)
+  address               String                  @db.VarChar(45)
+  type                  String                  @db.VarChar(100)
+  pool_wallet_type      PoolWalletType          @relation(fields: [type], references: [code])
+  prv                   String?                 @db.Text
+
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
 
   @@map("pool_wallet")
 }

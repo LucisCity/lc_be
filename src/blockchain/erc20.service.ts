@@ -1,9 +1,7 @@
 import { Contract, ethers } from 'ethers';
 import { KMath } from '@libs/helper/math.helper';
 import { BlockchainService } from './blockchain.service';
-import { Injectable } from '@nestjs/common';
 
-@Injectable()
 export class Erc20Service {
   private readonly provider: ethers.providers.JsonRpcProvider;
   private contract: Contract;
@@ -33,7 +31,7 @@ export class Erc20Service {
     // console.log('result: ', result);
     return KMath.div(result.toString(), decimals).toNumber();
   }
-  public async transfer(recipient: string, amount: string, prvKey: string) {
+  public async transfer(recipient: string, amount: string, prvKey: string): Promise<string> {
     const wallet = new ethers.Wallet(prvKey, this.provider);
     const contractWithSigner = this.getContract().connect(wallet);
     const tx = await contractWithSigner.transfer(recipient, amount);
@@ -58,11 +56,7 @@ export class Erc20Service {
    * @param fromBlock
    * @param toBlock
    *  ***/
-  public async filterEvents(
-    event: string,
-    fromBlock: number,
-    toBlock: number,
-  ): Promise<ethers.Event[]> {
+  public async filterEvents(event: string, fromBlock: number, toBlock: number): Promise<ethers.Event[]> {
     const filterFrom = this.getContract().filters[event]();
     return await this.getContract().queryFilter(filterFrom, fromBlock, toBlock);
   }

@@ -171,6 +171,9 @@ type Query {
 
   """get account info"""
   getAccountInfo: AccountInfo
+
+  """get OTP"""
+  getOneTimePassword(address: String!): String!
 }
 
 type Mutation {
@@ -209,6 +212,9 @@ type Mutation {
 
   """set pool wallet"""
   setPoolWallet(address: String!, privateKey: String!): Boolean!
+
+  """withdraw balance"""
+  withdrawBalance(address: String!, amount: String!, signatureOTP: String!): Boolean!
 }
 
 input AccountInfoUpdateInput {

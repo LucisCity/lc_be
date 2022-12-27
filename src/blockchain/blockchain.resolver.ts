@@ -1,9 +1,6 @@
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { TransactionService } from './transaction.service';
-import {
-  AppAuthUser,
-  CurrentUser,
-} from '@libs/helper/decorator/current_user.decorator';
+import { AppAuthUser, CurrentUser } from '@libs/helper/decorator/current_user.decorator';
 import { UserRole } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/user-role.enum';
 import { UnauthorizedException, UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
@@ -15,12 +12,9 @@ export class BlockchainResolver {
   @Mutation(() => Boolean, {
     description: 'Send tx transaction',
   })
-  async sendTransaction(
-    @Args('txHash') txHash: string,
-    @Args('abi', { nullable: true }) abi?: string,
-  ) {
+  async sendTransaction(@Args('txHash') txHash: string, @Args('abi', { nullable: true }) abi?: string) {
     try {
-      await this.transactionService.sendTransaction(txHash, abi);
+      await this.transactionService.addTransaction(txHash, abi);
       return true;
     } catch (e) {
       return false;
@@ -47,5 +41,31 @@ export class BlockchainResolver {
     } catch (e) {
       return false;
     }
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => Boolean, {
+    description: 'withdraw balance',
+  })
+  async withdrawBalance(
+    @CurrentUser() user: AppAuthUser,
+    @Args('address') address: string,
+    @Args('amount') amount: string,
+    @Args('signatureOTP') signatureOTP: string,
+  ) {
+    try {
+      await this.transactionService.withdrawBalance(user.id, address, amount, signatureOTP);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => String, {
+    description: 'get OTP',
+  })
+  async getOneTimePassword(@CurrentUser() user: AppAuthUser, @Args('address') address: string) {
+    return this.transactionService.getOneTimePassword(address);
   }
 }
