@@ -86,7 +86,7 @@ model ReferralLog {
   invited_by String         @db.VarChar(45)
 
   type       ReferralType?
-  isClaim    Boolean        @default(false) @db.Boolean
+  is_claim    Boolean        @default(false) @db.Boolean
 
   created_at DateTime       @default(now())
   updated_at DateTime       @updatedAt
