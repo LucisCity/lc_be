@@ -196,6 +196,104 @@ type ReferralDataResponse {
   reward: String
 }
 
+type Project {
+  id: ID!
+  title: String!
+  price: Int!
+  address: String!
+  location: String!
+  rate: Decimal
+  total_rate: Int
+  favorites: Int
+  hightlight: String!
+  reason_invest: String!
+  policy_link: String!
+  enable: Boolean!
+  open_sale_at: DateTime!
+  take_profit_at: DateTime!
+  wait_transfer_at: DateTime
+  ended: Boolean
+  profit_period: Int!
+  created_at: DateTime!
+  updated_at: DateTime!
+  profile: ProjectProfile
+}
+
+type ProjectProfile {
+  project_id: String!
+  medias: JSON!
+  offers: JSON!
+  events: JSON!
+  project: Project!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+type ProjectMediaGql {
+  """Width of image"""
+  width: Int!
+
+  """Height of image"""
+  height: Int!
+
+  """Media url"""
+  url: String!
+
+  """Thumbnail url"""
+  thumbnail: String
+}
+
+type ProjectEventGql {
+  """Event start time"""
+  start_at: String!
+
+  """Event title"""
+  title: String!
+
+  """Event description"""
+  description: String!
+}
+
+type ProjectProfileGql {
+  project_id: String!
+
+  """"""
+  events: [ProjectEventGql!]
+
+  """"""
+  offers: [ProjectEventGql!]
+
+  """"""
+  medias: [ProjectMediaGql!]
+}
+
+type ProjectGql {
+  id: ID!
+  title: String!
+  price: Int!
+  address: String!
+  location: String!
+  rate: Decimal
+  total_rate: Int
+  favorites: Int
+  hightlight: String!
+  reason_invest: String!
+  policy_link: String!
+  open_sale_at: DateTime!
+  take_profit_at: DateTime!
+  wait_transfer_at: DateTime
+  ended: Boolean
+  profit_period: Int!
+
+  """"""
+  profile: ProjectProfileGql!
+}
+
 type Query {
   """Auth resolver"""
   temp: String!
@@ -214,6 +312,9 @@ type Query {
 
   """get unseen notis count"""
   countUnseenNotifications: Int
+
+  """Get list referral user"""
+  getProject(id: String!): ProjectGql!
 }
 
 type Mutation {
