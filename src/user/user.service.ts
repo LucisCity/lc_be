@@ -1,7 +1,11 @@
 import { PrismaService } from '@libs/prisma';
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { AccountInfo, AccountInfoUpdateInput, ReferralDataResponse } from './user.dto/user.dto';
+import {
+  AccountInfo,
+  AccountInfoUpdateInput,
+  ReferralDataResponse,
+} from './user.dto/user.dto';
 import { AppError } from '@libs/helper/errors/base.error';
 import { PasswordUtils } from '@libs/helper/password.util';
 import { ChangePassInput, EventType, VerifyInput } from '@libs/helper/email';
@@ -11,7 +15,10 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 export class UserService {
   private readonly logger = new Logger(UserService.name);
   private rewardReferral = process.env.REWARD_REFERRAL ?? '5';
-  constructor(private prisma: PrismaService, private eventEmitter: EventEmitter2) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   async create(user: Prisma.UserCreateInput) {
     return await this.prisma.user.create({
@@ -61,14 +68,14 @@ export class UserService {
       throw new AppError('Invitee not exist!', 'INVITEE_NOT_EXIST');
     }
 
-    if (invitee.is_claim) {
+    if (invitee.isClaim) {
       throw new AppError('Referral claimed!', 'CLAIMED');
     }
 
     const response = await this.prisma.$transaction(async (tx) => {
       await tx.referralLog.update({
         where: { user_id: inviteeId },
-        data: { is_claim: true },
+        data: { isClaim: true },
       });
       // find invited person
       let wallet = await tx.wallet.findUnique({
@@ -154,7 +161,11 @@ export class UserService {
   //     return { updated_profile: userProfile, password_saved: passwordSaved };
   //   }
 
-  async changePassword(userId: string, oldPass: string, newPass: string): Promise<boolean> {
+  async changePassword(
+    userId: string,
+    oldPass: string,
+    newPass: string,
+  ): Promise<boolean> {
     const user = await this.prisma.user.findUnique({
       where: {
         id: userId,
@@ -167,11 +178,17 @@ export class UserService {
       throw new AppError('Bad request', 'BAD_REQUEST');
     }
     if (oldPass === newPass) {
-      throw new AppError('New password must be different from old password', 'NEW_PASS_SAME_OLD_PASS');
+      throw new AppError(
+        'New password must be different from old password',
+        'NEW_PASS_SAME_OLD_PASS',
+      );
     }
     // check old password
     if (!(await PasswordUtils.comparePassword(oldPass, user.password))) {
-      throw new AppError('Wrong old password, please try again', 'WRONG_OLD_PASS');
+      throw new AppError(
+        'Wrong old password, please try again',
+        'WRONG_OLD_PASS',
+      );
     }
     // check strong pass
     if (PasswordUtils.validate(newPass) !== true) {
@@ -229,7 +246,10 @@ export class UserService {
       });
     } catch (e) {
       if (e.code === 'P2002') {
-        throw new AppError('username not available, please try another username', 'USERNAME_DUPLICATED');
+        throw new AppError(
+          'username not available, please try another username',
+          'USERNAME_DUPLICATED',
+        );
       }
     }
   }
