@@ -11,6 +11,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EmailService, EventType, VerifyInput } from '@libs/helper/email';
 import { ReferralType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/referral-type.enum';
 import { User } from '@prisma/client';
+import { NotificationService } from '@libs/notification';
 
 @Injectable()
 export class AuthService {
@@ -25,6 +26,7 @@ export class AuthService {
     private http: HttpService,
     private eventEmitter: EventEmitter2,
     private mailService: EmailService,
+    private notificationService: NotificationService,
   ) {}
 
   async login(email: string, pass: string) {
@@ -417,6 +419,11 @@ export class AuthService {
           is_claim: false,
         },
       });
+      await this.notificationService.createAndPushNoti(
+        inviter.id,
+        'Someone just used your referral code',
+        `An user just used your referral code to join Lucis City`,
+      );
       return true;
     } catch (err) {
       console.log(err);

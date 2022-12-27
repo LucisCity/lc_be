@@ -1,17 +1,17 @@
+import { AclModule } from '@libs/helper/acl';
+import { PrismaModule } from '@libs/prisma';
 import { ApolloDriver } from '@nestjs/apollo';
 import { CacheModule, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { GraphQLModule } from '@nestjs/graphql';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { ScheduleModule } from '@nestjs/schedule';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { PrismaModule } from '@libs/prisma';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { AdminController } from './admin.controller';
+import { AdminService } from './admin.service';
 import { AuthModule } from './auth/auth.module';
+import { ProjectModule } from './project/project.module';
 import { UserModule } from './user/user.module';
-import { EmailModule } from '@libs/helper/email';
-import { TasksModule } from './tasks/tasks.module';
 
 @Module({
   imports: [
@@ -31,18 +31,21 @@ import { TasksModule } from './tasks/tasks.module';
         debug: configService.get('NODE_ENV') !== 'production',
         playground: true, // always true for admin, front-end not allowed to use,
         introspection: true, // always true for admin, front-end not allowed to use,
-        autoSchemaFile: process.cwd() + '/src/schema.gql',
+        autoSchemaFile: process.cwd() + '/apps/admin/src/schema.gql',
+        subscriptions: {
+          'graphql-ws': true,
+          'subscriptions-transport-ws': false,
+        },
         dateScalarMode: 'date',
       }),
     }),
+    AclModule,
     PrismaModule,
-    EmailModule,
+    ProjectModule,
     AuthModule,
     UserModule,
-    ScheduleModule.forRoot(),
-    TasksModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AdminController],
+  providers: [AdminService],
 })
-export class AppModule {}
+export class AdminModule {}

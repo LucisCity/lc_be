@@ -8,7 +8,7 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"libs/**/*.ts\"",
+    "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -18,7 +18,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:e2e": "jest --config ./apps/lc-be/test/jest-e2e.json",
     "generate": "rm -rf libs/prisma/src/@generated/prisma-nestjs-graphql; npx prisma generate",
     "migrate": "npx prisma migrate dev",
     "migrate:prod": "npx prisma migrate deploy",
@@ -52,6 +52,8 @@
     "ethers": "^5.7.2",
     "google-auth-library": "^8.7.0",
     "graphql": "^16.6.0",
+    "graphql-type-json": "^0.3.2",
+    "graphql-subscriptions": "^2.0.0",
     "joi": "^17.6.3",
     "nanoid": "^3.3.1",
     "nestjs-log": "^2.0.6",
@@ -108,12 +110,14 @@
     "coverageDirectory": "./coverage",
     "testEnvironment": "node",
     "roots": [
-      "<rootDir>/src/",
-      "<rootDir>/libs/"
+      "<rootDir>/libs/",
+      "<rootDir>/apps/"
     ],
     "moduleNameMapper": {
       "^@libs/helper(|/.*)$": "<rootDir>/libs/helper/src/$1",
-      "^@libs/prisma(|/.*)$": "<rootDir>/libs/prisma/src/$1"
+      "^@libs/prisma(|/.*)$": "<rootDir>/libs/prisma/src/$1",
+      "^@libs/pubsub(|/.*)$": "<rootDir>/libs/pubsub/src/$1",
+      "^@libs/notification(|/.*)$": "<rootDir>/libs/notification/src/$1"
     }
   }
 }

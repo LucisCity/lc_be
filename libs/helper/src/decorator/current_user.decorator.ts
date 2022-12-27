@@ -6,16 +6,14 @@ import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { UserRole } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/user-role.enum';
 
-export const CurrentUser = createParamDecorator(
-  (data: unknown, context: ExecutionContext) => {
-    const ctx = GqlExecutionContext.create(context);
-    const user = ctx.getContext().req.user;
-    if (!!user && user.id == null) {
-      user.id = 0;
-    }
-    return user;
-  },
-);
+export const CurrentUser = createParamDecorator((data: unknown, context: ExecutionContext) => {
+  const ctx = GqlExecutionContext.create(context);
+  const user = ctx.getContext().req.user;
+  if (!!user && user.id == null) {
+    user.id = 0;
+  }
+  return user;
+});
 
 export type AppAuthUser = {
   id: string;

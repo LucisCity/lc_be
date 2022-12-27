@@ -6,12 +6,18 @@ import { AppError } from '@libs/helper/errors/base.error';
 import { PasswordUtils } from '@libs/helper/password.util';
 import { ChangePassInput, EventType, VerifyInput } from '@libs/helper/email';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NotificationGql } from '@libs/notification/notification.dto';
+import { NotificationService } from '@libs/notification';
 
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
   private rewardReferral = process.env.REWARD_REFERRAL ?? '5';
-  constructor(private prisma: PrismaService, private eventEmitter: EventEmitter2) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventEmitter: EventEmitter2,
+    private notification: NotificationService,
+  ) {}
 
   async create(user: Prisma.UserCreateInput) {
     return await this.prisma.user.create({
@@ -232,5 +238,60 @@ export class UserService {
         throw new AppError('username not available, please try another username', 'USERNAME_DUPLICATED');
       }
     }
+  }
+
+  async getNotifications(userId: string, page?: number, limit?: number) {
+    return await this.prisma.notification.findMany({
+      where: {
+        user_id: userId,
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+  }
+
+  async countUnseenNotifications(userId: string) {
+    return this.prisma.notification.count({
+      where: {
+        user_id: userId,
+        is_seen: false,
+      },
+    });
+  }
+  async seenNotification(userId: string, notiId: number) {
+    const responses = await this.prisma.$transaction([
+      this.prisma.notification.update({
+        where: {
+          id: notiId,
+        },
+        data: {
+          is_seen: true,
+        },
+      }),
+      this.prisma.notification.count({
+        where: {
+          user_id: userId,
+          is_seen: false,
+        },
+      }),
+    ]);
+    await this.notification.publishUnseenNotisCount(userId, responses[1]);
+    return true;
+  }
+
+  async markAllNotisSeen(userId: string) {
+    await this.prisma.notification.updateMany({
+      where: {
+        user_id: userId,
+      },
+      data: {
+        is_seen: true,
+      },
+    });
+    await this.notification.publishUnseenNotisCount(userId, 0);
+    return true;
   }
 }
