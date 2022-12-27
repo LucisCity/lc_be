@@ -14,6 +14,7 @@ import { EmailModule } from '@libs/helper/email';
 import { TasksModule } from './tasks/tasks.module';
 import { PubsubModule } from '@libs/pubsub';
 import { NotificationModule } from '@libs/notification';
+import { ImageModule } from './image/image.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { NotificationModule } from '@libs/notification';
     TasksModule,
     PubsubModule,
     NotificationModule,
+    ImageModule,
   ],
   controllers: [AppController],
   providers: [AppService],
