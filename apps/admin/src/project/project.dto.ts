@@ -1,9 +1,5 @@
-import { ProjectEventCreateNestedManyWithoutProjectInput } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-event/project-event-create-nested-many-without-project.input';
-import { ProjectMediaCreateNestedManyWithoutProjectInput } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-media/project-media-create-nested-many-without-project.input';
-import { ProjectOfferCreateNestedManyWithoutProjectInput } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-offer/project-offer-create-nested-many-without-project.input';
 import { ProjectProfileCreateNestedOneWithoutProjectInput } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profile/project-profile-create-nested-one-without-project.input';
 import { ProjectProfileCreateWithoutProjectInput } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profile/project-profile-create-without-project.input';
-import { ProjectProfileCreateInput } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profile/project-profile-create.input';
 import { ProjectCreateInput } from '@libs/prisma/@generated/prisma-nestjs-graphql/project/project-create.input';
 import { Field, InputType, Int, OmitType } from '@nestjs/graphql';
 import { IsLatLong, MinDate } from 'class-validator';

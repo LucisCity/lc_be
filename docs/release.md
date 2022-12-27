@@ -10,6 +10,11 @@
 * ADMIN_PORT=9001
 * ADMIN_REGISTER_ENABLE=false
 
+- Docker config:
+
+* add into .env in deploy folder: ADMIN_PORT
+* add container config for admin copy from docker-compose.yml.example
+
 - Update db: first time init so only need run
 
 ```

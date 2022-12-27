@@ -10,4 +10,4 @@ COPY . $APP_HOME
 RUN yarn generate
 RUN yarn build admin
 
-CMD ["npm", "run", "start:main"]
+CMD ["npm", "run", "start:admin"]
