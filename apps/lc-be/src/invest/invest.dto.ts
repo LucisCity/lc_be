@@ -44,8 +44,8 @@ export abstract class ProjectProfileGql extends OmitType(ProjectProfile, [
   @Field(() => [ProjectEventGql], { nullable: true, description: '' })
   events: ProjectEventGql[];
 
-  @Field(() => [ProjectEventGql], { nullable: true, description: '' })
-  offers: ProjectEventGql[];
+  @Field(() => [ProjectOfferGql], { nullable: true, description: '' })
+  offers: ProjectOfferGql[];
 
   @Field(() => [ProjectMediaGql], { nullable: true, description: '' })
   medias: ProjectMediaGql[];
