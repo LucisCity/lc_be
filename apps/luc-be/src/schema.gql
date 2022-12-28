@@ -217,6 +217,11 @@ type ReferralDataResponse {
   reward: String
 }
 
+type TransactionHistoryResponse {
+  count: Int
+  transactionHistory: [TransactionLog!]
+}
+
 type Query {
   """Auth resolver"""
   temp: String!
@@ -232,6 +237,9 @@ type Query {
 
   """get all notis"""
   getNotifications(page: Int, limit: Int): [NotificationGql!]
+
+  """get list transaction history"""
+  getTransactionHistory(skip: Int, take: Int): TransactionHistoryResponse
 
   """get unseen notis count"""
   countUnseenNotifications: Int

@@ -6,7 +6,6 @@ import { AppError } from '@libs/helper/errors/base.error';
 import { PasswordUtils } from '@libs/helper/password.util';
 import { ChangePassInput, EventType, VerifyInput } from '@libs/helper/email';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { NotificationGql } from '@libs/notification/notification.dto';
 import { NotificationService } from '@libs/notification';
 
 @Injectable()
@@ -53,6 +52,30 @@ export class UserService {
       return await this.prisma.wallet.findUnique({
         where: { user_id: userId },
       });
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  async getTransactionHistory(userId: string, skip: number, take: number) {
+    try {
+      const count = await this.prisma.transactionLog.count({ where: { user_id: userId } });
+      const list = await this.prisma.transactionLog.findMany({
+        where: { user_id: userId },
+        orderBy: {
+          created_at: 'desc',
+        },
+        include: {
+          wallet: true,
+          blockchain_transaction: true,
+        },
+        skip,
+        take,
+      });
+      return {
+        count,
+        transactionHistory: list,
+      };
     } catch (err) {
       throw err;
     }

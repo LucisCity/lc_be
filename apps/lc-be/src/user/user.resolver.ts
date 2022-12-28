@@ -4,11 +4,16 @@ import { AppAuthUser, CurrentUser } from '@libs/helper/decorator/current_user.de
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
 import { AppError } from '@libs/helper/errors/base.error';
-import { AccountInfo, AccountInfoUpdateInput, ReferralDataResponse } from './user.dto/user.dto';
+import {
+  AccountInfo,
+  AccountInfoUpdateInput,
+  ReferralDataResponse,
+  TransactionHistoryResponse,
+} from './user.dto/user.dto';
 import { User } from '@libs/prisma/@generated/prisma-nestjs-graphql/user/user.model';
 import { Wallet } from '@libs/prisma/@generated/prisma-nestjs-graphql/wallet/wallet.model';
 import { NotificationGql } from '@libs/notification/notification.dto';
-
+import { TransactionLog } from '@libs/prisma/@generated/prisma-nestjs-graphql/transaction-log/transaction-log.model';
 @Resolver()
 export class UserResolver {
   constructor(private userService: UserService) {}
@@ -75,6 +80,16 @@ export class UserResolver {
     @Args('limit', { nullable: true, type: () => Int }) limit: number,
   ): Promise<NotificationGql[]> {
     return this.userService.getNotifications(user.id, page, limit);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => TransactionHistoryResponse, { nullable: true, description: 'get list transaction history' })
+  async getTransactionHistory(
+    @CurrentUser() user: AppAuthUser,
+    @Args('skip', { nullable: true, type: () => Int }) skip: number,
+    @Args('take', { nullable: true, type: () => Int }) take: number,
+  ): Promise<TransactionHistoryResponse> {
+    return this.userService.getTransactionHistory(user.id, skip, take);
   }
 
   @UseGuards(GqlAuthGuard)

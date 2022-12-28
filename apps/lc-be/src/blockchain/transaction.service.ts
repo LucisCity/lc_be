@@ -61,7 +61,7 @@ export class TransactionService {
 
     const poolWallet = await this.prismaService.poolWallet.findFirst({ where: { type: 'USDT_POOL' } });
     const balancePool = await erc20Service.balanceOf(poolWallet.address);
-    console.log(balancePool);
+
     if (ethers.utils.parseUnits(balancePool.toString()).lt(ethers.utils.parseUnits(amount))) {
       this.logger.error('Out of money');
       throw new AppError('Balance pool not enough!', 'BALANCE_POOL_NOT_ENOUGH');

@@ -1,6 +1,7 @@
-import { Field, InputType, ObjectType, PickType } from '@nestjs/graphql';
+import { Field, InputType, Int, ObjectType, PickType } from '@nestjs/graphql';
 import { UserProfile } from '@libs/prisma/@generated/prisma-nestjs-graphql/user-profile/user-profile.model';
 import { User } from '@libs/prisma/@generated/prisma-nestjs-graphql/user/user.model';
+import { TransactionLog } from '@libs/prisma/@generated/prisma-nestjs-graphql/transaction-log/transaction-log.model';
 
 @ObjectType()
 export class AccountInfo extends PickType(UserProfile, [
@@ -37,4 +38,13 @@ export class AccountInfoUpdateInput {
 export class ReferralDataResponse extends User {
   @Field(() => String, { nullable: true })
   reward: string;
+}
+
+@ObjectType()
+export class TransactionHistoryResponse {
+  @Field(() => Int, { nullable: true })
+  count: number;
+
+  @Field(() => [TransactionLog], { nullable: true })
+  transactionHistory: TransactionLog[];
 }
