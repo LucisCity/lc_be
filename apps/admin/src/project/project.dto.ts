@@ -35,7 +35,13 @@ export class ProjectEvent {
 }
 
 @InputType()
-export class ProjectProfileCreateWithoutProjectInputGql {
+export class ProjectProfileCreateWithoutProjectInputGql extends OmitType(ProjectProfileCreateWithoutProjectInput, [
+  'created_at',
+  'updated_at',
+  'events',
+  'offers',
+  'medias',
+]) {
   @Field(() => [ProjectMedia], { nullable: false })
   medias!: ProjectMedia[];
 

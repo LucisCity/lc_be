@@ -28,7 +28,7 @@ type ReferralLog {
   user: User!
   invited_by: String!
   type: ReferralType
-  isClaim: Boolean!
+  is_claim: Boolean!
   created_at: DateTime!
   updated_at: DateTime!
 }
@@ -49,6 +49,26 @@ type TransactionType {
   _count: TransactionTypeCount!
 }
 
+type BlockchainTransaction {
+  id: ID!
+  tx_hash: String!
+  status: TransactionStatus!
+  message_error: String
+  abi: String
+  transaction_log_id: String
+  transaction_log: TransactionLog
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  CONFIRMING
+  SUCCEED
+  FAILED
+}
+
 type TransactionLog {
   id: ID!
   type: String!
@@ -57,6 +77,7 @@ type TransactionLog {
   wallet: Wallet!
   amount: Decimal!
   description: String
+  blockchain_transaction: BlockchainTransaction
   created_at: DateTime!
   updated_at: DateTime!
 }
@@ -196,6 +217,11 @@ type ReferralDataResponse {
   reward: String
 }
 
+type TransactionHistoryResponse {
+  count: Int
+  transactionHistory: [TransactionLog!]
+}
+
 type Project {
   id: ID!
   title: String!
@@ -205,8 +231,6 @@ type Project {
   rate: Decimal
   total_rate: Int
   favorites: Int
-  hightlight: String!
-  reason_invest: String!
   policy_link: String!
   enable: Boolean!
   open_sale_at: DateTime!
@@ -221,6 +245,8 @@ type Project {
 
 type ProjectProfile {
   project_id: String!
+  reason_invest: String
+  hightlight: String
   medias: JSON!
   offers: JSON!
   events: JSON!
@@ -248,6 +274,14 @@ type ProjectMediaGql {
   thumbnail: String
 }
 
+type ProjectOfferGql {
+  """Title"""
+  title: String!
+
+  """Icon"""
+  icon: String!
+}
+
 type ProjectEventGql {
   """Event start time"""
   start_at: String!
@@ -261,12 +295,14 @@ type ProjectEventGql {
 
 type ProjectProfileGql {
   project_id: String!
+  reason_invest: String
+  hightlight: String
 
   """"""
   events: [ProjectEventGql!]
 
   """"""
-  offers: [ProjectEventGql!]
+  offers: [ProjectOfferGql!]
 
   """"""
   medias: [ProjectMediaGql!]
@@ -281,8 +317,6 @@ type ProjectGql {
   rate: Decimal
   total_rate: Int
   favorites: Int
-  hightlight: String!
-  reason_invest: String!
   policy_link: String!
   open_sale_at: DateTime!
   take_profit_at: DateTime!
@@ -307,14 +341,17 @@ type Query {
   """get account info"""
   getAccountInfo: AccountInfo
 
-  """get OTP"""
-  getOneTimePassword(address: String!): String!
-
   """get all notis"""
   getNotifications(page: Int, limit: Int): [NotificationGql!]
 
+  """get list transaction history"""
+  getTransactionHistory(skip: Int, take: Int): TransactionHistoryResponse
+
   """get unseen notis count"""
   countUnseenNotifications: Int
+
+  """get OTP"""
+  getOneTimePassword(address: String!): String!
 
   """Get list referral user"""
   getProject(id: String!): ProjectGql!
@@ -362,7 +399,7 @@ type Mutation {
   setPoolWallet(address: String!, privateKey: String!): Boolean!
 
   """withdraw balance"""
-  withdrawBalance(address: String!, amount: String!, signatureOTP: String!): Boolean!
+  withdrawBalance(address: String!, amount: String!, signatureOTP: String!): TransactionLog!
 }
 
 input AccountInfoUpdateInput {

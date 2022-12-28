@@ -85,8 +85,8 @@ model ReferralLog {
   user       User   @relation(fields: [user_id], references: [id])
   invited_by String @db.VarChar(45)
 
-  type       ReferralType?
-  is_claim    Boolean        @default(false) @db.Boolean
+  type     ReferralType?
+  is_claim Boolean       @default(false) @db.Boolean
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -108,23 +108,23 @@ model Contract {
 }
 
 model PoolWalletType {
-  code                      String               @db.VarChar(100)
-  description               String               @db.Text
-  pool_wallet               PoolWallet[]
+  code        String       @db.VarChar(100)
+  description String       @db.Text
+  pool_wallet PoolWallet[]
 
   @@unique([code])
   @@map("pool_wallet_type")
 }
 
 model PoolWallet {
-  id                    String                  @id @default(cuid()) @db.VarChar(45)
-  address               String                  @db.VarChar(45)
-  type                  String                  @db.VarChar(100)
-  pool_wallet_type      PoolWalletType          @relation(fields: [type], references: [code])
-  prv                   String?                 @db.Text
+  id               String         @id @default(cuid()) @db.VarChar(45)
+  address          String         @db.VarChar(45)
+  type             String         @db.VarChar(100)
+  pool_wallet_type PoolWalletType @relation(fields: [type], references: [code])
+  prv              String?        @db.Text
 
-  created_at            DateTime @default(now())
-  updated_at            DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("pool_wallet")
 }
@@ -144,8 +144,8 @@ model BlockchainTransaction {
   message_error String?           @db.Text
   abi           String?           @db.Text
 
-  transaction_log_id       String?                       @db.VarChar(45) @unique()
-  transaction_log          TransactionLog?              @relation(fields: [transaction_log_id], references: [id])
+  transaction_log_id String?         @unique() @db.VarChar(45)
+  transaction_log    TransactionLog? @relation(fields: [transaction_log_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -186,7 +186,7 @@ model TransactionLog {
   amount           Decimal
   description      String?
 
-  blockchain_transaction       BlockchainTransaction?
+  blockchain_transaction BlockchainTransaction?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -195,17 +195,14 @@ model TransactionLog {
 }
 
 model Project {
-  id    String @id @default(cuid()) @db.VarChar(45)
-  title String @db.VarChar(512)
-  price Int
-
+  id               String    @id @default(cuid()) @db.VarChar(45)
+  title            String    @db.VarChar(512)
+  price            Int
   address          String    @db.VarChar(1024)
   location         String    @db.VarChar(30) // lat,long
   rate             Decimal?  @db.Decimal(2, 1)
   total_rate       Int?
   favorites        Int?
-  hightlight       String
-  reason_invest    String
   policy_link      String
   enable           Boolean   @default(false)
   open_sale_at     DateTime
@@ -222,11 +219,13 @@ model Project {
 }
 
 model ProjectProfile {
-  project_id String  @unique
-  medias     Json
-  offers     Json
-  events     Json
-  project    Project @relation(fields: [project_id], references: [id])
+  project_id    String  @unique
+  reason_invest String?
+  hightlight    String?
+  medias        Json
+  offers        Json
+  events        Json
+  project       Project @relation(fields: [project_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
