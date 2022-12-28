@@ -8,6 +8,6 @@ COPY package.json $APP_HOME/
 RUN yarn install
 COPY . $APP_HOME
 RUN yarn generate
-RUN yarn build
+RUN yarn build admin
 
-CMD ["npm", "run", "start:main"]
+CMD ["npm", "run", "start:admin"]
