@@ -10,10 +10,9 @@ import {
   ReferralDataResponse,
   TransactionHistoryResponse,
 } from './user.dto/user.dto';
-import { User } from '@libs/prisma/@generated/prisma-nestjs-graphql/user/user.model';
 import { Wallet } from '@libs/prisma/@generated/prisma-nestjs-graphql/wallet/wallet.model';
 import { NotificationGql } from '@libs/notification/notification.dto';
-import { TransactionLog } from '@libs/prisma/@generated/prisma-nestjs-graphql/transaction-log/transaction-log.model';
+
 @Resolver()
 export class UserResolver {
   constructor(private userService: UserService) {}
