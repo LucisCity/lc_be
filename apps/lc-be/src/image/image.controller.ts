@@ -1,36 +1,31 @@
-import {
-  Body,
-  Controller,
-  HttpStatus,
-  ParseFilePipeBuilder,
-  Post,
-  UploadedFile,
-  UseInterceptors,
-} from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Controller, ParseFilePipe, Post, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { ImageService } from './image.service';
-import { ImageDto } from './image.dto';
+import { FileTypeValidator, MaxFileSizeValidator } from './image.dto';
+import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
+import { AppAuthUser, CurrentUser } from '@libs/helper/decorator/current_user.decorator';
 
-const TEN_MB = 10000000;
+const MAX_SIZE = 5000000;
 
-@Controller('image')
+@Controller('upload')
+@UseGuards(GqlAuthGuard)
 export class ImageController {
   constructor(private imageService: ImageService) {}
 
-  @Post('upload')
-  @UseInterceptors(FileInterceptor('image'))
-  async uploadFile(
+  @Post('kyc_imgs')
+  @UseInterceptors(AnyFilesInterceptor())
+  async uploadKycImages(
     // @Body() imageDto: ImageDto,
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addMaxSizeValidator({
-          maxSize: TEN_MB,
-        })
-        .build({
-          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        }),
+    @CurrentUser() user: AppAuthUser,
+    @UploadedFiles(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: MAX_SIZE }),
+          new FileTypeValidator({ fileType: /image\/(jpg|jpeg|png|gif)/ }),
+        ],
+      }),
     )
-    image: Express.Multer.File,
+    files: Array<Express.Multer.File>,
   ) {
     // const sizes = imageDto.sizes;
     // if (sizes) {
@@ -40,7 +35,7 @@ export class ImageController {
     //    */
     //   return true;
     // }
-    await this.imageService.uploadImageToS3(image);
+    await this.imageService.uploadKycImages(user.id, files);
     return true;
   }
 }

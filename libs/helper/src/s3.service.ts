@@ -7,7 +7,18 @@ import { AWSError } from 'aws-sdk/global';
 Usage:
 const filebase = new FilebaseService(bucket_name)
  */
+export interface S3UploadParams {
+  fieldName: string;
+  filePath: string;
+  fileContent: any;
+  contentType: string;
+  _bucket?: string;
+}
 
+export interface S3UploadReturnObject {
+  label: string;
+  url: string;
+}
 // https://docs.filebase.com/configurations/code-development/aws-sdk-javascript
 // https://github.com/aws/aws-sdk-js-v3
 export class S3Service {
@@ -34,7 +45,13 @@ export class S3Service {
    * @param contentType eg: image/png
    * @param _bucket
    */
-  async upload(filePath: string, fileContent: any, contentType: string, _bucket?: string): Promise<string> {
+  async upload(
+    fieldName: string,
+    filePath: string,
+    fileContent: any,
+    contentType: string,
+    _bucket?: string,
+  ): Promise<S3UploadReturnObject> {
     const s3 = this.s3;
     let bucket = this.bucket;
     if (_bucket) {
@@ -57,13 +74,25 @@ export class S3Service {
           reject(err);
         }
         const s3url = s3.getSignedUrl('getObject', { Key: params.Key });
-        console.log('s3url: ', s3url);
+        // console.log('s3url: ', s3url);
         const uploadFileUrlS3 = s3url.split('?')[0];
         // console.log('upload_file_url, err, data: ', uploadFileUrlS3, err, data);
 
-        resolve(uploadFileUrlS3);
+        resolve({ label: fieldName, url: uploadFileUrlS3 });
       });
     });
+  }
+
+  async uploadMultiple(files: S3UploadParams[]): Promise<S3UploadReturnObject[]> {
+    const promises = [];
+
+    files.forEach((i) => {
+      const promise = this.upload(i.fieldName, i.filePath, i.fileContent, i.contentType, i._bucket);
+      promises.push(promise);
+    });
+    // console.log(`s3 service files to be uploaded: ${JSON.stringify(files)}`);
+
+    return Promise.all(promises);
   }
 
   async getObjectMeta(filePath: string): Promise<PromiseResult<HeadObjectOutput, AWSError>> {
