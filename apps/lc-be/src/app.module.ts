@@ -15,6 +15,7 @@ import { TasksModule } from './tasks/tasks.module';
 import { PubsubModule } from '@libs/pubsub';
 import { NotificationModule } from '@libs/notification';
 import { ImageModule } from './image/image.module';
+import { InvestModule } from './invest/invest.module';
 
 @Module({
   imports: [
@@ -34,7 +35,7 @@ import { ImageModule } from './image/image.module';
         debug: configService.get('NODE_ENV') !== 'production',
         playground: true, // always true for admin, front-end not allowed to use,
         introspection: true, // always true for admin, front-end not allowed to use,
-        autoSchemaFile: process.cwd() + '/apps/luc-be/src/schema.gql',
+        autoSchemaFile: process.cwd() + '/apps/lc-be/src/schema.gql',
         dateScalarMode: 'date',
         subscriptions: {
           'graphql-ws': true,
@@ -50,6 +51,7 @@ import { ImageModule } from './image/image.module';
     PubsubModule,
     NotificationModule,
     ImageModule,
+    InvestModule,
   ],
   controllers: [AppController],
   providers: [AppService],

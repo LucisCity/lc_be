@@ -24,7 +24,7 @@ type ReferralLog {
   user: User!
   invited_by: String!
   type: ReferralType
-  isClaim: Boolean!
+  is_claim: Boolean!
   created_at: DateTime!
   updated_at: DateTime!
 }
@@ -45,6 +45,26 @@ type TransactionType {
   _count: TransactionTypeCount!
 }
 
+type BlockchainTransaction {
+  id: ID!
+  tx_hash: String!
+  status: TransactionStatus!
+  message_error: String
+  abi: String
+  transaction_log_id: String
+  transaction_log: TransactionLog
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  CONFIRMING
+  SUCCEED
+  FAILED
+}
+
 type TransactionLog {
   id: ID!
   type: String!
@@ -53,6 +73,7 @@ type TransactionLog {
   wallet: Wallet!
   amount: Decimal!
   description: String
+  blockchain_transaction: BlockchainTransaction
   created_at: DateTime!
   updated_at: DateTime!
 }
@@ -172,8 +193,6 @@ input ProjectCreateInputGql {
   price: Int!
   address: String!
   favorites: Int
-  hightlight: String!
-  reason_invest: String!
   policy_link: String!
   profit_period: Int!
   created_at: DateTime
@@ -181,8 +200,19 @@ input ProjectCreateInputGql {
   location: String!
   open_sale_at: DateTime!
   take_profit_at: DateTime!
+  profile: ProjectProfileCreateInputGql!
+}
+
+input ProjectProfileCreateInputGql {
+  create: ProjectProfileCreateWithoutProjectInputGql
+}
+
+input ProjectProfileCreateWithoutProjectInputGql {
+  reason_invest: String
+  hightlight: String
   medias: [ProjectMedia!]!
   offers: [ProjectOffer!]!
+  events: [ProjectEvent!]!
 }
 
 input ProjectMedia {
@@ -196,7 +226,7 @@ input ProjectMedia {
   url: String!
 
   """Thumbnail url"""
-  thumbnail: String!
+  thumbnail: String
 }
 
 input ProjectOffer {
@@ -205,4 +235,15 @@ input ProjectOffer {
 
   """Icon"""
   icon: String!
+}
+
+input ProjectEvent {
+  """Event start time"""
+  start_at: DateTime!
+
+  """Event title"""
+  title: String!
+
+  """Event description"""
+  description: String!
 }

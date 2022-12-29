@@ -416,7 +416,7 @@ export class AuthService {
           user_id: userId,
           invited_by: inviter.id,
           type: ReferralType.REGISTER,
-          isClaim: false,
+          is_claim: false,
         },
       });
       await this.notificationService.createAndPushNoti(

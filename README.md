@@ -19,7 +19,7 @@ cd deploy
 cp .env.example .env
 cp docker-compose.yml.example docker-compose.yml
 deploy.sh
-docker exec -it lc_api bash && yarn db:push
+docker exec -it lc_api bash & yarn db:push
 ```
 
 ## Running the app local

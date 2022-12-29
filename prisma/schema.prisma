@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["interactiveTransactions"]
+  provider = "prisma-client-js"
 }
 
 generator nestgraphql {
@@ -107,8 +106,8 @@ model ReferralLog {
   user       User   @relation(fields: [user_id], references: [id])
   invited_by String @db.VarChar(45)
 
-  type    ReferralType?
-  isClaim Boolean       @default(false) @db.Boolean
+  type     ReferralType?
+  is_claim Boolean       @default(false) @db.Boolean
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -129,10 +128,21 @@ model Contract {
   @@map("contract")
 }
 
+model PoolWalletType {
+  code        String       @db.VarChar(100)
+  description String       @db.Text
+  pool_wallet PoolWallet[]
+
+  @@unique([code])
+  @@map("pool_wallet_type")
+}
+
 model PoolWallet {
-  id      String  @id @default(cuid()) @db.VarChar(45)
-  address String  @db.VarChar(45)
-  prv     String? @db.Text
+  id               String         @id @default(cuid()) @db.VarChar(45)
+  address          String         @db.VarChar(45)
+  type             String         @db.VarChar(100)
+  pool_wallet_type PoolWalletType @relation(fields: [type], references: [code])
+  prv              String?        @db.Text
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -154,6 +164,9 @@ model BlockchainTransaction {
   status        TransactionStatus @default(PENDING)
   message_error String?           @db.Text
   abi           String?           @db.Text
+
+  transaction_log_id String?         @unique() @db.VarChar(45)
+  transaction_log    TransactionLog? @relation(fields: [transaction_log_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -194,6 +207,8 @@ model TransactionLog {
   amount           Decimal
   description      String?
 
+  blockchain_transaction BlockchainTransaction?
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -204,27 +219,39 @@ model Project {
   id               String    @id @default(cuid()) @db.VarChar(45)
   title            String    @db.VarChar(512)
   price            Int
-  rate             Decimal?  @db.Decimal(2, 1)
-  total_rate       Int?
   address          String    @db.VarChar(1024)
   location         String    @db.VarChar(30) // lat,long
+  rate             Decimal?  @db.Decimal(2, 1)
+  total_rate       Int?
   favorites        Int?
-  hightlight       String
-  reason_invest    String
   policy_link      String
-  medias           Json
   enable           Boolean   @default(false)
   open_sale_at     DateTime
   take_profit_at   DateTime
   wait_transfer_at DateTime?
   ended            Boolean?
   profit_period    Int // in day
-  offers           Json
+
+  created_at DateTime        @default(now())
+  updated_at DateTime        @updatedAt
+  profile    ProjectProfile?
+
+  @@map("project")
+}
+
+model ProjectProfile {
+  project_id    String  @unique
+  reason_invest String?
+  hightlight    String?
+  medias        Json
+  offers        Json
+  events        Json
+  project       Project @relation(fields: [project_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  @@map("project")
+  @@map("project_profile")
 }
 
 model Notification {

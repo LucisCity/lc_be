@@ -6,7 +6,6 @@ import { AppError } from '@libs/helper/errors/base.error';
 import { PasswordUtils } from '@libs/helper/password.util';
 import { ChangePassInput, EventType, VerifyInput } from '@libs/helper/email';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { NotificationGql } from '@libs/notification/notification.dto';
 import { NotificationService } from '@libs/notification';
 
 @Injectable()
@@ -58,6 +57,30 @@ export class UserService {
     }
   }
 
+  async getTransactionHistory(userId: string, skip: number, take: number) {
+    try {
+      const count = await this.prisma.transactionLog.count({ where: { user_id: userId } });
+      const list = await this.prisma.transactionLog.findMany({
+        where: { user_id: userId },
+        orderBy: {
+          created_at: 'desc',
+        },
+        include: {
+          wallet: true,
+          blockchain_transaction: true,
+        },
+        skip,
+        take,
+      });
+      return {
+        count,
+        transactionHistory: list,
+      };
+    } catch (err) {
+      throw err;
+    }
+  }
+
   async claimReferral(inviteeId: string) {
     const invitee = await this.prisma.referralLog.findUnique({
       where: { user_id: inviteeId },
@@ -67,14 +90,14 @@ export class UserService {
       throw new AppError('Invitee not exist!', 'INVITEE_NOT_EXIST');
     }
 
-    if (invitee.isClaim) {
+    if (invitee.is_claim) {
       throw new AppError('Referral claimed!', 'CLAIMED');
     }
 
     const response = await this.prisma.$transaction(async (tx) => {
       await tx.referralLog.update({
         where: { user_id: inviteeId },
-        data: { isClaim: true },
+        data: { is_claim: true },
       });
       // find invited person
       let wallet = await tx.wallet.findUnique({
@@ -93,7 +116,7 @@ export class UserService {
             type: 'CLAIM_REFERRAL',
             user_id: invitee.invited_by,
             description: 'Claim reward for referral',
-            amount: new Prisma.Decimal(5),
+            amount: new Prisma.Decimal(this.rewardReferral),
           },
         });
       } else {
