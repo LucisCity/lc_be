@@ -14,6 +14,7 @@ import { User } from '@libs/prisma/@generated/prisma-nestjs-graphql/user/user.mo
 import { Wallet } from '@libs/prisma/@generated/prisma-nestjs-graphql/wallet/wallet.model';
 import { NotificationGql } from '@libs/notification/notification.dto';
 import { TransactionLog } from '@libs/prisma/@generated/prisma-nestjs-graphql/transaction-log/transaction-log.model';
+import { ProfileGql } from '../auth/auth.type';
 @Resolver()
 export class UserResolver {
   constructor(private userService: UserService) {}
@@ -44,16 +45,15 @@ export class UserResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => Boolean, {
+  @Mutation(() => ProfileGql, {
     nullable: true,
     description: 'update account info',
   })
   async updateAccountInfo(
     @CurrentUser() user: AppAuthUser,
     @Args('input') input: AccountInfoUpdateInput,
-  ): Promise<boolean> {
-    await this.userService.updateAccountInfo(user.id, input);
-    return true;
+  ): Promise<ProfileGql> {
+    return await this.userService.updateAccountInfo(user.id, input);
   }
 
   @UseGuards(GqlAuthGuard)
