@@ -368,6 +368,9 @@ type Query {
   """get unseen notis count"""
   countUnseenNotifications: Int
 
+  """get kyc verification images"""
+  getKycImages: UserKycVerification
+
   """get OTP"""
   getOneTimePassword(address: String!): String!
 

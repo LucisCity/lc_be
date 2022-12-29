@@ -8,6 +8,7 @@ import { ChangePassInput, EventType } from '@libs/helper/email';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotificationService } from '@libs/notification';
 import { ProfileGql } from '../auth/auth.type';
+import { UserKycVerification } from '@libs/prisma/@generated/prisma-nestjs-graphql/user-kyc-verification/user-kyc-verification.model';
 
 @Injectable()
 export class UserService {
@@ -326,5 +327,13 @@ export class UserService {
     });
     await this.notification.publishUnseenNotisCount(userId, 0);
     return true;
+  }
+
+  async getKycImages(userId: string): Promise<UserKycVerification> {
+    return await this.prisma.userKycVerification.findUnique({
+      where: {
+        user_id: userId,
+      },
+    });
   }
 }
