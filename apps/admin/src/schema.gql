@@ -19,6 +19,24 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type UserKycVerification {
+  id: ID!
+  user_id: String!
+  front_id: String!
+  back_id: String!
+  holding_id: String!
+  status: KycStatus!
+  user: User!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+enum KycStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
 type ReferralLog {
   user_id: ID!
   user: User!
@@ -97,6 +115,7 @@ type Wallet {
 
 type UserCount {
   notification: Int!
+  kyc_verification: Int!
 }
 
 type User {
@@ -111,6 +130,7 @@ type User {
   password: String
   profile: UserProfile
   notification: [Notification!]
+  kyc_verification: [UserKycVerification!]
   created_at: DateTime!
   updated_at: DateTime!
   referral_log: ReferralLog
@@ -161,6 +181,7 @@ type UserGql {
   email: String
   ref_code: String!
   notification: [Notification!]
+  kyc_verification: [UserKycVerification!]
   referral_log: ReferralLog
   wallet: Wallet
   _count: UserCount!
@@ -173,8 +194,11 @@ type AuthGql {
 }
 
 type Query {
-  """Admin"""
-  user(userId: Float!): String!
+  """list pending kycs"""
+  getPendingKycs: [UserKycVerification!]
+
+  """list kycs with options"""
+  getKycs(userId: String, id: Int, status: KycStatus): [UserKycVerification!]
 }
 
 type Mutation {
@@ -186,6 +210,9 @@ type Mutation {
 
   """Admin register"""
   register(email: String!, password: String!): Boolean!
+
+  """update kycs"""
+  updateKyc(userId: String, status: KycStatus): Boolean
 }
 
 input ProjectCreateInputGql {

@@ -4,9 +4,11 @@ import { Prisma } from '@prisma/client';
 import { AccountInfo, AccountInfoUpdateInput, ReferralDataResponse } from './user.dto/user.dto';
 import { AppError } from '@libs/helper/errors/base.error';
 import { PasswordUtils } from '@libs/helper/password.util';
-import { ChangePassInput, EventType, VerifyInput } from '@libs/helper/email';
+import { ChangePassInput, EventType } from '@libs/helper/email';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotificationService } from '@libs/subscription/notification.service';
+import { ProfileGql } from '../auth/auth.type';
+import { UserKycVerification } from '@libs/prisma/@generated/prisma-nestjs-graphql/user-kyc-verification/user-kyc-verification.model';
 
 @Injectable()
 export class UserService {
@@ -245,16 +247,25 @@ export class UserService {
     return { email: profile.user.email, ...profile };
   }
 
-  async updateAccountInfo(userId: string, input: AccountInfoUpdateInput) {
+  async updateAccountInfo(userId: string, input: AccountInfoUpdateInput): Promise<ProfileGql> {
     try {
-      await this.prisma.userProfile.update({
+      const oldProfile = await this.prisma.userProfile.findUnique({
+        where: {
+          user_id: userId,
+        },
+      });
+      const given_name = input.given_name ?? oldProfile.given_name;
+      const family_name = input.family_name ?? oldProfile.family_name;
+      let display_name =
+        family_name && given_name ? family_name + ' ' + given_name : !family_name ? given_name : family_name;
+      return await this.prisma.userProfile.update({
         where: {
           user_id: userId,
         },
         data: {
           given_name: input.given_name,
           user_name: input.user_name,
-          display_name: input.display_name,
+          display_name: display_name,
           family_name: input.family_name,
           date_of_birth: input.date_of_birth,
         },
@@ -319,5 +330,17 @@ export class UserService {
     });
     await this.notification.publishUnseenNotisCount(userId, 0);
     return true;
+  }
+
+  async getKycImages(userId: string): Promise<UserKycVerification> {
+    const userKyc = await this.prisma.userKycVerification.findMany({
+      where: {
+        user_id: userId,
+      },
+    });
+    if (userKyc.length > 0) {
+      return userKyc.find((i) => i.status !== 'FAILED') ?? userKyc[0];
+    }
+    return null;
   }
 }

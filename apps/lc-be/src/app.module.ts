@@ -13,6 +13,7 @@ import { UserModule } from './user/user.module';
 import { EmailModule } from '@libs/helper/email';
 import { TasksModule } from './tasks/tasks.module';
 import { PubsubModule } from '@libs/pubsub';
+import { ImageModule } from './image/image.module';
 import { InvestModule } from './invest/invest.module';
 import { AuthService } from './auth/auth.service';
 import { SubscriptionModule } from '@libs/subscription';
@@ -78,6 +79,7 @@ import { SubscriptionModule } from '@libs/subscription';
     TasksModule,
     PubsubModule,
     SubscriptionModule,
+    ImageModule,
     InvestModule,
   ],
   controllers: [AppController],

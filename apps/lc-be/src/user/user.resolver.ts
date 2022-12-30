@@ -13,6 +13,9 @@ import {
 import { Wallet } from '@libs/prisma/@generated/prisma-nestjs-graphql/wallet/wallet.model';
 import { NotificationGql } from '@libs/subscription/subscription.dto';
 
+import { TransactionLog } from '@libs/prisma/@generated/prisma-nestjs-graphql/transaction-log/transaction-log.model';
+import { ProfileGql } from '../auth/auth.type';
+import { UserKycVerification } from '@libs/prisma/@generated/prisma-nestjs-graphql/user-kyc-verification/user-kyc-verification.model';
 @Resolver()
 export class UserResolver {
   constructor(private userService: UserService) {}
@@ -43,16 +46,15 @@ export class UserResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => Boolean, {
+  @Mutation(() => ProfileGql, {
     nullable: true,
     description: 'update account info',
   })
   async updateAccountInfo(
     @CurrentUser() user: AppAuthUser,
     @Args('input') input: AccountInfoUpdateInput,
-  ): Promise<boolean> {
-    await this.userService.updateAccountInfo(user.id, input);
-    return true;
+  ): Promise<ProfileGql> {
+    return await this.userService.updateAccountInfo(user.id, input);
   }
 
   @UseGuards(GqlAuthGuard)
@@ -110,5 +112,11 @@ export class UserResolver {
   @Mutation(() => Boolean, { nullable: true, description: 'mark all notis as read' })
   async markAllNotisSeen(@CurrentUser() user: AppAuthUser): Promise<boolean> {
     return this.userService.markAllNotisSeen(user.id);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => UserKycVerification, { nullable: true, description: 'get kyc verification images' })
+  async getKycImages(@CurrentUser() user: AppAuthUser): Promise<UserKycVerification> {
+    return this.userService.getKycImages(user.id);
   }
 }
