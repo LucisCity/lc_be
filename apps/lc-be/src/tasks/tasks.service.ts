@@ -63,28 +63,29 @@ export class TasksService {
           });
           return;
         }
-        if (txDetail.status === 1) {
-          // succeed
-          if (txDetail.confirmations < 10) {
-            await this.prismaService.blockchainTransaction.update({
-              where: {
-                id: tx.id,
-              },
-              data: {
-                status: 'CONFIRMING',
-              },
-            });
-            return;
-          }
+        if (txDetail.status !== 1) {
           await this.prismaService.blockchainTransaction.update({
             where: {
               id: tx.id,
             },
             data: {
-              status: 'SUCCEED',
+              status: 'FAILED',
+              message_error: 'Transaction revert: check on explorer (bscscan.com, etherscan.io,...)',
             },
           });
-          // TODO: Add handler here
+          return;
+        }
+
+        // succeed
+        if (txDetail.confirmations < 10) {
+          await this.prismaService.blockchainTransaction.update({
+            where: {
+              id: tx.id,
+            },
+            data: {
+              status: 'CONFIRMING',
+            },
+          });
           return;
         }
         await this.prismaService.blockchainTransaction.update({
@@ -92,12 +93,24 @@ export class TasksService {
             id: tx.id,
           },
           data: {
-            status: 'FAILED',
-            message_error: 'Transaction revert: check on explorer (bscscan.com, etherscan.io,...)',
+            status: 'SUCCEED',
           },
         });
+        // TODO: Add handler here
       } catch (e) {
         this.logger.error(`Error: ${e.message}`);
+        if (e.status === 503) {
+          await this.prismaService.blockchainTransaction.update({
+            where: {
+              id: tx.id,
+            },
+            data: {
+              message_error: e.message,
+              status: 'PENDING',
+            },
+          });
+          return;
+        }
         await this.prismaService.blockchainTransaction.update({
           where: {
             id: tx.id,

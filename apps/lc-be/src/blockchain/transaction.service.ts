@@ -22,7 +22,7 @@ export class TransactionService {
 
   async getOneTimePassword(address: string) {
     const password = randString(10);
-    await this.cacheManager.set(address, password);
+    await this.cacheManager.set(address, password, 5 * 60);
     return password;
   }
 
@@ -40,7 +40,7 @@ export class TransactionService {
     if (!password) {
       throw new AppError('claim time expired!', 'SIGNATURE_EXPIRED');
     }
-
+    await this.cacheManager.del(address);
     const signer = ethers.utils.verifyMessage(password, signatureOTP);
     if (signer !== address) {
       throw new AppError('signature was wrong!', 'SIGNATURE_WRONG');
