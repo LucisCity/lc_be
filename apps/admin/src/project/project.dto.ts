@@ -39,14 +39,17 @@ export class ProjectProfileCreateWithoutProjectInputGql extends OmitType(Project
   'created_at',
   'updated_at',
   'events',
-  'offers',
   'medias',
+  'rate',
+  'total_rate',
+  'follows',
+  'offers',
 ]) {
   @Field(() => [ProjectMedia], { nullable: false })
   medias!: ProjectMedia[];
 
-  @Field(() => [ProjectOffer], { nullable: false })
-  offers!: ProjectOffer[];
+  @Field(() => [Int], { nullable: false })
+  offers!: number[];
 
   @Field(() => [ProjectEvent], { nullable: false })
   events!: ProjectEvent[];
@@ -56,10 +59,11 @@ export class ProjectProfileCreateWithoutProjectInputGql extends OmitType(Project
 export class ProjectProfileCreateInputGql extends OmitType(ProjectProfileCreateNestedOneWithoutProjectInput, [
   'connect',
   'connectOrCreate',
+  'create',
 ]) {
   @Field(() => ProjectProfileCreateWithoutProjectInputGql, { nullable: true })
   // @Type(() => ProjectProfileCreateWithoutProjectInputGql)
-  create: ProjectProfileCreateWithoutProjectInput;
+  create: ProjectProfileCreateWithoutProjectInputGql;
 }
 
 @InputType()
@@ -67,8 +71,6 @@ export class ProjectCreateInputGql extends OmitType(ProjectCreateInput, [
   'enable',
   'ended',
   'id',
-  'rate',
-  'total_rate',
   'location',
   'open_sale_at',
   'take_profit_at',

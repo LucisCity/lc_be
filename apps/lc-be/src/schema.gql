@@ -248,9 +248,6 @@ type Project {
   price: Int!
   address: String!
   location: String!
-  rate: Decimal
-  total_rate: Int
-  favorites: Int
   policy_link: String!
   enable: Boolean!
   open_sale_at: DateTime!
@@ -267,9 +264,12 @@ type ProjectProfile {
   project_id: String!
   reason_invest: String
   hightlight: String
+  vote: Decimal!
+  total_vote: Int!
+  follows: Int!
   medias: JSON!
-  offers: JSON!
   events: JSON!
+  offers: String
   project: Project!
   created_at: DateTime!
   updated_at: DateTime!
@@ -317,6 +317,9 @@ type ProjectProfileGql {
   project_id: String!
   reason_invest: String
   hightlight: String
+  vote: Decimal!
+  total_vote: Int!
+  follows: Int!
 
   """"""
   events: [ProjectEventGql!]
@@ -334,9 +337,6 @@ type ProjectGql {
   price: Int!
   address: String!
   location: String!
-  rate: Decimal
-  total_rate: Int
-  favorites: Int
   policy_link: String!
   open_sale_at: DateTime!
   take_profit_at: DateTime!
@@ -378,6 +378,9 @@ type Query {
 
   """Get list referral user"""
   getProject(id: String!): ProjectGql!
+
+  """"""
+  isVoted(projectId: String!): Boolean!
 }
 
 type Mutation {
@@ -423,6 +426,12 @@ type Mutation {
 
   """withdraw balance"""
   withdrawBalance(address: String!, amount: String!, signatureOTP: String!): TransactionLog!
+
+  """Vote project"""
+  voteProject(input: RateProjectInput!): Boolean
+
+  """Toggle follow project"""
+  toggleFollowProject(projectId: String!): Boolean
 }
 
 input AccountInfoUpdateInput {
@@ -430,6 +439,11 @@ input AccountInfoUpdateInput {
   given_name: String
   family_name: String
   date_of_birth: DateTime
+}
+
+input RateProjectInput {
+  projectId: String!
+  value: Float!
 }
 
 type Subscription {

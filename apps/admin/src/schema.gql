@@ -219,7 +219,6 @@ input ProjectCreateInputGql {
   title: String!
   price: Int!
   address: String!
-  favorites: Int
   policy_link: String!
   profit_period: Int!
   created_at: DateTime
@@ -238,7 +237,7 @@ input ProjectProfileCreateWithoutProjectInputGql {
   reason_invest: String
   hightlight: String
   medias: [ProjectMedia!]!
-  offers: [ProjectOffer!]!
+  offers: [Int!]!
   events: [ProjectEvent!]!
 }
 
@@ -254,14 +253,6 @@ input ProjectMedia {
 
   """Thumbnail url"""
   thumbnail: String
-}
-
-input ProjectOffer {
-  """Title"""
-  title: String!
-
-  """Icon"""
-  icon: String!
 }
 
 input ProjectEvent {

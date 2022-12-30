@@ -1,6 +1,7 @@
 import { ProjectProfile } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profile/project-profile.model';
 import { Project } from '@libs/prisma/@generated/prisma-nestjs-graphql/project/project.model';
-import { Field, Int, ObjectType, OmitType } from '@nestjs/graphql';
+import { Field, Float, InputType, Int, ObjectType, OmitType } from '@nestjs/graphql';
+import { Max, Min } from 'class-validator';
 
 @ObjectType()
 export class ProjectMediaGql {
@@ -55,4 +56,15 @@ export abstract class ProjectProfileGql extends OmitType(ProjectProfile, [
 export abstract class ProjectGql extends OmitType(Project, ['created_at', 'enable', 'updated_at', 'profile']) {
   @Field(() => ProjectProfileGql, { nullable: false, description: '' })
   profile: ProjectProfileGql;
+}
+
+@InputType()
+export class RateProjectInput {
+  @Field(() => String, { nullable: false })
+  projectId: string;
+
+  @Field(() => Float, { nullable: false })
+  @Min(1)
+  @Max(10)
+  value: number;
 }
