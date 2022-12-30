@@ -25,3 +25,7 @@ docker exec -it lc_api bash & yarn db:push
 - Add pool type (indatabase)
     - INSERT INTO public.pool_wallet_type (code, description) VALUES ('USDT_POOL'::varchar(100), 'pool for usdt'::text)
 - Add .env: USDT_ADDRESS=
+
+## Endpoint
+
+- Add endpoint prefix: /api/*

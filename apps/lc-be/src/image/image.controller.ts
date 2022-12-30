@@ -7,12 +7,12 @@ import { AppAuthUser, CurrentUser } from '@libs/helper/decorator/current_user.de
 
 const MAX_SIZE = 5000000;
 
-@Controller('upload')
+@Controller('api')
 @UseGuards(GqlAuthGuard)
 export class ImageController {
   constructor(private imageService: ImageService) {}
 
-  @Post('kyc')
+  @Post('upload_kyc')
   @UseInterceptors(AnyFilesInterceptor())
   async uploadKycImages(
     // @Body() imageDto: ImageDto,
