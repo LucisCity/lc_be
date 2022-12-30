@@ -1,10 +1,8 @@
-import { Args, Int, Resolver, Subscription } from '@nestjs/graphql';
+import { Resolver, Subscription } from '@nestjs/graphql';
 import { PubsubService } from '@libs/pubsub';
 import { NotificationGql, UnseenNotifications } from './subscription.dto';
 import { BlockchainTransaction } from '@libs/prisma/@generated/prisma-nestjs-graphql/blockchain-transaction/blockchain-transaction.model';
 import { UseGuards } from '@nestjs/common';
-import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
-import { AppAuthUser, CurrentUser } from '@libs/helper/decorator/current_user.decorator';
 import { AuthWsGuard } from '@libs/helper/guards/authWs.guard';
 
 @Resolver()
@@ -14,7 +12,7 @@ export class SubscriptionResolver {
    * @param payload always have field `listReceiverId` as Array<string> that is a list receiver
    * @param context
    */
-  public static _filter(payload, context) {
+  public static _filter(payload, _, context) {
     const user = context?.extra?.user;
     if (user && user.id) {
       const receiver = (payload?.listReceiverId ?? []).find((id) => id === user.id);

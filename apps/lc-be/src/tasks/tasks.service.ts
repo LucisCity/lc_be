@@ -69,7 +69,7 @@ export class TasksService {
           return;
         }
         if (txDetail.status !== 1) {
-          await this.prismaService.blockchainTransaction.update({
+          const transaction = await this.prismaService.blockchainTransaction.update({
             where: {
               id: tx.id,
             },
@@ -77,6 +77,13 @@ export class TasksService {
               status: 'FAILED',
               message_error: 'Transaction revert: check on explorer (bscscan.com, etherscan.io,...)',
             },
+            include: {
+              transaction_log: true,
+            },
+          });
+          await this.pubsubService.pubSub.publish('blockchainWatcher', {
+            blockchainWatcher: transaction,
+            listReceiverId: [transaction.transaction_log?.user_id],
           });
           return;
         }
@@ -90,17 +97,30 @@ export class TasksService {
             data: {
               status: 'CONFIRMING',
             },
+            include: {
+              transaction_log: true,
+            },
           });
-          await this.pubsubService.pubSub.publish('blockchainWatcher', { blockchainWatcher: transaction });
+          await this.pubsubService.pubSub.publish('blockchainWatcher', {
+            blockchainWatcher: transaction,
+            listReceiverId: [transaction.transaction_log?.user_id],
+          });
           return;
         }
-        await this.prismaService.blockchainTransaction.update({
+        const transaction = await this.prismaService.blockchainTransaction.update({
           where: {
             id: tx.id,
           },
           data: {
             status: 'SUCCEED',
           },
+          include: {
+            transaction_log: true,
+          },
+        });
+        await this.pubsubService.pubSub.publish('blockchainWatcher', {
+          blockchainWatcher: transaction,
+          listReceiverId: [transaction.transaction_log?.user_id],
         });
         // TODO: Add handler here
       } catch (e) {
@@ -117,7 +137,7 @@ export class TasksService {
           });
           return;
         }
-        await this.prismaService.blockchainTransaction.update({
+        const transaction = await this.prismaService.blockchainTransaction.update({
           where: {
             id: tx.id,
           },
@@ -125,6 +145,14 @@ export class TasksService {
             message_error: e.message,
             status: 'FAILED',
           },
+          include: {
+            transaction_log: true,
+          },
+        });
+
+        await this.pubsubService.pubSub.publish('blockchainWatcher', {
+          blockchainWatcher: transaction,
+          listReceiverId: [transaction.transaction_log?.user_id],
         });
       }
     }
