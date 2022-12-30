@@ -411,6 +411,7 @@ input AccountInfoUpdateInput {
 }
 
 type Subscription {
-  pushNotification(userId: String!): NotificationGql!
-  unseenNotifications(userId: String!): UnseenNotifications!
+  pushNotification: NotificationGql!
+  unseenNotifications: UnseenNotifications!
+  blockchainWatcher: BlockchainTransaction!
 }

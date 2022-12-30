@@ -1,5 +1,5 @@
-import { ApolloDriver } from '@nestjs/apollo';
-import { CacheModule, Module } from '@nestjs/common';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { CacheModule, Module, UnauthorizedException } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -15,6 +15,7 @@ import { TasksModule } from './tasks/tasks.module';
 import { PubsubModule } from '@libs/pubsub';
 import { NotificationModule } from '@libs/notification';
 import { InvestModule } from './invest/invest.module';
+import { AuthService } from './auth/auth.service';
 
 @Module({
   imports: [
@@ -23,22 +24,50 @@ import { InvestModule } from './invest/invest.module';
       ttl: 60,
       limit: 2,
     }),
-    CacheModule.register({ isGlobal: true, ttl: 5 * 60 }),
+    CacheModule.register({ isGlobal: true }),
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
-    GraphQLModule.forRootAsync({
+    GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
+      imports: [ConfigModule, AuthModule],
+      inject: [ConfigService, AuthService],
+      useFactory: async (configService: ConfigService, authService: AuthService) => ({
         debug: configService.get('NODE_ENV') !== 'production',
         playground: true, // always true for admin, front-end not allowed to use,
         introspection: true, // always true for admin, front-end not allowed to use,
         autoSchemaFile: process.cwd() + '/apps/lc-be/src/schema.gql',
         dateScalarMode: 'date',
         subscriptions: {
-          'graphql-ws': true,
-          'subscriptions-transport-ws': false,
+          'graphql-ws': {
+            onConnect: async (context) => {
+              const { connectionParams, extra } = context;
+              const authorization = connectionParams?.['authorization'] as any;
+              if (!authorization) {
+                throw new UnauthorizedException({
+                  statusCode: 401,
+                  message: 'Access token is required!',
+                });
+              }
+
+              const payloadJwt = await authService.getJwtPayload(authorization);
+
+              if (!payloadJwt) {
+                throw new UnauthorizedException({
+                  statusCode: 401,
+                  message: 'Access token is required!',
+                });
+              }
+
+              (extra as any).user = {
+                id: payloadJwt.id,
+                role: payloadJwt.role,
+              };
+            },
+          },
+        },
+
+        context: ({ req, res, connection, extra }) => {
+          return { req, res, connection, extra };
         },
       }),
     }),

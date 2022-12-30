@@ -439,4 +439,13 @@ export class AuthService {
     }
     return null;
   }
+
+  async getJwtPayload(authorization: string) {
+    try {
+      const token = authorization?.split(' ')[1];
+      return await this.jwt.verifyAsync(token);
+    } catch (e) {
+      return null;
+    }
+  }
 }
