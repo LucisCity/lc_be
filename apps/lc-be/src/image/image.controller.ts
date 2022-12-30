@@ -12,7 +12,7 @@ const MAX_SIZE = 5000000;
 export class ImageController {
   constructor(private imageService: ImageService) {}
 
-  @Post('kyc_imgs')
+  @Post('kyc')
   @UseInterceptors(AnyFilesInterceptor())
   async uploadKycImages(
     // @Body() imageDto: ImageDto,

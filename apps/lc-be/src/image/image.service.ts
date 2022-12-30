@@ -20,6 +20,18 @@ export class ImageService {
   }
 
   async uploadKycImages(userId: string, files: Array<Express.Multer.File>) {
+    const existedKyc = await this.prisma.userKycVerification.findFirst({
+      where: {
+        user_id: userId,
+        status: {
+          not: 'FAILED',
+        },
+      },
+    });
+    if (existedKyc) {
+      throw new AppError('Kyc is being processed or has succeed', 'KYC_PENDING_OR_SUCCEED');
+    }
+    // throw new AppError('Test Server Error', 'TEST_SERVER_ERROR');
     // console.log(`upload files image service ${files}`);
     if (files.length !== 3) {
       throw new AppError('Kyc images must be exactly 3', 'BAD_REQUEST');

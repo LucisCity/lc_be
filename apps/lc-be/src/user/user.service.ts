@@ -330,11 +330,14 @@ export class UserService {
   }
 
   async getKycImages(userId: string): Promise<UserKycVerification> {
-    return await this.prisma.userKycVerification.findUnique({
+    const userKyc = await this.prisma.userKycVerification.findMany({
       where: {
         user_id: userId,
       },
     });
-    // return null;
+    if (userKyc.length > 0) {
+      return userKyc.find((i) => i.status !== 'FAILED') ?? userKyc[0];
+    }
+    return null;
   }
 }

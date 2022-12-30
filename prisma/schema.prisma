@@ -71,7 +71,8 @@ enum KycStatus {
 }
 
 model UserKycVerification {
-  user_id    String    @id
+  id         Int       @id @default(autoincrement())
+  user_id    String
   front_id   String    @db.VarChar(1024)
   back_id    String    @db.VarChar(1024)
   holding_id String    @db.VarChar(1024)
