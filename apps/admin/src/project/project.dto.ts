@@ -40,8 +40,8 @@ export class ProjectProfileCreateWithoutProjectInputGql extends OmitType(Project
   'updated_at',
   'events',
   'medias',
-  'rate',
-  'total_rate',
+  'vote',
+  'total_vote',
   'follows',
   'offers',
 ]) {
