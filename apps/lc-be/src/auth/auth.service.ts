@@ -37,6 +37,7 @@ export class AuthService {
       include: {
         profile: true,
         wallet: true,
+        kyc_verification: true,
       },
     });
     if (!user || !user.password) {
@@ -151,6 +152,7 @@ export class AuthService {
         include: {
           profile: true,
           wallet: true,
+          kyc_verification: true,
         },
       });
       if (!userInfo) {
@@ -178,6 +180,7 @@ export class AuthService {
           include: {
             profile: true,
             wallet: true,
+            kyc_verification: true,
           },
         });
         if (inviter) {
@@ -258,6 +261,7 @@ export class AuthService {
       include: {
         profile: true,
         wallet: true,
+        kyc_verification: true,
       },
     });
 
@@ -285,6 +289,7 @@ export class AuthService {
         include: {
           profile: true,
           wallet: true,
+          kyc_verification: true,
         },
       });
 
