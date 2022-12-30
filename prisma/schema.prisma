@@ -35,7 +35,7 @@ model User {
   password         String?              @db.VarChar(255)
   profile          UserProfile?
   notification     Notification[]
-  kyc_verification UserKycVerification?
+  kyc_verification UserKycVerification[]
   created_at       DateTime             @default(now())
   updated_at       DateTime             @updatedAt
 

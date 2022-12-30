@@ -335,5 +335,6 @@ export class UserService {
         user_id: userId,
       },
     });
+    // return null;
   }
 }
