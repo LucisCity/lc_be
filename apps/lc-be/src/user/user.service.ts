@@ -6,7 +6,7 @@ import { AppError } from '@libs/helper/errors/base.error';
 import { PasswordUtils } from '@libs/helper/password.util';
 import { ChangePassInput, EventType, VerifyInput } from '@libs/helper/email';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { NotificationService } from '@libs/notification';
+import { NotificationService } from '@libs/subscription/notification.service';
 
 @Injectable()
 export class UserService {

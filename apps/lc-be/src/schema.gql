@@ -2,17 +2,13 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type UserProfile {
-  user_id: ID!
-  user_name: String
-  display_name: String
-  given_name: String
-  family_name: String
-  phone: String
-  avatar: String
-  date_of_birth: DateTime
-  cover: String
-  country_code: String
+type Notification {
+  id: ID!
+  user_id: String!
+  title: String
+  content: String
+  is_seen: Boolean!
+  link: String
   user: User!
   created_at: DateTime!
   updated_at: DateTime!
@@ -133,31 +129,20 @@ enum UserStatus {
   BANNED
 }
 
-type Notification {
-  id: ID!
-  user_id: String!
-  title: String
-  content: String
-  is_seen: Boolean!
-  link: String
+type UserProfile {
+  user_id: ID!
+  user_name: String
+  display_name: String
+  given_name: String
+  family_name: String
+  phone: String
+  avatar: String
+  date_of_birth: DateTime
+  cover: String
+  country_code: String
   user: User!
   created_at: DateTime!
   updated_at: DateTime!
-}
-
-type NotificationGql {
-  id: ID!
-  user_id: String!
-  title: String
-  content: String
-  is_seen: Boolean!
-  link: String
-  created_at: DateTime!
-}
-
-type UnseenNotifications {
-  user_id: String
-  count: Int
 }
 
 type ProfileGql {
@@ -220,6 +205,21 @@ type ReferralDataResponse {
 type TransactionHistoryResponse {
   count: Int
   transactionHistory: [TransactionLog!]
+}
+
+type NotificationGql {
+  id: ID!
+  user_id: String!
+  title: String
+  content: String
+  is_seen: Boolean!
+  link: String
+  created_at: DateTime!
+}
+
+type UnseenNotifications {
+  user_id: String
+  count: Int
 }
 
 type Project {

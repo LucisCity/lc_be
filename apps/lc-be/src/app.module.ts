@@ -13,9 +13,9 @@ import { UserModule } from './user/user.module';
 import { EmailModule } from '@libs/helper/email';
 import { TasksModule } from './tasks/tasks.module';
 import { PubsubModule } from '@libs/pubsub';
-import { NotificationModule } from '@libs/notification';
 import { InvestModule } from './invest/invest.module';
 import { AuthService } from './auth/auth.service';
+import { SubscriptionModule } from '@libs/subscription';
 
 @Module({
   imports: [
@@ -77,7 +77,7 @@ import { AuthService } from './auth/auth.service';
     UserModule,
     TasksModule,
     PubsubModule,
-    NotificationModule,
+    SubscriptionModule,
     InvestModule,
   ],
   controllers: [AppController],

@@ -2,13 +2,18 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '@libs/prisma';
 import { BlockchainService } from '../blockchain/blockchain.service';
+import { PubsubService } from '@libs/pubsub';
 
 const EVERY_2_SECONDS = '*/2 * * * * *';
 @Injectable()
 export class TasksService {
   private readonly logger = new Logger(TasksService.name);
   private readonly enableCron = process.env.SCAN_BLOCKCHAIN_CRON_ENABLE === 'true';
-  constructor(private prismaService: PrismaService, private blockChainService: BlockchainService) {
+  constructor(
+    private prismaService: PrismaService,
+    private blockChainService: BlockchainService,
+    private pubsubService: PubsubService,
+  ) {
     this.logger.log(`Cron scan transaction from blockchain ${this.enableCron ? 'ON' : 'OFF'}`);
   }
 
@@ -78,7 +83,7 @@ export class TasksService {
 
         // succeed
         if (txDetail.confirmations < 10) {
-          await this.prismaService.blockchainTransaction.update({
+          const transaction = await this.prismaService.blockchainTransaction.update({
             where: {
               id: tx.id,
             },
@@ -86,6 +91,7 @@ export class TasksService {
               status: 'CONFIRMING',
             },
           });
+          await this.pubsubService.pubSub.publish('blockchainWatcher', { blockchainWatcher: transaction });
           return;
         }
         await this.prismaService.blockchainTransaction.update({

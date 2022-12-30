@@ -11,7 +11,7 @@ import {
   TransactionHistoryResponse,
 } from './user.dto/user.dto';
 import { Wallet } from '@libs/prisma/@generated/prisma-nestjs-graphql/wallet/wallet.model';
-import { NotificationGql } from '@libs/notification/notification.dto';
+import { NotificationGql } from '@libs/subscription/subscription.dto';
 
 @Resolver()
 export class UserResolver {
