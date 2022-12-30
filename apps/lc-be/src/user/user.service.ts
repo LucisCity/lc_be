@@ -36,6 +36,9 @@ export class UserService {
     try {
       const list = await this.prisma.user.findMany({
         where: { invited_by: userId },
+        orderBy: {
+          created_at: 'desc',
+        },
         include: {
           referral_log: true,
           profile: true,
