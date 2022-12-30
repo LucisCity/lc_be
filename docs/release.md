@@ -26,6 +26,14 @@ docker exec -it lc_api bash & yarn db:push
     - INSERT INTO public.pool_wallet_type (code, description) VALUES ('USDT_POOL'::varchar(100), 'pool for usdt'::text)
 - Add .env: USDT_ADDRESS=
 
-## Endpoint
+
+## Account
 
 - Add endpoint prefix: /api/*
+- Add .env: 
+ S3_BUCKET=
+ S3_BUCKET_METADATA=
+ S3_REGION=
+ S3_ACCESS_KEY=
+ S3_SECRET=
+
