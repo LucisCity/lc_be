@@ -2,7 +2,7 @@ import { AppAuthUser, CurrentUser } from '@libs/helper/decorator/current_user.de
 import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
 import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { ProjectGql, RateProjectInput } from './invest.dto';
+import { ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
 import { InvestService } from './invest.service';
 
 @Resolver()
@@ -14,6 +14,13 @@ export class InvestResolver {
   })
   async getProject(@Args('id') id: string) {
     return await this.service.getProject(id);
+  }
+
+  @Query(() => [ProjectGql], {
+    description: 'Get related project',
+  })
+  async getProjects(@Args('filter', { type: () => ProjectFilter, nullable: true }) filter: ProjectFilter) {
+    return await this.service.getProjects(filter);
   }
 
   @UseGuards(GqlAuthGuard)

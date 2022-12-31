@@ -1,3 +1,4 @@
+import { ProjectType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/project-type.enum';
 import { ProjectProfile } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profile/project-profile.model';
 import { Project } from '@libs/prisma/@generated/prisma-nestjs-graphql/project/project.model';
 import { Field, Float, InputType, Int, ObjectType, OmitType } from '@nestjs/graphql';
@@ -67,4 +68,10 @@ export class RateProjectInput {
   @Min(1)
   @Max(10)
   value: number;
+}
+
+@InputType()
+export class ProjectFilter {
+  @Field(() => ProjectType, { nullable: true })
+  type: ProjectType;
 }

@@ -218,6 +218,8 @@ type Mutation {
 input ProjectCreateInputGql {
   title: String!
   price: Int!
+  type: ProjectType
+  thumbnail: String!
   address: String!
   policy_link: String!
   profit_period: Int!
@@ -227,6 +229,14 @@ input ProjectCreateInputGql {
   open_sale_at: DateTime!
   take_profit_at: DateTime!
   profile: ProjectProfileCreateInputGql!
+}
+
+enum ProjectType {
+  HOUSE
+  VILLA
+  HOTEL
+  HOMESTAY
+  TOURIST_VILLAGE
 }
 
 input ProjectProfileCreateInputGql {

@@ -3,7 +3,7 @@ import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common';
 import { CACHE_KEY } from './invest.config';
 import { Cache } from 'cache-manager';
 import { Prisma, ProjectOffer } from '@prisma/client';
-import { RateProjectInput } from './invest.dto';
+import { ProjectFilter, RateProjectInput } from './invest.dto';
 import { ExistDataError, InvalidInput, NotFoundError } from '@libs/helper/errors/base.error';
 import { KMath } from '@libs/helper/math.helper';
 
@@ -37,6 +37,21 @@ export class InvestService {
       result.profile.offers = offers.filter((item) => profileOffers.includes(item.id));
     }
 
+    return result;
+  }
+
+  async getProjects(filter: ProjectFilter) {
+    const where: Prisma.ProjectWhereInput = {};
+    if (filter.type) {
+      where.type = filter.type;
+    }
+    const result = await this.prisma.project.findMany({
+      where,
+      include: {
+        profile: true,
+      },
+      take: 20,
+    });
     return result;
   }
 

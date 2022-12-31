@@ -246,6 +246,8 @@ type Project {
   id: ID!
   title: String!
   price: Int!
+  type: ProjectType!
+  thumbnail: String!
   address: String!
   location: String!
   policy_link: String!
@@ -258,6 +260,14 @@ type Project {
   created_at: DateTime!
   updated_at: DateTime!
   profile: ProjectProfile
+}
+
+enum ProjectType {
+  HOUSE
+  VILLA
+  HOTEL
+  HOMESTAY
+  TOURIST_VILLAGE
 }
 
 type ProjectProfile {
@@ -335,6 +345,8 @@ type ProjectGql {
   id: ID!
   title: String!
   price: Int!
+  type: ProjectType!
+  thumbnail: String!
   address: String!
   location: String!
   policy_link: String!
@@ -379,8 +391,15 @@ type Query {
   """Get list referral user"""
   getProject(id: String!): ProjectGql!
 
+  """Get related project"""
+  getProjects(filter: ProjectFilter): [ProjectGql!]!
+
   """"""
   isVoted(projectId: String!): Boolean!
+}
+
+input ProjectFilter {
+  type: ProjectType
 }
 
 type Mutation {
