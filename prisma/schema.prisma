@@ -24,20 +24,20 @@ enum UserRole {
 }
 
 model User {
-  id               String               @id @default(cuid()) @db.VarChar(45)
-  role             UserRole             @default(USER)
-  status           UserStatus           @default(PENDING)
-  email            String?              @unique @db.VarChar(255)
-  ref_code         String               @unique @db.VarChar(10)
-  invited_by       String?              @db.VarChar(45)
-  google_id        String?              @unique @db.VarChar(45)
-  facebook_id      String?              @unique @db.VarChar(45)
-  password         String?              @db.VarChar(255)
+  id               String                @id @default(cuid()) @db.VarChar(45)
+  role             UserRole              @default(USER)
+  status           UserStatus            @default(PENDING)
+  email            String?               @unique @db.VarChar(255)
+  ref_code         String                @unique @db.VarChar(10)
+  invited_by       String?               @db.VarChar(45)
+  google_id        String?               @unique @db.VarChar(45)
+  facebook_id      String?               @unique @db.VarChar(45)
+  password         String?               @db.VarChar(255)
   profile          UserProfile?
   notification     Notification[]
   kyc_verification UserKycVerification[]
-  created_at       DateTime             @default(now())
-  updated_at       DateTime             @updatedAt
+  created_at       DateTime              @default(now())
+  updated_at       DateTime              @updatedAt
 
   referral_log ReferralLog?
   wallet       Wallet?
@@ -216,17 +216,24 @@ model TransactionLog {
   @@map("transaction_log")
 }
 
+enum ProjectType {
+  HOUSE
+  VILLA
+  HOTEL
+  HOMESTAY
+  TOURIST_VILLAGE
+}
+
 model Project {
-  id               String    @id @default(cuid()) @db.VarChar(45)
-  title            String    @db.VarChar(512)
+  id               String      @id @default(cuid()) @db.VarChar(45)
+  title            String      @db.VarChar(512)
   price            Int
-  address          String    @db.VarChar(1024)
-  location         String    @db.VarChar(30) // lat,long
-  rate             Decimal?  @db.Decimal(2, 1)
-  total_rate       Int?
-  favorites        Int?
+  type             ProjectType @default(HOUSE)
+  thumbnail        String
+  address          String      @db.VarChar(1024)
+  location         String      @db.VarChar(30) // lat,long
   policy_link      String
-  enable           Boolean   @default(false)
+  enable           Boolean     @default(false)
   open_sale_at     DateTime
   take_profit_at   DateTime
   wait_transfer_at DateTime?
@@ -244,15 +251,46 @@ model ProjectProfile {
   project_id    String  @unique
   reason_invest String?
   hightlight    String?
+  vote          Decimal @default(0) @db.Decimal(2, 1)
+  total_vote    Int     @default(0)
+  follows       Int     @default(0)
   medias        Json
-  offers        Json
   events        Json
+  offers        String?
   project       Project @relation(fields: [project_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   @@map("project_profile")
+}
+
+model ProjectFollower {
+  project_id String
+  user_id    String
+  is_follow  Boolean
+
+  @@id([project_id, user_id])
+  @@map("project_follower")
+}
+
+model ProjectVoter {
+  project_id String
+  user_id    String
+  value      Float
+  is_voted   Boolean
+
+  @@id([project_id, user_id])
+  @@map("project_voter")
+}
+
+model ProjectOffer {
+  id Int @id @default(autoincrement())
+
+  icon  String
+  title String
+
+  @@map("project_offer")
 }
 
 model Notification {

@@ -198,7 +198,7 @@ export class UserService {
       },
     });
     if (!user) {
-      throw new AppError('Bad request', 'BAD_REQUEST');
+      throw new AppError('User not found', 'USER_NOT_FOUND');
     }
     if (oldPass === newPass) {
       throw new AppError('New password must be different from old password', 'NEW_PASS_SAME_OLD_PASS');
@@ -272,7 +272,7 @@ export class UserService {
       });
     } catch (e) {
       if (e.code === 'P2002') {
-        throw new AppError('username not available, please try another username', 'USERNAME_DUPLICATED');
+        throw new AppError('Username not available', 'USERNAME_DUPLICATED');
       }
     }
   }

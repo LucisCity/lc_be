@@ -218,8 +218,9 @@ type Mutation {
 input ProjectCreateInputGql {
   title: String!
   price: Int!
+  type: ProjectType
+  thumbnail: String!
   address: String!
-  favorites: Int
   policy_link: String!
   profit_period: Int!
   created_at: DateTime
@@ -230,6 +231,14 @@ input ProjectCreateInputGql {
   profile: ProjectProfileCreateInputGql!
 }
 
+enum ProjectType {
+  HOUSE
+  VILLA
+  HOTEL
+  HOMESTAY
+  TOURIST_VILLAGE
+}
+
 input ProjectProfileCreateInputGql {
   create: ProjectProfileCreateWithoutProjectInputGql
 }
@@ -238,7 +247,7 @@ input ProjectProfileCreateWithoutProjectInputGql {
   reason_invest: String
   hightlight: String
   medias: [ProjectMedia!]!
-  offers: [ProjectOffer!]!
+  offers: [Int!]!
   events: [ProjectEvent!]!
 }
 
@@ -254,14 +263,6 @@ input ProjectMedia {
 
   """Thumbnail url"""
   thumbnail: String
-}
-
-input ProjectOffer {
-  """Title"""
-  title: String!
-
-  """Icon"""
-  icon: String!
 }
 
 input ProjectEvent {

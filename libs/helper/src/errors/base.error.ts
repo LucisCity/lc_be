@@ -11,3 +11,15 @@ export class InvalidInput extends ApolloError {
     super(message, 'INVALID_INPUT');
   }
 }
+
+export class NotFoundError extends ApolloError {
+  constructor(message: string) {
+    super(message, 'NOT_FOUND');
+  }
+}
+
+export class ExistDataError extends ApolloError {
+  constructor(message: string) {
+    super(message, 'EXIST_DATA');
+  }
+}
