@@ -149,7 +149,7 @@ export class InvestService {
         },
         data: {
           follows: {
-            [follower.is_follow ? 'decrement' : 'increment']: 1,
+            [follower?.is_follow ? 'decrement' : 'increment']: 1,
           },
         },
       }),

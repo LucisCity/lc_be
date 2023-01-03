@@ -270,6 +270,9 @@ model ProjectFollower {
   user_id    String
   is_follow  Boolean
 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
   @@id([project_id, user_id])
   @@map("project_follower")
 }
