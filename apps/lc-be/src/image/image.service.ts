@@ -59,4 +59,22 @@ export class ImageService {
       },
     });
   }
+
+  async uploadAvatar(userId: string, file: Express.Multer.File) {
+    const s3Image: S3UploadReturnObject = await this.s3Service.upload(
+      file.fieldname,
+      file.originalname + '_' + randId(10),
+      file.buffer,
+      file.mimetype,
+    );
+    await this.prisma.userProfile.update({
+      where: {
+        user_id: userId,
+      },
+      data: {
+        avatar: s3Image.url,
+      },
+    });
+    return s3Image.url;
+  }
 }
