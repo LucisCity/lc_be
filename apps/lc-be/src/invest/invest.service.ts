@@ -3,8 +3,8 @@ import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common';
 import { CACHE_KEY } from './invest.config';
 import { Cache } from 'cache-manager';
 import { Prisma, ProjectOffer } from '@prisma/client';
-import { ProjectFilter, RateProjectInput } from './invest.dto';
-import { ExistDataError, InvalidInput, NotFoundError } from '@libs/helper/errors/base.error';
+import { ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
+import { InvalidInput, NotFoundError } from '@libs/helper/errors/base.error';
 import { KMath } from '@libs/helper/math.helper';
 
 @Injectable()
@@ -149,11 +149,84 @@ export class InvestService {
         },
         data: {
           follows: {
-            [follower.is_follow ? 'decrement' : 'increment']: 1,
+            [follower?.is_follow ? 'decrement' : 'increment']: 1,
           },
         },
       }),
     ]);
     return true;
+  }
+
+  async investedProjects(userId: string) {
+    return await this.prisma.project.findMany({
+      include: {
+        profile: true,
+      },
+      take: 20,
+    });
+  }
+
+  async followingProjects(userId: string) {
+    return await this.prisma.$transaction(async (prisma) => {
+      const followingProjectIds = await prisma.projectFollower.findMany({
+        where: {
+          user_id: userId,
+          is_follow: true,
+        },
+      });
+      if (followingProjectIds.length > 0) {
+        return await prisma.project.findMany({
+          where: {
+            id: {
+              in: followingProjectIds.map((i) => i.project_id),
+            },
+          },
+          include: {
+            profile: true,
+          },
+        });
+      }
+      return [];
+    });
+  }
+
+  async recommendedProjects(userId: string) {
+    const followingProjects = await this.followingProjects(userId);
+    if (followingProjects.length > 0) {
+      const followingProjectIds = [];
+      const followingProjectTypes = [];
+      followingProjects.forEach((i) => {
+        followingProjectIds.push(i.id);
+        followingProjectTypes.push(i.type);
+      });
+      return await this.prisma.project.findMany({
+        where: {
+          id: {
+            notIn: followingProjectIds,
+          },
+          type: {
+            in: followingProjectTypes,
+          },
+        },
+        include: {
+          profile: true,
+        },
+      });
+    }
+    return [];
+  }
+
+  async hotProjects() {
+    return await this.prisma.project.findMany({
+      orderBy: {
+        profile: {
+          follows: 'desc',
+        },
+      },
+      include: {
+        profile: true,
+      },
+      take: 20,
+    });
   }
 }

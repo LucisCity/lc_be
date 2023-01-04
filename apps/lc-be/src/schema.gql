@@ -396,6 +396,18 @@ type Query {
 
   """"""
   isVoted(projectId: String!): Boolean!
+
+  """get list of projects user has invested"""
+  investedProjects: [ProjectGql!]!
+
+  """get list of projects user is following"""
+  followingProjects: [ProjectGql!]!
+
+  """get list of projects to recommend to user"""
+  recommendedProjects: [ProjectGql!]!
+
+  """get list of hot projects"""
+  hotProjects: [ProjectGql!]!
 }
 
 input ProjectFilter {

@@ -31,6 +31,37 @@ export class InvestResolver {
     return await this.service.isVoted(user.id, projectId);
   }
 
+  @UseGuards(GqlAuthGuard)
+  @Query(() => [ProjectGql], {
+    description: 'get list of projects user has invested',
+  })
+  async investedProjects(@CurrentUser() user: AppAuthUser) {
+    return await this.service.investedProjects(user.id);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => [ProjectGql], {
+    description: 'get list of projects user is following',
+  })
+  async followingProjects(@CurrentUser() user: AppAuthUser) {
+    return await this.service.followingProjects(user.id);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => [ProjectGql], {
+    description: 'get list of projects to recommend to user',
+  })
+  async recommendedProjects(@CurrentUser() user: AppAuthUser) {
+    return await this.service.recommendedProjects(user.id);
+  }
+
+  @Query(() => [ProjectGql], {
+    description: 'get list of hot projects',
+  })
+  async hotProjects() {
+    return await this.service.hotProjects();
+  }
+
   // Mutation
 
   @UseGuards(GqlAuthGuard)
