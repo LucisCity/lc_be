@@ -1,5 +1,15 @@
-import { Controller, ParseFilePipe, Post, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
-import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import {
+  Controller,
+  HttpStatus,
+  ParseFilePipe,
+  ParseFilePipeBuilder,
+  Post,
+  UploadedFiles,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { ImageService } from './image.service';
 import { FileTypeValidator, MaxFileSizeValidator } from './image.dto';
 import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
@@ -37,5 +47,35 @@ export class ImageController {
     // }
     await this.imageService.uploadKycImages(user.id, files);
     return true;
+  }
+
+  @Post('upload_avatar')
+  @UseInterceptors(FileInterceptor('avatar'))
+  async uploadAvatar(
+    // @Body() imageDto: ImageDto,
+    @CurrentUser() user: AppAuthUser,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: /image\/(jpg|jpeg|png|gif)/,
+        })
+        .addMaxSizeValidator({
+          maxSize: MAX_SIZE,
+        })
+        .build({
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        }),
+    )
+    file: Express.Multer.File,
+  ) {
+    // const sizes = imageDto.sizes;
+    // if (sizes) {
+    //   //TODO: import service resize image here!!!
+    //   /**
+    //    * eg: {image_sm, image_md, ...}  = this.resizeService.resizeImage(sizes);
+    //    */
+    //   return true;
+    // }
+    return await this.imageService.uploadAvatar(user.id, file);
   }
 }

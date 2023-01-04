@@ -197,23 +197,18 @@ model Wallet {
   @@map("wallet")
 }
 
-model TransactionType {
-  code            String           @db.VarChar(100)
-  description     String           @db.Text
-  transaction_log TransactionLog[]
-
-  @@unique([code])
-  @@map("transaction_type")
+enum TransactionType {
+  CLAIM_REFERRAL
+  CLAIM_PROFIT
 }
 
 model TransactionLog {
-  id               String          @id @default(cuid()) @db.VarChar(45)
-  type             String          @db.VarChar(100)
-  transaction_type TransactionType @relation(fields: [type], references: [code])
-  user_id          String          @db.VarChar(45)
-  wallet           Wallet          @relation(fields: [user_id], references: [user_id])
-  amount           Decimal
-  description      String?
+  id          String          @id @default(cuid()) @db.VarChar(45)
+  type        TransactionType
+  user_id     String          @db.VarChar(45)
+  wallet      Wallet          @relation(fields: [user_id], references: [user_id])
+  amount      Decimal
+  description String?
 
   blockchain_transaction BlockchainTransaction?
 
@@ -301,6 +296,45 @@ model ProjectOffer {
   title String
 
   @@map("project_offer")
+}
+
+model ProjectNftBought {
+  project_id    String
+  user_id       String
+  total         Int
+  project_ended Boolean @default(false)
+
+  @@unique([project_id, user_id])
+  @@map("project_nft_owner")
+}
+
+model ProjectProfitBalance {
+  user_id     String
+  project_id  String
+  balance     Decimal @default(0)
+  last_period Int
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([user_id, project_id])
+  @@map("project_profit_balance")
+}
+
+model ProfitBalanceChangeLog {
+  id         Int      @id @default(autoincrement())
+  project_id String
+  user_id    String
+  amount     Decimal
+  period     Int
+  from       DateTime
+  to         DateTime
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([project_id, user_id, period])
+  @@map("profit_balance_change_log")
 }
 
 model Notification {
