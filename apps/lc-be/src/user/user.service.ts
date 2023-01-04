@@ -256,7 +256,7 @@ export class UserService {
       });
       const given_name = input.given_name ?? oldProfile.given_name;
       const family_name = input.family_name ?? oldProfile.family_name;
-      let display_name =
+      const display_name =
         family_name && given_name ? family_name + ' ' + given_name : !family_name ? given_name : family_name;
       return await this.prisma.userProfile.update({
         where: {

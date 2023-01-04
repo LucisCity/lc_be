@@ -42,7 +42,7 @@ model User {
   referral_log ReferralLog?
   wallet       Wallet?
 
-  wallet_address String?                 @db.VarChar(45)
+  wallet_address String?                 @unique
   @@map("user")
 }
 
@@ -200,6 +200,7 @@ model Wallet {
 enum TransactionType {
   CLAIM_REFERRAL
   CLAIM_PROFIT
+  BUY_NFT
 }
 
 model TransactionLog {

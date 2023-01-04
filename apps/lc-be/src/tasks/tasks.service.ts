@@ -6,7 +6,10 @@ import { PubsubService } from '@libs/pubsub';
 import { ContractType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/contract-type.enum';
 import { Erc721Service } from '../blockchain/erc721.service';
 import { erc721ABI } from '../blockchain/abi/erc721ABI';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from 'ethers';
+import { Prisma } from '@prisma/client';
+import { TransactionType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/transaction-type.enum';
+import { NotificationService } from '@libs/subscription/notification.service';
 
 const EVERY_2_SECONDS = '*/2 * * * * *';
 @Injectable()
@@ -18,6 +21,7 @@ export class TasksService {
     private prismaService: PrismaService,
     private blockChainService: BlockchainService,
     private pubsubService: PubsubService,
+    private notificationService: NotificationService,
   ) {
     this.logger.log(`Cron scan transaction from blockchain ${this.enableCron ? 'ON' : 'OFF'}`);
   }
@@ -215,9 +219,26 @@ export class TasksService {
           }
           // mint
           if (from === '0x0000000000000000000000000000000000000000') {
-            // TODO:
-            // const floorPrice = await instance.getContract().floorPrice();
-            // const nomalizeFloorPrice = BigNumber.from(floorPrice).toString();
+            const floorPrice = await instance.getContract().floorPrice();
+            const normalizeFloorPrice = BigNumber.from(floorPrice).toString();
+
+            const user = await this.prismaService.user.findUnique({ where: { wallet_address: to } });
+            await this.prismaService.transactionLog.create({
+              data: {
+                type: TransactionType.BUY_NFT,
+                user_id: user?.wallet_address ?? '0000000000000000000000000',
+                description: 'Claim reward for referral',
+                amount: new Prisma.Decimal(normalizeFloorPrice),
+              },
+            });
+            if (user) {
+              await this.notificationService.createAndPushNoti(
+                user.id,
+                'you just bought one nft',
+                `you just bought one nft`,
+              );
+            }
+
             return;
           }
           if (nft.owner === from && to !== nft.owner) {
