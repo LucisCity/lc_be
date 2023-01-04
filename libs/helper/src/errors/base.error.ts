@@ -23,3 +23,9 @@ export class ExistDataError extends ApolloError {
     super(message, 'EXIST_DATA');
   }
 }
+
+export class NotEnoughBalance extends ApolloError {
+  constructor(message: string) {
+    super(message, 'NOT_ENOUGH_BALANCE');
+  }
+}

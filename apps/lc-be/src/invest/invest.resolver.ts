@@ -1,5 +1,6 @@
 import { AppAuthUser, CurrentUser } from '@libs/helper/decorator/current_user.decorator';
 import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
+import { ProjectProfitBalance } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profit-balance/project-profit-balance.model';
 import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
@@ -62,6 +63,14 @@ export class InvestResolver {
     return await this.service.hotProjects();
   }
 
+  @UseGuards(GqlAuthGuard)
+  @Query(() => [ProjectProfitBalance], {
+    description: 'Get profit balance',
+  })
+  async getProfitBalance(@CurrentUser() user: AppAuthUser, @Args('projectId') projectId: string) {
+    return this.service.getProfitBalance(user.id, projectId);
+  }
+
   // Mutation
 
   @UseGuards(GqlAuthGuard)
@@ -80,5 +89,14 @@ export class InvestResolver {
   })
   async toggleFollowProject(@CurrentUser() user: AppAuthUser, @Args('projectId') projectId: string): Promise<any> {
     return this.service.toggleFollowProject(user.id, projectId);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => Boolean, {
+    nullable: true,
+    description: 'Claim project profit',
+  })
+  async claimProjectProfit(@CurrentUser() user: AppAuthUser, @Args('projectId') projectId: string): Promise<any> {
+    return this.service.claimProjectProfit(user.id, projectId);
   }
 }
