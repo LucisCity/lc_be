@@ -42,6 +42,7 @@ model User {
   referral_log ReferralLog?
   wallet       Wallet?
 
+  wallet_address String?                 @db.VarChar(45)
   @@map("user")
 }
 
@@ -116,12 +117,18 @@ model ReferralLog {
   @@map("referral_log")
 }
 
+enum ContractType {
+    TOKEN
+    NFT
+}
 model Contract {
   id            String  @id @default(cuid()) @db.VarChar(45)
   address       String  @db.VarChar(45)
   admin         String? @db.VarChar(45)
   admin_prv_key String? @db.Text
   abi           String? @db.Text
+
+  type          ContractType?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -309,4 +316,17 @@ model Notification {
   updated_at DateTime @updatedAt
 
   @@map("notification")
+}
+
+model Nft {
+  id            String     @id @default(cuid())
+
+  owner         String
+  token_id      String     @unique
+  address       String     @db.VarChar(45)
+
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  @@map("nft")
 }

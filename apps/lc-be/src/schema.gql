@@ -135,6 +135,7 @@ type User {
   updated_at: DateTime!
   referral_log: ReferralLog
   wallet: Wallet
+  wallet_address: String
   _count: UserCount!
 }
 
@@ -184,6 +185,7 @@ type UserGql {
   kyc_verification: [UserKycVerification!]
   referral_log: ReferralLog
   wallet: Wallet
+  wallet_address: String
   _count: UserCount!
   profile: ProfileGql!
 }
@@ -218,6 +220,7 @@ type ReferralDataResponse {
   updated_at: DateTime!
   referral_log: ReferralLog
   wallet: Wallet
+  wallet_address: String
   _count: UserCount!
   reward: String
 }

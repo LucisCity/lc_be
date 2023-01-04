@@ -25,6 +25,10 @@ export class BlockchainService {
     return null;
   }
 
+  public async getBlockNumber() {
+    return await this.provider.getBlockNumber();
+  }
+
   /***
    * @param to
    * @param amount want to send. Exp: 0.1 bnb
@@ -38,12 +42,7 @@ export class BlockchainService {
     });
   }
 
-  public async getLogs(
-    from: number,
-    to: number,
-    address?: string,
-    topics?: string[],
-  ) {
+  public async getLogs(from: number, to: number, address?: string, topics?: string[]) {
     const req: {
       fromBlock: number;
       toBlock: number;

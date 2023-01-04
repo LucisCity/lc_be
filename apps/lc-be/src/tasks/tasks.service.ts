@@ -3,12 +3,17 @@ import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '@libs/prisma';
 import { BlockchainService } from '../blockchain/blockchain.service';
 import { PubsubService } from '@libs/pubsub';
+import { ContractType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/contract-type.enum';
+import { Erc721Service } from '../blockchain/erc721.service';
+import { erc721ABI } from '../blockchain/abi/erc721ABI';
+import { BigNumber, ethers } from 'ethers';
 
 const EVERY_2_SECONDS = '*/2 * * * * *';
 @Injectable()
 export class TasksService {
   private readonly logger = new Logger(TasksService.name);
   private readonly enableCron = process.env.SCAN_BLOCKCHAIN_CRON_ENABLE === 'true';
+  private startBlock = 0;
   constructor(
     private prismaService: PrismaService,
     private blockChainService: BlockchainService,
@@ -156,5 +161,77 @@ export class TasksService {
         });
       }
     }
+  }
+
+  @Cron(EVERY_2_SECONDS)
+  async listenerEventNft() {
+    if (!this.enableCron) {
+      return;
+    }
+
+    const blockNumber = await this.blockChainService.getBlockNumber();
+    if (this.startBlock === 0) {
+      // rada 3000 blocks
+      this.startBlock = blockNumber - 3000;
+    }
+    if (blockNumber === this.startBlock) {
+      return;
+    } else {
+      this.startBlock = blockNumber;
+    }
+    const contracts = await this.prismaService.contract.findMany({
+      where: {
+        OR: [
+          {
+            type: ContractType.NFT,
+          },
+        ],
+      },
+    });
+
+    const listNftInstance: Erc721Service[] = [];
+    for (const c of contracts) {
+      const nft = new Erc721Service(this.blockChainService);
+      nft.setContract(c.address, c?.abi ?? erc721ABI);
+      listNftInstance.push(nft);
+    }
+
+    listNftInstance.forEach((instance) => {
+      instance.filterEvents('Transfer', this.startBlock, 'latest').then((listEvents) => {
+        listEvents.forEach(async (event) => {
+          const from = event.args[0];
+          const to = event.args[1];
+          const tokenId = event.args[2] as BigNumber;
+          // transfer
+          const nft = await this.prismaService.nft.findUnique({ where: { token_id: tokenId.toString() } });
+          if (!nft) {
+            await this.prismaService.nft.create({
+              data: {
+                token_id: tokenId.toString(),
+                owner: to,
+                address: instance.getContract().address,
+              },
+            });
+          }
+          // mint
+          if (from === '0x0000000000000000000000000000000000000000') {
+            // TODO:
+            // const floorPrice = await instance.getContract().floorPrice();
+            // const nomalizeFloorPrice = BigNumber.from(floorPrice).toString();
+            return;
+          }
+          if (nft.owner === from && to !== nft.owner) {
+            await this.prismaService.nft.update({
+              where: {
+                token_id: tokenId.toString(),
+              },
+              data: {
+                owner: to,
+              },
+            });
+          }
+        });
+      });
+    });
   }
 }
