@@ -42,7 +42,8 @@ model User {
   referral_log ReferralLog?
   wallet       Wallet?
 
-  wallet_address String?                 @unique
+  wallet_address String? @unique
+
   @@map("user")
 }
 
@@ -118,20 +119,22 @@ model ReferralLog {
 }
 
 enum ContractType {
-    TOKEN
-    NFT
+  TOKEN
+  NFT
 }
+
 model Contract {
   id            String  @id @default(cuid()) @db.VarChar(45)
-  address       String  @db.VarChar(45)
+  address       String  @unique() @db.VarChar(45)
   admin         String? @db.VarChar(45)
   admin_prv_key String? @db.Text
   abi           String? @db.Text
 
-  type          ContractType?
+  type ContractType?
 
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  project    Project?
 
   @@map("contract")
 }
@@ -245,9 +248,11 @@ model Project {
   profit_period       Int // in day
   profit_period_index Int         @default(0)
 
-  created_at DateTime        @default(now())
-  updated_at DateTime        @updatedAt
-  profile    ProjectProfile?
+  contract_address String?         @db.VarChar(45) @unique()
+  contract         Contract?       @relation(fields: [contract_address], references: [address])
+  created_at       DateTime        @default(now())
+  updated_at       DateTime        @updatedAt
+  profile          ProjectProfile?
 
   @@map("project")
 }
@@ -354,14 +359,14 @@ model Notification {
 }
 
 model Nft {
-  id            String     @id @default(cuid())
+  id String @id @default(cuid())
 
-  owner         String
-  token_id      String     @unique
-  address       String     @db.VarChar(45)
+  owner    String
+  token_id String @unique
+  address  String @db.VarChar(45)
 
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("nft")
 }

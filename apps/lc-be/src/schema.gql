@@ -240,6 +240,31 @@ type UnseenNotifications {
   count: Int
 }
 
+type ProjectProfitBalance {
+  user_id: String!
+  project_id: String!
+  balance: Decimal!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+type Contract {
+  id: ID!
+  address: String!
+  admin: String
+  admin_prv_key: String
+  abi: String
+  type: ContractType
+  created_at: DateTime!
+  updated_at: DateTime!
+  project: Project
+}
+
+enum ContractType {
+  TOKEN
+  NFT
+}
+
 type Project {
   id: ID!
   title: String!
@@ -255,6 +280,9 @@ type Project {
   wait_transfer_at: DateTime
   ended: Boolean
   profit_period: Int!
+  profit_period_index: Int!
+  contract_address: String
+  contract: Contract
   created_at: DateTime!
   updated_at: DateTime!
   profile: ProjectProfile
@@ -353,6 +381,9 @@ type ProjectGql {
   wait_transfer_at: DateTime
   ended: Boolean
   profit_period: Int!
+  profit_period_index: Int!
+  contract_address: String
+  contract: Contract
 
   """"""
   profile: ProjectProfileGql!
@@ -409,6 +440,9 @@ type Query {
 
   """get list of hot projects"""
   hotProjects: [ProjectGql!]!
+
+  """Get profit balance"""
+  getProfitBalance(projectId: String!): [ProjectProfitBalance!]!
 }
 
 input ProjectFilter {
@@ -467,6 +501,9 @@ type Mutation {
 
   """Toggle follow project"""
   toggleFollowProject(projectId: String!): Boolean
+
+  """Claim project profit"""
+  claimProjectProfit(projectId: String!): Boolean
 }
 
 input AccountInfoUpdateInput {
