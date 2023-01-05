@@ -146,48 +146,6 @@ export class UserService {
     return response;
   }
 
-  //   async updateProfile(
-  //     userId: number,
-  //     data: Prisma.UserProfileUpdateInput,
-  //   ): Promise<UpdateProfileResponse> {
-  //     const password = data.password;
-  //     delete data.password;
-  //     const userProfile = await this.prisma.userProfile.update({
-  //       where: {
-  //         user_id: userId,
-  //       },
-  //       data: data,
-  //       include: {
-  //         user: true,
-  //       },
-  //     });
-  //     let passwordSaved = false;
-  //     if (password && password.set) {
-  //       // check exist password
-  //       if (userProfile.user.password) {
-  //         throw new AppError('Password existed', 'PASSWORD_EXIST');
-  //       }
-  //       // check strong pass
-  //       if (PasswordUtils.validate(password.set) !== true) {
-  //         throw new AppError(
-  //           'New password invalid, password must length from 8-32, contain letter and digit ',
-  //           'NEW_PASS_INVALID',
-  //         );
-  //       }
-  //       const hashPass = await PasswordUtils.hashPassword(password.set);
-  //       await this.prisma.user.update({
-  //         where: {
-  //           id: userId,
-  //         },
-  //         data: {
-  //           password: hashPass,
-  //         },
-  //       });
-  //       passwordSaved = true;
-  //     }
-  //     return { updated_profile: userProfile, password_saved: passwordSaved };
-  //   }
-
   async changePassword(userId: string, oldPass: string, newPass: string): Promise<boolean> {
     const user = await this.prisma.user.findUnique({
       where: {
@@ -342,5 +300,28 @@ export class UserService {
       return userKyc.find((i) => i.status !== 'FAILED') ?? userKyc[0];
     }
     return null;
+  }
+
+  async getWalletAddress(userId: string): Promise<string | null | undefined> {
+    const user = await this.prisma.user.findFirst({ where: { id: userId } });
+    return user?.wallet_address;
+  }
+
+  async updateWalletAddress(userId: string, walletAddress: string) {
+    const user = await this.prisma.user.findUnique({ where: { wallet_address: walletAddress } });
+    if (user) {
+      throw new AppError('Duplicate address!', 'DUPLICATE_ADDRESS');
+    }
+    const u = await this.prisma.user.findFirst({ where: { id: userId } });
+    if (u.wallet_address) {
+      throw new AppError('User connected to 1 address.', 'USER_CONNECTED');
+    }
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        wallet_address: walletAddress,
+      },
+    });
+    return walletAddress;
   }
 }

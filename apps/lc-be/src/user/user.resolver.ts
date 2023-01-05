@@ -119,4 +119,19 @@ export class UserResolver {
   async getKycImages(@CurrentUser() user: AppAuthUser): Promise<UserKycVerification> {
     return this.userService.getKycImages(user.id);
   }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => String, { nullable: true, description: 'get wallet address' })
+  async getWalletAddress(@CurrentUser() user: AppAuthUser): Promise<string> {
+    return this.userService.getWalletAddress(user.id);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => String, { nullable: true, description: 'upadate wallet address' })
+  async updateWalletAddress(
+    @CurrentUser() user: AppAuthUser,
+    @Args('walletAddress') walletAddress: string,
+  ): Promise<string> {
+    return await this.userService.updateWalletAddress(user.id, walletAddress);
+  }
 }
