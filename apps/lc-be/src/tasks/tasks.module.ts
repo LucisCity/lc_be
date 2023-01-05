@@ -4,7 +4,7 @@ import { BlockchainModule } from '../blockchain/blockchain.module';
 import { NotificationService } from '@libs/subscription/notification.service';
 
 @Module({
-  imports: [BlockchainModule, NotificationService],
+  imports: [BlockchainModule],
   providers: [TasksService],
 })
 export class TasksModule {}

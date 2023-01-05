@@ -201,6 +201,7 @@ enum TransactionType {
   CLAIM_REFERRAL
   CLAIM_PROFIT
   BUY_NFT
+  WITHDRAW_BALANCE
 }
 
 model TransactionLog {

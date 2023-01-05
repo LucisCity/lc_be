@@ -88,6 +88,7 @@ enum TransactionType {
   CLAIM_REFERRAL
   CLAIM_PROFIT
   BUY_NFT
+  WITHDRAW_BALANCE
 }
 
 """An arbitrary-precision Decimal type"""
@@ -382,6 +383,9 @@ type Query {
   """get kyc verification images"""
   getKycImages: UserKycVerification
 
+  """get wallet address"""
+  getWalletAddress: String
+
   """get OTP"""
   getOneTimePassword(address: String!): String!
 
@@ -445,6 +449,9 @@ type Mutation {
 
   """mark all notis as read"""
   markAllNotisSeen: Boolean
+
+  """upadate wallet address"""
+  updateWalletAddress(walletAddress: String!): String
 
   """Send tx transaction"""
   sendTransaction(txHash: String!, abi: String): Boolean!

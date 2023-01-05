@@ -134,7 +134,7 @@ export class TasksService {
         // TODO: Add handler here
       } catch (e) {
         this.logger.error(`Error: ${e.message}`);
-        if (e.status === 503) {
+        if (e.status == 500 || e.status == 501 || e.status == 502 || e.status == 503 || e.status == 504) {
           await this.prismaService.blockchainTransaction.update({
             where: {
               id: tx.id,
@@ -172,87 +172,95 @@ export class TasksService {
     if (!this.enableCron) {
       return;
     }
-
-    const blockNumber = await this.blockChainService.getBlockNumber();
-    if (this.startBlock === 0) {
-      // rada 3000 blocks
-      this.startBlock = blockNumber - 3000;
-    }
-    if (blockNumber === this.startBlock) {
-      return;
-    } else {
-      this.startBlock = blockNumber;
-    }
-    const contracts = await this.prismaService.contract.findMany({
-      where: {
-        OR: [
-          {
-            type: ContractType.NFT,
-          },
-        ],
-      },
-    });
-
-    const listNftInstance: Erc721Service[] = [];
-    for (const c of contracts) {
-      const nft = new Erc721Service(this.blockChainService);
-      nft.setContract(c.address, c?.abi ?? erc721ABI);
-      listNftInstance.push(nft);
-    }
-
-    listNftInstance.forEach((instance) => {
-      instance.filterEvents('Transfer', this.startBlock, 'latest').then((listEvents) => {
-        listEvents.forEach(async (event) => {
-          const from = event.args[0];
-          const to = event.args[1];
-          const tokenId = event.args[2] as BigNumber;
-          // transfer
-          const nft = await this.prismaService.nft.findUnique({ where: { token_id: tokenId.toString() } });
-          if (!nft) {
-            await this.prismaService.nft.create({
-              data: {
-                token_id: tokenId.toString(),
-                owner: to,
-                address: instance.getContract().address,
-              },
-            });
-          }
-          // mint
-          if (from === '0x0000000000000000000000000000000000000000') {
-            const floorPrice = await instance.getContract().floorPrice();
-            const normalizeFloorPrice = BigNumber.from(floorPrice).toString();
-
-            const user = await this.prismaService.user.findUnique({ where: { wallet_address: to } });
-            await this.prismaService.transactionLog.create({
-              data: {
-                type: TransactionType.BUY_NFT,
-                user_id: user?.wallet_address ?? '0000000000000000000000000',
-                description: 'Claim reward for referral',
-                amount: new Prisma.Decimal(normalizeFloorPrice),
-              },
-            });
-            if (user) {
-              await this.notificationService.createAndPushNoti(
-                user.id,
-                'you just bought one nft',
-                `you just bought one nft`,
-              );
-            }
-
-            return;
-          }
-          if (nft.owner === from && to !== nft.owner) {
-            await this.prismaService.nft.update({
-              where: {
-                token_id: tokenId.toString(),
-              },
-              data: {
-                owner: to,
-              },
-            });
-          }
-        });
+    try {
+      const blockNumber = await this.blockChainService.getBlockNumber();
+      if (this.startBlock === 0) {
+        // rada 3000 blocks
+        this.startBlock = blockNumber - 3000;
+      }
+      if (blockNumber === this.startBlock) {
+        return;
+      } else {
+        this.startBlock = blockNumber;
+      }
+      const contracts = await this.prismaService.contract.findMany({
+        where: {
+          OR: [
+            {
+              type: ContractType.NFT,
+            },
+          ],
+        },
       });
-    });
+
+      const listNftInstance: Erc721Service[] = [];
+      for (const c of contracts) {
+        const nft = new Erc721Service(this.blockChainService);
+        nft.setContract(c.address, c?.abi ?? erc721ABI);
+        listNftInstance.push(nft);
+      }
+
+      listNftInstance.forEach((instance) => {
+        instance
+          .filterEvents('Transfer', this.startBlock, 'latest')
+          .then((listEvents) => {
+            listEvents.forEach(async (event) => {
+              const from = event.args[0];
+              const to = event.args[1];
+              const tokenId = event.args[2] as BigNumber;
+              // transfer
+              const nft = await this.prismaService.nft.findUnique({ where: { token_id: tokenId.toString() } });
+              if (!nft) {
+                await this.prismaService.nft.create({
+                  data: {
+                    token_id: tokenId.toString(),
+                    owner: to,
+                    address: instance.getContract().address,
+                  },
+                });
+              }
+              // mint
+              if (from === '0x0000000000000000000000000000000000000000') {
+                const floorPrice = await instance.getContract().floorPrice();
+                const normalizeFloorPrice = BigNumber.from(floorPrice).toString();
+
+                const user = await this.prismaService.user.findUnique({ where: { wallet_address: to } });
+                await this.prismaService.transactionLog.create({
+                  data: {
+                    type: TransactionType.BUY_NFT,
+                    user_id: user?.wallet_address ?? '0000000000000000000000000',
+                    description: 'Claim reward for referral',
+                    amount: new Prisma.Decimal(normalizeFloorPrice),
+                  },
+                });
+                if (user) {
+                  await this.notificationService.createAndPushNoti(
+                    user.id,
+                    'you just bought one nft',
+                    `you just bought one nft`,
+                  );
+                }
+
+                return;
+              }
+              if (nft.owner === from && to !== nft.owner) {
+                await this.prismaService.nft.update({
+                  where: {
+                    token_id: tokenId.toString(),
+                  },
+                  data: {
+                    owner: to,
+                  },
+                });
+              }
+            });
+          })
+          .catch((e) => {
+            this.logger.error(`Error: ${e.message}`);
+          });
+      });
+    } catch (e) {
+      this.logger.error(`Error: ${e.message}`);
+    }
   }
 }
