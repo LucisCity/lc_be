@@ -3,6 +3,7 @@ import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Prisma, Project } from '@prisma/client';
+import { PubsubService } from '@libs/pubsub';
 
 const PROFIT_RATE = 0.1; // 10%
 
@@ -10,7 +11,11 @@ const PROFIT_RATE = 0.1; // 10%
 export class InvestJob {
   private readonly logger = new Logger(InvestJob.name);
 
-  constructor(private prisma: PrismaService, @Inject(CACHE_MANAGER) private cacheManager: Cache) {}
+  constructor(
+    private prisma: PrismaService,
+    private pubsubService: PubsubService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async computeProfit() {
@@ -116,7 +121,7 @@ export class InvestJob {
       });
     }
     this.logger.verbose(`Compute profit in previous period in project ${Object.keys(projectById).join(', ')}`);
-    await this.prisma.$transaction([
+    const txResults = await this.prisma.$transaction([
       ...profitBalanceInputs.map((item) => this.prisma.projectProfitBalance.upsert(item)),
       ...profitBalanceChangeLogInputs.map((item) => this.prisma.projectProfitBalanceChangeLog.create(item)),
       ...Object.values(projectById).map((item) =>
@@ -130,5 +135,10 @@ export class InvestJob {
         }),
       ),
     ]);
+
+    // public to client
+    for (let item of profitBalanceInputs) {
+      this.pubsubService.pubSub.publish('profitBalance', { profitBalance: item.create });
+    }
   }
 }
