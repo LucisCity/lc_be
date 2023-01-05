@@ -4,7 +4,7 @@ import { CACHE_KEY } from './invest.config';
 import { Cache } from 'cache-manager';
 import { Prisma, ProjectOffer } from '@prisma/client';
 import { ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
-import { InvalidInput, NotFoundError } from '@libs/helper/errors/base.error';
+import { InvalidInput, NotEnoughBalance, NotFoundError } from '@libs/helper/errors/base.error';
 import { KMath } from '@libs/helper/math.helper';
 
 @Injectable()
@@ -228,5 +228,54 @@ export class InvestService {
       },
       take: 20,
     });
+  }
+
+  async getProfitBalance(userId: string, projectId: string) {
+    return this.prisma.projectProfitBalance.findUnique({
+      where: {
+        user_id_project_id: {
+          user_id: userId,
+          project_id: projectId,
+        },
+      },
+    });
+  }
+
+  async claimProjectProfit(userId: string, projectId: string) {
+    const balance = await this.prisma.projectProfitBalance.findUnique({
+      where: {
+        user_id_project_id: {
+          user_id: userId,
+          project_id: projectId,
+        },
+      },
+    });
+    if (!balance) {
+      throw new NotEnoughBalance('Not enough balance to claim');
+    }
+    // create log, update balance
+    await this.prisma.$transaction([
+      this.prisma.projectProfitBalanceChangeLog.create({
+        data: {
+          amount: -balance.balance,
+          project_id: projectId,
+          user_id: userId,
+        },
+      }),
+      this.prisma.projectProfitBalance.update({
+        data: {
+          balance: {
+            decrement: balance.balance,
+          },
+        },
+        where: {
+          user_id_project_id: {
+            project_id: projectId,
+            user_id: userId,
+          },
+        },
+      }),
+    ]);
+    return true;
   }
 }

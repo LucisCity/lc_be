@@ -229,20 +229,21 @@ enum ProjectType {
 }
 
 model Project {
-  id               String      @id @default(cuid()) @db.VarChar(45)
-  title            String      @db.VarChar(512)
-  price            Int
-  type             ProjectType @default(HOUSE)
-  thumbnail        String
-  address          String      @db.VarChar(1024)
-  location         String      @db.VarChar(30) // lat,long
-  policy_link      String
-  enable           Boolean     @default(false)
-  open_sale_at     DateTime
-  take_profit_at   DateTime
-  wait_transfer_at DateTime?
-  ended            Boolean?
-  profit_period    Int // in day
+  id                  String      @id @default(cuid()) @db.VarChar(45)
+  title               String      @db.VarChar(512)
+  price               Int
+  type                ProjectType @default(HOUSE)
+  thumbnail           String
+  address             String      @db.VarChar(1024)
+  location            String      @db.VarChar(30) // lat,long
+  policy_link         String
+  enable              Boolean     @default(false)
+  open_sale_at        DateTime
+  take_profit_at      DateTime
+  wait_transfer_at    DateTime?
+  ended               Boolean?
+  profit_period       Int // in day
+  profit_period_index Int         @default(0)
 
   created_at DateTime        @default(now())
   updated_at DateTime        @updatedAt
@@ -301,20 +302,20 @@ model ProjectOffer {
 }
 
 model ProjectNftBought {
-  project_id    String
-  user_id       String
-  total         Int
-  project_ended Boolean @default(false)
+  project_id      String
+  user_id         String
+  total_nft       Int
+  currency_amount Decimal
+  project_ended   Boolean @default(false)
 
   @@unique([project_id, user_id])
   @@map("project_nft_owner")
 }
 
 model ProjectProfitBalance {
-  user_id     String
-  project_id  String
-  balance     Decimal @default(0)
-  last_period Int
+  user_id    String
+  project_id String
+  balance    Decimal @default(0)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -323,20 +324,18 @@ model ProjectProfitBalance {
   @@map("project_profit_balance")
 }
 
-model ProfitBalanceChangeLog {
-  id         Int      @id @default(autoincrement())
-  project_id String
-  user_id    String
-  amount     Decimal
-  period     Int
-  from       DateTime
-  to         DateTime
+model ProjectProfitBalanceChangeLog {
+  id           Int     @id @default(autoincrement())
+  project_id   String
+  user_id      String
+  amount       Decimal
+  period_index Int?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  @@unique([project_id, user_id, period])
-  @@map("profit_balance_change_log")
+  @@unique([project_id, user_id, period_index])
+  @@map("project_profit_balance_change_log")
 }
 
 model Notification {

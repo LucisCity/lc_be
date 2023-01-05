@@ -1,5 +1,6 @@
 import { ProjectType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/project-type.enum';
 import { ProjectProfile } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profile/project-profile.model';
+import { ProjectProfitBalance } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profit-balance/project-profit-balance.model';
 import { Project } from '@libs/prisma/@generated/prisma-nestjs-graphql/project/project.model';
 import { Field, Float, InputType, Int, ObjectType, OmitType } from '@nestjs/graphql';
 import { Max, Min } from 'class-validator';
