@@ -193,6 +193,7 @@ model Wallet {
 enum TransactionType {
   CLAIM_REFERRAL
   CLAIM_PROFIT
+  WITHDRAW_BALANCE
 }
 
 model TransactionLog {
@@ -232,8 +233,8 @@ model Project {
   open_sale_at        DateTime
   take_profit_at      DateTime
   wait_transfer_at    DateTime?
-  ended               Boolean?
-  profit_period       Int // in day
+  ended               Boolean     @default(false)
+  profit_period       Int         @default(90) // in day
   profit_period_index Int         @default(0)
 
   created_at DateTime        @default(now())
@@ -306,7 +307,9 @@ model ProjectNftBought {
 model ProjectProfitBalance {
   user_id    String
   project_id String
-  balance    Decimal @default(0)
+  balance    Decimal  @default(0)
+  from       DateTime
+  to         DateTime
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

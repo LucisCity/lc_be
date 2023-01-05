@@ -4,11 +4,12 @@ import { ProjectProfitBalance } from '@libs/prisma/@generated/prisma-nestjs-grap
 import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
+import { InvestJob } from './invest.job';
 import { InvestService } from './invest.service';
 
 @Resolver()
 export class InvestResolver {
-  constructor(private service: InvestService) {}
+  constructor(private service: InvestService, private job: InvestJob) {}
 
   @Query(() => ProjectGql, {
     description: 'Get list referral user',
@@ -64,12 +65,22 @@ export class InvestResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Query(() => [ProjectProfitBalance], {
+  @Query(() => ProjectProfitBalance, {
     description: 'Get profit balance',
+    nullable: true,
   })
   async getProfitBalance(@CurrentUser() user: AppAuthUser, @Args('projectId') projectId: string) {
     return this.service.getProfitBalance(user.id, projectId);
   }
+
+  // @Query(() => Boolean, {
+  //   description: 'Test compute profit',
+  //   nullable: true,
+  // })
+  // async computeProfit() {
+  //   await this.job.computeProfit();
+  //   return true;
+  // }
 
   // Mutation
 
