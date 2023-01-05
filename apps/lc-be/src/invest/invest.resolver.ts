@@ -3,7 +3,7 @@ import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
 import { ProjectProfitBalance } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profit-balance/project-profit-balance.model';
 import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
+import { InvestedProjectGql, ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
 import { InvestService } from './invest.service';
 
 @Resolver()
@@ -33,7 +33,7 @@ export class InvestResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Query(() => [ProjectGql], {
+  @Query(() => [InvestedProjectGql], {
     description: 'get list of projects user has invested',
   })
   async investedProjects(@CurrentUser() user: AppAuthUser) {

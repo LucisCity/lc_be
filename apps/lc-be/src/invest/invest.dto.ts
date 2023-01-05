@@ -2,8 +2,9 @@ import { ProjectType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prism
 import { ProjectProfile } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profile/project-profile.model';
 import { ProjectProfitBalance } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profit-balance/project-profit-balance.model';
 import { Project } from '@libs/prisma/@generated/prisma-nestjs-graphql/project/project.model';
-import { Field, Float, InputType, Int, ObjectType, OmitType } from '@nestjs/graphql';
+import { Field, Float, InputType, Int, IntersectionType, ObjectType, OmitType } from '@nestjs/graphql';
 import { Max, Min } from 'class-validator';
+import { ProjectNftBought } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-nft-bought/project-nft-bought.model';
 
 @ObjectType()
 export class ProjectMediaGql {
@@ -58,6 +59,27 @@ export abstract class ProjectProfileGql extends OmitType(ProjectProfile, [
 export abstract class ProjectGql extends OmitType(Project, ['created_at', 'enable', 'updated_at', 'profile']) {
   @Field(() => ProjectProfileGql, { nullable: false, description: '' })
   profile: ProjectProfileGql;
+}
+
+@ObjectType()
+export abstract class ProjectProfitBalanceGql extends OmitType(ProjectProfitBalance, [
+  'project_id',
+  'created_at',
+  'updated_at',
+]) {}
+@ObjectType()
+export abstract class ProjectNftBoughtGql extends OmitType(ProjectNftBought, ['project_id', 'user_id']) {}
+
+@ObjectType()
+export abstract class InvestedProjectGql extends OmitType(Project, ['created_at', 'enable', 'updated_at', 'profile']) {
+  @Field(() => ProjectProfileGql, { nullable: false, description: '' })
+  profile: ProjectProfileGql;
+
+  @Field(() => ProjectProfitBalanceGql, { nullable: false, description: '' })
+  profit_balance: ProjectProfitBalanceGql;
+
+  @Field(() => ProjectNftBoughtGql, { nullable: false, description: '' })
+  nft_bought: ProjectNftBoughtGql;
 }
 
 @InputType()
