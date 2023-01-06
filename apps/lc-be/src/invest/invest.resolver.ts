@@ -6,7 +6,7 @@ import { PubsubService } from '@libs/pubsub';
 import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver, Subscription } from '@nestjs/graphql';
 import { INVEST_SUBSCRIPTION_KEY } from './invest.config';
-import { ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
+import { InvestedProjectGql, ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
 import { InvestService } from './invest.service';
 
 @Resolver()
@@ -36,7 +36,7 @@ export class InvestResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Query(() => [ProjectGql], {
+  @Query(() => [InvestedProjectGql], {
     description: 'get list of projects user has invested',
   })
   async investedProjects(@CurrentUser() user: AppAuthUser) {

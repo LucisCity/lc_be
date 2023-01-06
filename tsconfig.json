@@ -36,11 +36,11 @@
       "@libs/pubsub/*": [
         "libs/pubsub/src/*"
       ],
-      "@libs/notification": [
-        "libs/notification/src"
+      "@libs/subscription": [
+        "libs/subscription/src"
       ],
-      "@libs/notification/*": [
-        "libs/notification/src/*"
+      "@libs/subscription/*": [
+        "libs/subscription/src/*"
       ]
     }
   }

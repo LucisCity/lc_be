@@ -3,7 +3,6 @@ import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common';
 import { CACHE_KEY, INVEST_SUBSCRIPTION_KEY } from './invest.config';
 import { Cache } from 'cache-manager';
 import { Prisma, ProjectOffer } from '@prisma/client';
-import { InvestErrorCode, ProjectFilter, RateProjectInput } from './invest.dto';
 import {
   AppError,
   BadRequestError,
@@ -11,6 +10,7 @@ import {
   NotEnoughBalance,
   NotFoundError,
 } from '@libs/helper/errors/base.error';
+import { InvestedProjectGql, InvestErrorCode, ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
 import { KMath } from '@libs/helper/math.helper';
 import { PubsubService } from '@libs/pubsub';
 @Injectable()
@@ -37,6 +37,7 @@ export class InvestService {
       },
       include: {
         profile: true,
+        contract: true,
       },
     });
     // compute offer object
@@ -59,6 +60,7 @@ export class InvestService {
       where,
       include: {
         profile: true,
+        contract: true,
       },
       take: 20,
     });
@@ -168,11 +170,50 @@ export class InvestService {
   }
 
   async investedProjects(userId: string) {
-    return await this.prisma.project.findMany({
-      include: {
-        profile: true,
-      },
-      take: 20,
+    return await this.prisma.$transaction(async (prisma) => {
+      const nftBought = await prisma.projectNftBought.findMany({
+        where: {
+          user_id: userId,
+        },
+        orderBy: {
+          project_id: 'asc',
+        },
+      });
+      if (nftBought.length > 0) {
+        const investedProjectIds = nftBought.map((i) => i.project_id);
+        const profitBalance = await prisma.projectProfitBalance.findMany({
+          where: {
+            project_id: {
+              in: investedProjectIds,
+            },
+          },
+          select: {
+            balance: true,
+          },
+          orderBy: {
+            project_id: 'asc',
+          },
+        });
+        const projects = await prisma.project.findMany({
+          where: {
+            id: {
+              in: investedProjectIds,
+            },
+          },
+          include: {
+            profile: true,
+          },
+          orderBy: {
+            id: 'asc',
+          },
+        });
+        return projects.map((i, idx) => ({
+          ...i,
+          profit_balance: { ...profitBalance[idx] },
+          nft_bought: { ...nftBought[idx] },
+        }));
+      }
+      return [];
     });
   }
 

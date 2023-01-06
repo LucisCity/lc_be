@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@libs/prisma';
 import { PubsubService } from '@libs/pubsub';
 import { Prisma } from '@prisma/client';
-import { NotificationGql } from './notification.dto';
 
 @Injectable()
 export class NotificationService {
@@ -36,15 +35,20 @@ export class NotificationService {
     ]);
 
     // this.logger.log(`newNoti ${JSON.stringify(newNoti)}`);
-    await this.pubsubService.pubSub.publish('pushNotification', { pushNotification: responses[0] });
+    await this.pubsubService.pubSub.publish('pushNotification', {
+      pushNotification: responses[0],
+      listReceiverId: [userId],
+    });
     await this.pubsubService.pubSub.publish('unseenNotifications', {
       unseenNotifications: { user_id: userId, count: responses[1] },
+      listReceiverId: [userId],
     });
   }
 
   async publishUnseenNotisCount(userId: string, count: number) {
     await this.pubsubService.pubSub.publish('unseenNotifications', {
       unseenNotifications: { user_id: userId, count: count },
+      listReceiverId: [userId],
     });
   }
 }

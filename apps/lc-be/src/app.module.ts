@@ -13,11 +13,11 @@ import { UserModule } from './user/user.module';
 import { EmailModule } from '@libs/helper/email';
 import { TasksModule } from './tasks/tasks.module';
 import { PubsubModule } from '@libs/pubsub';
-import { NotificationModule } from '@libs/notification';
 import { ImageModule } from './image/image.module';
 import { InvestModule } from './invest/invest.module';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JwtService } from '@nestjs/jwt';
+import { SubscriptionModule } from '@libs/subscription';
 
 @Module({
   imports: [
@@ -26,7 +26,7 @@ import { JwtService } from '@nestjs/jwt';
       ttl: 60,
       limit: 2,
     }),
-    CacheModule.register({ isGlobal: true, ttl: 5 * 60 }),
+    CacheModule.register({ isGlobal: true }),
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
     GraphQLModule.forRootAsync({
@@ -74,7 +74,7 @@ import { JwtService } from '@nestjs/jwt';
     UserModule,
     TasksModule,
     PubsubModule,
-    NotificationModule,
+    SubscriptionModule,
     ImageModule,
     InvestModule,
   ],

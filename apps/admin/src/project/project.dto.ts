@@ -92,6 +92,9 @@ export class ProjectCreateInputGql extends OmitType(ProjectCreateInput, [
   @Field(() => ProjectProfileCreateInputGql, { nullable: false })
   profile: ProjectProfileCreateInputGql;
 
+  @Field(() => String, { nullable: true })
+  contract_address: string;
+
   // @Field(() => [ProjectMedia], { nullable: false })
   // @ArrayMinSize(5)
   // @ArrayMaxSize(5)

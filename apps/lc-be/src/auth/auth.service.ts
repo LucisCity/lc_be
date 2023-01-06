@@ -11,7 +11,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EmailService, EventType, VerifyInput } from '@libs/helper/email';
 import { ReferralType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/referral-type.enum';
 import { User } from '@prisma/client';
-import { NotificationService } from '@libs/notification';
+import { NotificationService } from '@libs/subscription/notification.service';
 
 @Injectable()
 export class AuthService {
@@ -443,5 +443,14 @@ export class AuthService {
       });
     }
     return null;
+  }
+
+  async getJwtPayload(authorization: string) {
+    try {
+      const token = authorization?.split(' ')[1];
+      return await this.jwt.verifyAsync(token);
+    } catch (e) {
+      return null;
+    }
   }
 }
