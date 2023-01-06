@@ -132,8 +132,8 @@ model Contract {
 
   type ContractType?
 
-  created_at DateTime  @default(now())
-  updated_at DateTime  @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   project    Project?
 
   @@map("contract")
@@ -251,7 +251,7 @@ model Project {
   profit_period        Int         @default(90) // in day
   profit_period_index  Int         @default(0)
 
-  contract_address String?         @db.VarChar(45) @unique()
+  contract_address String?         @unique() @db.VarChar(45)
   contract         Contract?       @relation(fields: [contract_address], references: [address])
   created_at       DateTime        @default(now())
   updated_at       DateTime        @updatedAt
@@ -309,7 +309,7 @@ model ProjectOffer {
   @@map("project_offer")
 }
 
-model ProjectNftBought {
+model ProjectNftOwner {
   project_id      String
   user_id         String
   total_nft       Int

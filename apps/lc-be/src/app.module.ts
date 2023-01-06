@@ -46,10 +46,12 @@ import { SubscriptionModule } from '@libs/subscription';
               if (!connectionParams.authorization || connectionParams.authorization.length === 0) {
                 return;
               }
-
               const token = ExtractJwt.fromAuthHeaderAsBearerToken()({
                 headers: { authorization: connectionParams.authorization },
               });
+              if (!token) {
+                return;
+              }
               const jwtService = new JwtService({
                 secret: configService.get<string>('JWT_SECRET'),
               });
@@ -57,7 +59,6 @@ import { SubscriptionModule } from '@libs/subscription';
               if (!payload || !payload.id) {
                 throw new Error('Token is not valid');
               }
-              extra.user = { id: payload.id };
               context.user = { id: payload.id };
             },
             context: (ctx) => {

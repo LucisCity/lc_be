@@ -1,6 +1,6 @@
 import { AppAuthUser, CurrentUser } from '@libs/helper/decorator/current_user.decorator';
 import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
-import { ProjectNftBought } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-nft-bought/project-nft-bought.model';
+import { ProjectNftOwner } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-nft-owner/project-nft-owner.model';
 import { ProjectProfitBalance } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profit-balance/project-profit-balance.model';
 import { PubsubService } from '@libs/pubsub';
 import { UseGuards } from '@nestjs/common';
@@ -76,7 +76,7 @@ export class InvestResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Query(() => ProjectNftBought, {
+  @Query(() => ProjectNftOwner, {
     description: 'Get nft bought of user',
     nullable: true,
   })

@@ -175,7 +175,7 @@ export class InvestService {
 
   async investedProjects(userId: string) {
     return await this.prisma.$transaction(async (prisma) => {
-      const nftBought = await prisma.projectNftBought.findMany({
+      const nftBought = await prisma.projectNftOwner.findMany({
         where: {
           user_id: userId,
         },
@@ -344,7 +344,7 @@ export class InvestService {
           id: projectId,
         },
       }),
-      this.prisma.projectNftBought.findUnique({
+      this.prisma.projectNftOwner.findUnique({
         where: {
           project_id_user_id: {
             project_id: projectId,
@@ -377,7 +377,7 @@ export class InvestService {
 
     const receiveAmount = project.nft_price.mul(nftBought.total_nft).toNumber();
     await this.prisma.$transaction([
-      this.prisma.projectNftBought.update({
+      this.prisma.projectNftOwner.update({
         where: {
           project_id_user_id: {
             project_id: projectId,
@@ -401,7 +401,7 @@ export class InvestService {
   }
 
   async getNftBought(userId: string, projectId: string) {
-    return this.prisma.projectNftBought.findUnique({
+    return this.prisma.projectNftOwner.findUnique({
       where: {
         project_id_user_id: {
           project_id: projectId,

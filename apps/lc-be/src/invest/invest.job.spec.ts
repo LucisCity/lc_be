@@ -58,7 +58,7 @@ describe('InvestService', () => {
     const user = result[0];
     const project = result[1];
 
-    const nftBought = await prisma.projectNftBought.create({
+    const nftBought = await prisma.projectNftOwner.create({
       data: {
         project_id: project.id,
         user_id: user.id,
@@ -69,7 +69,7 @@ describe('InvestService', () => {
     });
     await service.computeProfit();
     await prisma.$transaction([
-      prisma.projectNftBought.delete({
+      prisma.projectNftOwner.delete({
         where: {
           project_id_user_id: {
             project_id: nftBought.project_id,
