@@ -27,6 +27,7 @@ export class InvestService {
       },
       include: {
         profile: true,
+        contract: true,
       },
     });
     // compute offer object
@@ -49,6 +50,7 @@ export class InvestService {
       where,
       include: {
         profile: true,
+        contract: true,
       },
       take: 20,
     });

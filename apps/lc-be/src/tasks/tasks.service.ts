@@ -133,7 +133,6 @@ export class TasksService {
         });
         // TODO: Add handler here
       } catch (e) {
-        this.logger.error(`Error: ${e.message}`);
         if (e.status == 500 || e.status == 501 || e.status == 502 || e.status == 503 || e.status == 504) {
           await this.prismaService.blockchainTransaction.update({
             where: {
@@ -146,6 +145,7 @@ export class TasksService {
           });
           return;
         }
+        this.logger.error(`Error: ${e.message}`);
         const transaction = await this.prismaService.blockchainTransaction.update({
           where: {
             id: tx.id,
@@ -256,11 +256,11 @@ export class TasksService {
             });
           })
           .catch((e) => {
-            this.logger.error(`Error: ${e.message}`);
+            // this.logger.error(`Error: ${e.message}`);
           });
       });
     } catch (e) {
-      this.logger.error(`Error: ${e.message}`);
+      // this.logger.error(`Error: ${e.message}`);
     }
   }
 }
