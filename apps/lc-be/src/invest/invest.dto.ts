@@ -4,8 +4,8 @@ import { Field, Float, InputType, Int, ObjectType, OmitType } from '@nestjs/grap
 import { Max, Min } from 'class-validator';
 import { registerEnumType } from '@nestjs/graphql';
 import { ProjectType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/project-type.enum';
-import { ProjectNftBought } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-nft-bought/project-nft-bought.model';
 import { ProjectProfitBalance } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profit-balance/project-profit-balance.model';
+import { ProjectNftOwner } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-nft-owner/project-nft-owner.model';
 
 @ObjectType()
 export class ProjectMediaGql {
@@ -69,7 +69,7 @@ export abstract class ProjectProfitBalanceGql extends OmitType(ProjectProfitBala
   'updated_at',
 ]) {}
 @ObjectType()
-export abstract class ProjectNftBoughtGql extends OmitType(ProjectNftBought, ['project_id', 'user_id']) {}
+export abstract class ProjectNftOwnerGql extends OmitType(ProjectNftOwner, ['project_id', 'user_id']) {}
 
 @ObjectType()
 export abstract class InvestedProjectGql extends OmitType(Project, ['created_at', 'enable', 'updated_at', 'profile']) {
@@ -79,8 +79,8 @@ export abstract class InvestedProjectGql extends OmitType(Project, ['created_at'
   @Field(() => ProjectProfitBalanceGql, { nullable: false, description: '' })
   profit_balance: ProjectProfitBalanceGql;
 
-  @Field(() => ProjectNftBoughtGql, { nullable: false, description: '' })
-  nft_bought: ProjectNftBoughtGql;
+  @Field(() => ProjectNftOwnerGql, { nullable: false, description: '' })
+  nft_bought: ProjectNftOwnerGql;
 }
 
 @InputType()

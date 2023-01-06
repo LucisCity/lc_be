@@ -256,7 +256,7 @@ enum VipCardTier {
   GALAXY_PREMIUM
 }
 
-type ProjectNftBought {
+type ProjectNftOwner {
   project_id: String!
   user_id: String!
   total_nft: Int!
@@ -431,7 +431,7 @@ type ProjectProfitBalanceGql {
   to: DateTime!
 }
 
-type ProjectNftBoughtGql {
+type ProjectNftOwnerGql {
   total_nft: Int!
   currency_amount: Decimal!
   project_ended: Boolean!
@@ -468,7 +468,7 @@ type InvestedProjectGql {
   profit_balance: ProjectProfitBalanceGql!
 
   """"""
-  nft_bought: ProjectNftBoughtGql!
+  nft_bought: ProjectNftOwnerGql!
 }
 
 type Query {
@@ -530,7 +530,7 @@ type Query {
   getProfitBalance(projectId: String!): ProjectProfitBalance
 
   """Get nft bought of user"""
-  getNftBought(projectId: String!): ProjectNftBought
+  getNftBought(projectId: String!): ProjectNftOwner
 }
 
 input ProjectFilter {

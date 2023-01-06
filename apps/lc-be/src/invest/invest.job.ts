@@ -30,7 +30,7 @@ export class InvestJob {
           },
         },
       }),
-      this.prisma.projectNftBought.findMany({
+      this.prisma.projectNftOwner.findMany({
         where: {
           project_ended: false,
         },
