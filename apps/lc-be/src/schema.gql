@@ -2,17 +2,13 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type UserProfile {
-  user_id: ID!
-  user_name: String
-  display_name: String
-  given_name: String
-  family_name: String
-  phone: String
-  avatar: String
-  date_of_birth: DateTime
-  cover: String
-  country_code: String
+type Notification {
+  id: ID!
+  user_id: String!
+  title: String
+  content: String
+  is_seen: Boolean!
+  link: String
   user: User!
   created_at: DateTime!
   updated_at: DateTime!
@@ -134,6 +130,7 @@ type User {
   updated_at: DateTime!
   referral_log: ReferralLog
   wallet: Wallet
+  wallet_address: String
   _count: UserCount!
 }
 
@@ -247,6 +244,8 @@ type ProjectProfitBalance {
   user_id: String!
   project_id: String!
   balance: Decimal!
+  from: DateTime!
+  to: DateTime!
   created_at: DateTime!
   updated_at: DateTime!
 }
@@ -268,16 +267,6 @@ enum ContractType {
   NFT
 }
 
-type ProjectProfitBalance {
-  user_id: String!
-  project_id: String!
-  balance: Decimal!
-  from: DateTime!
-  to: DateTime!
-  created_at: DateTime!
-  updated_at: DateTime!
-}
-
 type Project {
   id: ID!
   title: String!
@@ -294,6 +283,8 @@ type Project {
   ended: Boolean!
   profit_period: Int!
   profit_period_index: Int!
+  contract_address: String
+  contract: Contract
   created_at: DateTime!
   updated_at: DateTime!
   profile: ProjectProfile
@@ -495,6 +486,9 @@ type Mutation {
   """mark all notis as read"""
   markAllNotisSeen: Boolean
 
+  """upadate wallet address"""
+  updateWalletAddress(walletAddress: String!): String
+
   """Send tx transaction"""
   sendTransaction(txHash: String!, abi: String): Boolean!
 
@@ -509,6 +503,9 @@ type Mutation {
 
   """Toggle follow project"""
   toggleFollowProject(projectId: String!): Boolean
+
+  """Claim project profit"""
+  claimProjectProfit(projectId: String!): Boolean
 }
 
 input AccountInfoUpdateInput {
@@ -527,4 +524,5 @@ type Subscription {
   pushNotification: NotificationGql!
   unseenNotifications: UnseenNotifications!
   blockchainWatcher: BlockchainTransaction!
+  profitBalanceChange(projectId: String!): ProjectProfitBalance
 }

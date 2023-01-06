@@ -219,7 +219,7 @@ input ProjectCreateInputGql {
   thumbnail: String!
   address: String!
   policy_link: String!
-  profit_period: Int!
+  profit_period: Int
   profit_period_index: Int
   contract: ContractCreateNestedOneWithoutProjectInput
   created_at: DateTime

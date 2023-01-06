@@ -4,7 +4,7 @@ import { CACHE_KEY, INVEST_SUBSCRIPTION_KEY } from './invest.config';
 import { Cache } from 'cache-manager';
 import { Prisma, ProjectOffer } from '@prisma/client';
 import { ProjectFilter, RateProjectInput } from './invest.dto';
-import { InvalidInput, NotEnoughBalance, NotFoundError } from '@libs/helper/errors/base.error';
+import { AppError, InvalidInput, NotEnoughBalance, NotFoundError } from '@libs/helper/errors/base.error';
 import { KMath } from '@libs/helper/math.helper';
 import { PubsubService } from '@libs/pubsub';
 @Injectable()
@@ -34,6 +34,10 @@ export class InvestService {
         contract: true,
       },
     });
+
+    if (!result) {
+      throw new AppError('project not found!', 'PROJECT_NOT_FOUND');
+    }
     // compute offer object
     if (result.profile.offers?.length > 0) {
       const profileOffers = result.profile.offers.split(',').map(Number);

@@ -364,7 +364,7 @@ model Nft {
   id String @id @default(cuid())
 
   owner    String
-  token_id String @unique
+  token_id String
   address  String @db.VarChar(45)
 
   created_at DateTime @default(now())
