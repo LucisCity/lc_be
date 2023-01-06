@@ -1,4 +1,4 @@
-import { InvalidInput, NotFoundError } from '@libs/helper/errors/base.error';
+import { AppError, BadRequestError, InvalidInput, NotFoundError } from '@libs/helper/errors/base.error';
 import { PrismaService } from '@libs/prisma';
 import { Injectable, Logger } from '@nestjs/common';
 import { ProjectCreateInputGql } from './project.dto';
@@ -34,10 +34,48 @@ export class ProjectService {
     return true;
   }
 
-  // async updateProjectEvent(input: ProjectEventCreateManyInputGql[]) {
-  //   await this.prisma.projectEvent.createMany({
-  //     data: input,
-  //   });
-  //   return true;
-  // }
+  async finishProject(projectId: string) {
+    const project = await this.prisma.project.findUnique({
+      where: {
+        id: projectId,
+      },
+    });
+    if (!project) {
+      throw new NotFoundError('Project not found');
+    }
+    if (project.ended === true) {
+      throw new BadRequestError('Project ended');
+    }
+
+    // send money bought nft back to user
+    const histories = await this.prisma.projectSellVoteHistory.findMany({
+      where: {
+        project_id: projectId,
+      },
+    });
+    await this.prisma.$transaction([
+      ...histories.map((item) =>
+        this.prisma.wallet.update({
+          data: {
+            balance: {
+              increment: item.receive_amount,
+            },
+          },
+          where: {
+            user_id: item.user_id,
+          },
+        }),
+      ),
+      this.prisma.project.update({
+        data: {
+          ended: true,
+        },
+        where: {
+          id: projectId,
+        },
+      }),
+    ]);
+
+    return true;
+  }
 }

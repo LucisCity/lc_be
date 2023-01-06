@@ -20,6 +20,17 @@ export class ProjectResolver {
     return this.service.uploadProject(input);
   }
 
+  @UseGuards(CanAclGuard)
+  @UseAcls({ actions: [AclAction.Create], subject: 'Project' })
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => Boolean, {
+    nullable: true,
+    description: 'Finish project',
+  })
+  async finishProject(@Args('projectId') projectId: string): Promise<boolean> {
+    return this.service.finishProject(projectId);
+  }
+
   // @UseGuards(CanAclGuard)
   // @UseAcls({ actions: [AclAction.Create], subject: 'ProjectEvent' })
   // @UseGuards(GqlAuthGuard)
