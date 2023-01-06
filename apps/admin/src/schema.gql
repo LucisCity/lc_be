@@ -190,12 +190,31 @@ type AuthGql {
   user: UserGql!
 }
 
+type VipCard {
+  id: ID!
+  user_id: String!
+  number: String!
+  name: String!
+  password: String!
+  tier: VipCardTier
+  expired_at: DateTime
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+enum VipCardTier {
+  GALAXY_PREMIUM
+}
+
 type Query {
   """list pending kycs"""
   getPendingKycs: [UserKycVerification!]
 
   """list kycs with options"""
   getKycs(userId: String, id: Int, status: KycStatus): [UserKycVerification!]
+
+  """list vip cards with options"""
+  getVipCards(userId: String, id: String, number: String, tier: VipCardTier): [VipCard!]
 }
 
 type Mutation {
@@ -210,16 +229,27 @@ type Mutation {
 
   """update kycs"""
   updateKyc(userId: String, status: KycStatus): Boolean
+
+  """create vip card"""
+  createVipCard(input: VipCardCreateInputGql): VipCard
+
+  """update vip card"""
+  updateVipCard(number: String, input: VipCardUpdateInputGql): Boolean
+
+  """delete vip card"""
+  deleteVipCard(number: String): Boolean
 }
 
 input ProjectCreateInputGql {
   title: String!
   price: Int!
+  nft_price: Decimal!
+  total_nft: Int
   type: ProjectType
   thumbnail: String!
   address: String!
   policy_link: String!
-  profit_period: Int!
+  profit_period: Int
   profit_period_index: Int
   contract: ContractCreateNestedOneWithoutProjectInput
   created_at: DateTime
@@ -306,4 +336,37 @@ input ProjectEvent {
 
   """Event description"""
   description: String!
+}
+
+input VipCardCreateInputGql {
+  user_id: String!
+  name: String!
+  tier: VipCardTier
+  expired_at: DateTime
+  password: String!
+}
+
+input VipCardUpdateInputGql {
+  user_id: StringFieldUpdateOperationsInput
+  number: StringFieldUpdateOperationsInput
+  name: StringFieldUpdateOperationsInput
+  tier: NullableEnumVipCardTierFieldUpdateOperationsInput
+  expired_at: NullableDateTimeFieldUpdateOperationsInput
+  password: PasswordUpdate
+}
+
+input StringFieldUpdateOperationsInput {
+  set: String
+}
+
+input NullableEnumVipCardTierFieldUpdateOperationsInput {
+  set: VipCardTier
+}
+
+input NullableDateTimeFieldUpdateOperationsInput {
+  set: DateTime
+}
+
+input PasswordUpdate {
+  set: String
 }

@@ -365,10 +365,10 @@ export class InvestService {
       throw new AppError(InvestErrorCode.INVALID_TIME_VOTE_SELL, "Can't vote now");
     }
     if (nftBought.total_nft < 1) {
-      throw new AppError(InvestErrorCode.NOT_ENOUGHT_NFT, "Can't vote now");
+      throw new AppError(InvestErrorCode.NOT_ENOUGHT_NFT, 'Not enought nft to vote');
     }
-    if (!nftBought.is_sell_voted) {
-      throw new AppError(InvestErrorCode.SELL_VOTED, "Can't vote now");
+    if (nftBought.is_sell_voted) {
+      throw new AppError(InvestErrorCode.SELL_VOTED, 'You voed');
     }
 
     const receiveAmount = project.nft_price.mul(nftBought.total_nft).toNumber();
