@@ -262,7 +262,7 @@ export class TasksService {
                 return;
               }
               if (nft.owner === from && to !== nft.owner) {
-                await this.prismaService.nft.update({
+                await this.prismaService.nft.updateMany({
                   where: {
                     token_id: tokenId.toString(),
                     address: contractAddress,
