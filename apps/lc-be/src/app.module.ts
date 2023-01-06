@@ -1,5 +1,5 @@
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { CacheModule, Module, UnauthorizedException } from '@nestjs/common';
+import { ApolloDriver } from '@nestjs/apollo';
+import { CacheModule, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -15,7 +15,8 @@ import { TasksModule } from './tasks/tasks.module';
 import { PubsubModule } from '@libs/pubsub';
 import { ImageModule } from './image/image.module';
 import { InvestModule } from './invest/invest.module';
-import { AuthService } from './auth/auth.service';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { JwtService } from '@nestjs/jwt';
 import { SubscriptionModule } from '@libs/subscription';
 
 @Module({
@@ -28,11 +29,11 @@ import { SubscriptionModule } from '@libs/subscription';
     CacheModule.register({ isGlobal: true }),
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
-    GraphQLModule.forRootAsync<ApolloDriverConfig>({
+    GraphQLModule.forRootAsync({
       driver: ApolloDriver,
-      imports: [ConfigModule, AuthModule],
-      inject: [ConfigService, AuthService],
-      useFactory: async (configService: ConfigService, authService: AuthService) => ({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
         debug: configService.get('NODE_ENV') !== 'production',
         playground: true, // always true for admin, front-end not allowed to use,
         introspection: true, // always true for admin, front-end not allowed to use,
@@ -40,35 +41,30 @@ import { SubscriptionModule } from '@libs/subscription';
         dateScalarMode: 'date',
         subscriptions: {
           'graphql-ws': {
-            onConnect: async (context) => {
+            onConnect: (context: any) => {
               const { connectionParams, extra } = context;
-              const authorization = connectionParams?.['authorization'] as any;
-              if (!authorization) {
-                throw new UnauthorizedException({
-                  statusCode: 401,
-                  message: 'Access token is required!',
-                });
+              if (!connectionParams.authorization || connectionParams.authorization.length === 0) {
+                return;
               }
 
-              const payloadJwt = await authService.getJwtPayload(authorization);
-
-              if (!payloadJwt) {
-                throw new UnauthorizedException({
-                  statusCode: 401,
-                  message: 'Access token is required!',
-                });
+              const token = ExtractJwt.fromAuthHeaderAsBearerToken()({
+                headers: { authorization: connectionParams.authorization },
+              });
+              const jwtService = new JwtService({
+                secret: configService.get<string>('JWT_SECRET'),
+              });
+              const payload: { id: string } = jwtService.verify(token);
+              if (!payload || !payload.id) {
+                throw new Error('Token is not valid');
               }
-
-              (extra as any).user = {
-                id: payloadJwt.id,
-                role: payloadJwt.role,
-              };
+              extra.user = { id: payload.id };
+              context.user = { id: payload.id };
+            },
+            context: (ctx) => {
+              return { user: ctx.user };
             },
           },
-        },
-
-        context: ({ req, res, connection, extra }) => {
-          return { req, res, connection, extra };
+          'subscriptions-transport-ws': false,
         },
       }),
     }),

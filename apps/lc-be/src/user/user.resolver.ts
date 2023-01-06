@@ -31,6 +31,7 @@ export class UserResolver {
   @UseGuards(GqlAuthGuard)
   @Query(() => Wallet, {
     description: 'get balance',
+    nullable: true,
   })
   async getBalance(@CurrentUser() user: AppAuthUser): Promise<Wallet> {
     return await this.userService.getBalance(user.id);
