@@ -410,4 +410,29 @@ export class InvestService {
       },
     });
   }
+
+  async updateProjectNftOwner(userId: string, projectId: string) {
+    const project = await this.prisma.project.findUnique({ where: { id: projectId } });
+    if (!project) {
+      return;
+    }
+    return this.prisma.projectNftOwner.upsert({
+      where: {
+        project_id_user_id: {
+          project_id: projectId,
+          user_id: userId,
+        },
+      },
+      create: {
+        project_id: projectId,
+        user_id: userId,
+        total_nft: 1,
+        currency_amount: project.nft_price,
+      },
+      update: {
+        total_nft: { increment: 1 },
+        currency_amount: { increment: project.nft_price },
+      },
+    });
+  }
 }

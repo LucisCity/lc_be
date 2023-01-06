@@ -12,6 +12,7 @@ import { BigNumber, ethers } from 'ethers';
 import { Prisma } from '@prisma/client';
 import { TransactionType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/transaction-type.enum';
 import { NotificationService } from '@libs/subscription/notification.service';
+import { InvestService } from '../invest/invest.service';
 
 const EVERY_2_SECONDS = '*/2 * * * * *';
 @Injectable()
@@ -24,6 +25,7 @@ export class TasksService {
     private blockChainService: BlockchainService,
     private pubsubService: PubsubService,
     private notificationService: NotificationService,
+    private investService: InvestService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {
     this.logger.log(`Cron scan transaction from blockchain ${this.enableCron ? 'ON' : 'OFF'}`);
@@ -243,6 +245,9 @@ export class TasksService {
                 const normalizeFloorPrice = Number(ethers.utils.formatUnits(BigNumber.from(floorPrice))).toString();
 
                 const user = await this.prismaService.user.findUnique({ where: { wallet_address: to } });
+                const project = await this.prismaService.project.findUnique({
+                  where: { contract_address: contractAddress },
+                });
                 await this.prismaService.transactionLog.create({
                   data: {
                     type: TransactionType.BUY_NFT,
@@ -252,6 +257,9 @@ export class TasksService {
                   },
                 });
                 if (user) {
+                  if (project?.id) {
+                    await this.investService.updateProjectNftOwner(user.id, project.id);
+                  }
                   await this.notificationService.createAndPushNoti(
                     user.id,
                     'you just bought one nft',

@@ -256,27 +256,6 @@ enum VipCardTier {
   GALAXY_PREMIUM
 }
 
-type ProjectNftOwner {
-  project_id: String!
-  user_id: String!
-  total_nft: Int!
-  currency_amount: Decimal!
-  project_ended: Boolean!
-  is_sell_voted: Boolean!
-  created_at: DateTime!
-  updated_at: DateTime!
-}
-
-type ProjectProfitBalance {
-  user_id: String!
-  project_id: String!
-  balance: Decimal!
-  from: DateTime!
-  to: DateTime!
-  created_at: DateTime!
-  updated_at: DateTime!
-}
-
 type Contract {
   id: ID!
   address: String!
@@ -347,6 +326,27 @@ type ProjectProfile {
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
 scalar JSON
+
+type ProjectProfitBalance {
+  user_id: String!
+  project_id: String!
+  balance: Decimal!
+  from: DateTime!
+  to: DateTime!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+type ProjectNftOwner {
+  project_id: String!
+  user_id: String!
+  total_nft: Int!
+  currency_amount: Decimal!
+  project_ended: Boolean!
+  is_sell_voted: Boolean!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
 
 type ProjectMediaGql {
   """Width of image"""
@@ -610,8 +610,8 @@ input RateProjectInput {
 }
 
 type Subscription {
+  profitBalanceChange(projectId: String!): ProjectProfitBalance
   pushNotification: NotificationGql!
   unseenNotifications: UnseenNotifications!
   blockchainWatcher: BlockchainTransaction!
-  profitBalanceChange(projectId: String!): ProjectProfitBalance
 }
