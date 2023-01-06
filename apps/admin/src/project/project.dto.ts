@@ -74,7 +74,8 @@ export class ProjectCreateInputGql extends OmitType(ProjectCreateInput, [
   'location',
   'open_sale_at',
   'take_profit_at',
-  'wait_transfer_at',
+  'start_time_vote_sell',
+  'end_time_vote_sell',
   'profile',
 ]) {
   @Field(() => String, { nullable: false })
