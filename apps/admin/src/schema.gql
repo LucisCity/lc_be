@@ -221,6 +221,9 @@ type Mutation {
   """Upload new project"""
   uploadProject(input: ProjectCreateInputGql!): Boolean
 
+  """Finish project"""
+  finishProject(projectId: String!): Boolean
+
   """Admin login"""
   login(email: String!, password: String!): AuthGql!
 
