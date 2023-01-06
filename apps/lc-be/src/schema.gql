@@ -236,6 +236,17 @@ type TransactionHistoryResponse {
   transactionHistory: [TransactionLog!]
 }
 
+type ProjectNftBought {
+  project_id: String!
+  user_id: String!
+  total_nft: Int!
+  currency_amount: Decimal!
+  project_ended: Boolean!
+  is_sell_voted: Boolean!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
 type ProjectProfitBalance {
   user_id: String!
   project_id: String!
@@ -250,6 +261,8 @@ type Project {
   id: ID!
   title: String!
   price: Int!
+  nft_price: Decimal!
+  total_nft: Int!
   type: ProjectType!
   thumbnail: String!
   address: String!
@@ -258,7 +271,8 @@ type Project {
   enable: Boolean!
   open_sale_at: DateTime!
   take_profit_at: DateTime!
-  wait_transfer_at: DateTime
+  start_time_vote_sell: DateTime
+  end_time_vote_sell: DateTime
   ended: Boolean!
   profit_period: Int!
   profit_period_index: Int!
@@ -350,6 +364,8 @@ type ProjectGql {
   id: ID!
   title: String!
   price: Int!
+  nft_price: Decimal!
+  total_nft: Int!
   type: ProjectType!
   thumbnail: String!
   address: String!
@@ -357,7 +373,8 @@ type ProjectGql {
   policy_link: String!
   open_sale_at: DateTime!
   take_profit_at: DateTime!
-  wait_transfer_at: DateTime
+  start_time_vote_sell: DateTime
+  end_time_vote_sell: DateTime
   ended: Boolean!
   profit_period: Int!
   profit_period_index: Int!
@@ -417,6 +434,9 @@ type Query {
 
   """Get profit balance"""
   getProfitBalance(projectId: String!): ProjectProfitBalance
+
+  """Get nft bought of user"""
+  getNftBought(projectId: String!): ProjectNftBought
 }
 
 input ProjectFilter {
@@ -475,6 +495,9 @@ type Mutation {
 
   """Claim project profit"""
   claimProjectProfit(projectId: String!): Boolean
+
+  """Vote sell project"""
+  voteSellProject(projectId: String!, isSell: Boolean!): Boolean
 }
 
 input AccountInfoUpdateInput {

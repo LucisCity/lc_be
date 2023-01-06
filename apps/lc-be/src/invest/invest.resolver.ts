@@ -1,5 +1,6 @@
 import { AppAuthUser, CurrentUser } from '@libs/helper/decorator/current_user.decorator';
 import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
+import { ProjectNftBought } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-nft-bought/project-nft-bought.model';
 import { ProjectProfitBalance } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profit-balance/project-profit-balance.model';
 import { PubsubService } from '@libs/pubsub';
 import { UseGuards } from '@nestjs/common';
@@ -74,6 +75,15 @@ export class InvestResolver {
     return this.service.getProfitBalance(user.id, projectId);
   }
 
+  @UseGuards(GqlAuthGuard)
+  @Query(() => ProjectNftBought, {
+    description: 'Get nft bought of user',
+    nullable: true,
+  })
+  async getNftBought(@CurrentUser() user: AppAuthUser, @Args('projectId') projectId: string) {
+    return this.service.getNftBought(user.id, projectId);
+  }
+
   // @Query(() => Boolean, {
   //   description: 'Test compute profit',
   //   nullable: true,
@@ -123,6 +133,20 @@ export class InvestResolver {
     return this.service.claimProjectProfit(user.id, projectId);
   }
 
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => Boolean, {
+    nullable: true,
+    description: 'Vote sell project',
+  })
+  async voteSellProject(
+    @CurrentUser() user: AppAuthUser,
+    @Args('projectId') projectId: string,
+    @Args('isSell') isSell: boolean,
+  ): Promise<boolean> {
+    return this.service.voteSellProject(user.id, projectId, isSell);
+  }
+
+  // Subscription
   @Subscription(() => ProjectProfitBalance, {
     name: INVEST_SUBSCRIPTION_KEY.profitBalanceChange,
     filter: (payload, variables, context) => {

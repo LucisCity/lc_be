@@ -49,7 +49,7 @@ export class InvestJob {
     const MS_IN_DAY = 1000 * 24 * 60 * 60;
 
     for (let item of projects) {
-      if (item.wait_transfer_at != null && currentDate > item.wait_transfer_at) {
+      if (item.start_time_vote_sell != null && currentDate >= item.start_time_vote_sell) {
         // not allow take profit
         continue;
       }

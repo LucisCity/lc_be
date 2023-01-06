@@ -221,21 +221,24 @@ enum ProjectType {
 }
 
 model Project {
-  id                  String      @id @default(cuid()) @db.VarChar(45)
-  title               String      @db.VarChar(512)
-  price               Int
-  type                ProjectType @default(HOUSE)
-  thumbnail           String
-  address             String      @db.VarChar(1024)
-  location            String      @db.VarChar(30) // lat,long
-  policy_link         String
-  enable              Boolean     @default(false)
-  open_sale_at        DateTime
-  take_profit_at      DateTime
-  wait_transfer_at    DateTime?
-  ended               Boolean     @default(false)
-  profit_period       Int         @default(90) // in day
-  profit_period_index Int         @default(0)
+  id                   String      @id @default(cuid()) @db.VarChar(45)
+  title                String      @db.VarChar(512)
+  price                Int
+  nft_price            Decimal     @db.Decimal(8, 4)
+  total_nft            Int         @default(1000)
+  type                 ProjectType @default(HOUSE)
+  thumbnail            String
+  address              String      @db.VarChar(1024)
+  location             String      @db.VarChar(30) // lat,long
+  policy_link          String
+  enable               Boolean     @default(false)
+  open_sale_at         DateTime
+  take_profit_at       DateTime
+  start_time_vote_sell DateTime?
+  end_time_vote_sell   DateTime?
+  ended                Boolean     @default(false)
+  profit_period        Int         @default(90) // in day
+  profit_period_index  Int         @default(0)
 
   created_at DateTime        @default(now())
   updated_at DateTime        @updatedAt
@@ -299,6 +302,10 @@ model ProjectNftBought {
   total_nft       Int
   currency_amount Decimal
   project_ended   Boolean @default(false)
+  is_sell_voted   Boolean @default(false)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@unique([project_id, user_id])
   @@map("project_nft_owner")
@@ -330,6 +337,32 @@ model ProjectProfitBalanceChangeLog {
 
   @@unique([project_id, user_id, period_index])
   @@map("project_profit_balance_change_log")
+}
+
+model ProjectSellVoter {
+  project_id String
+  user_id    String
+  is_sell    Boolean
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@id([project_id, user_id])
+  @@map("project_sell_voter")
+}
+
+model ProjectSellVoteHistory {
+  project_id     String
+  user_id        String
+  is_sell        Boolean
+  receive_amount Decimal
+  is_receive     Boolean @default(false)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@id([project_id, user_id])
+  @@map("project_sell_vote_history")
 }
 
 model Notification {

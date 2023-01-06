@@ -1,10 +1,9 @@
-import { ProjectType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/project-type.enum';
 import { ProjectProfile } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profile/project-profile.model';
-import { ProjectProfitBalance } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profit-balance/project-profit-balance.model';
 import { Project } from '@libs/prisma/@generated/prisma-nestjs-graphql/project/project.model';
 import { Field, Float, InputType, Int, ObjectType, OmitType } from '@nestjs/graphql';
 import { Max, Min } from 'class-validator';
-
+import { registerEnumType } from '@nestjs/graphql';
+import { ProjectType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/project-type.enum';
 @ObjectType()
 export class ProjectMediaGql {
   @Field(() => Int, { nullable: false, description: 'Width of image' })
@@ -76,3 +75,11 @@ export class ProjectFilter {
   @Field(() => ProjectType, { nullable: true })
   type: ProjectType;
 }
+
+export enum InvestErrorCode {
+  INVALID_TIME_VOTE_SELL = 'INVALID_TIME_VOTE_SELL',
+  NOT_ENOUGHT_NFT = 'NOT_ENOUGHT_NFT',
+  SELL_VOTED = 'SELL_VOTED',
+}
+
+registerEnumType(InvestErrorCode, { name: 'InvestErrorCode', description: undefined });
