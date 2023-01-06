@@ -253,7 +253,7 @@ export class UserService {
       });
       const given_name = input.given_name ?? oldProfile.given_name;
       const family_name = input.family_name ?? oldProfile.family_name;
-      let display_name =
+      const display_name =
         family_name && given_name ? family_name + ' ' + given_name : !family_name ? given_name : family_name;
       return await this.prisma.userProfile.update({
         where: {
@@ -339,5 +339,13 @@ export class UserService {
       return userKyc.find((i) => i.status !== 'FAILED') ?? userKyc[0];
     }
     return null;
+  }
+
+  async getVipCard(userId: string) {
+    return await this.prisma.vipCard.findUnique({
+      where: {
+        user_id: userId,
+      },
+    });
   }
 }

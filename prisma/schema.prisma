@@ -343,3 +343,22 @@ model Notification {
 
   @@map("notification")
 }
+
+enum VipCardTier {
+  GALAXY_PREMIUM
+}
+
+model VipCard {
+  id         String       @id @default(cuid()) @db.VarChar(45)
+  user_id    String       @unique
+  number     String       @unique @db.VarChar(16)
+  name       String       @db.VarChar(45)
+  password   String       @db.VarChar(255)
+  tier       VipCardTier?
+  expired_at DateTime?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("vip_card")
+}

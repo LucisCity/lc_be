@@ -235,6 +235,22 @@ type TransactionHistoryResponse {
   transactionHistory: [TransactionLog!]
 }
 
+type VipCard {
+  id: ID!
+  user_id: String!
+  number: String!
+  name: String!
+  password: String!
+  tier: VipCardTier
+  expired_at: DateTime
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+enum VipCardTier {
+  GALAXY_PREMIUM
+}
+
 type ProjectProfitBalance {
   user_id: String!
   project_id: String!
@@ -424,6 +440,9 @@ type Query {
 
   """get kyc verification images"""
   getKycImages: UserKycVerification
+
+  """get vip card info"""
+  getVipCard: VipCard
 
   """get OTP"""
   getOneTimePassword(address: String!): String!
