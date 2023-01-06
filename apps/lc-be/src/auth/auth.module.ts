@@ -25,5 +25,6 @@ import { AuthService } from './auth.service';
     HttpModule,
     // UserModule,
   ],
+  exports: [AuthService],
 })
 export class AuthModule {}

@@ -11,7 +11,8 @@ import {
   TransactionHistoryResponse,
 } from './user.dto/user.dto';
 import { Wallet } from '@libs/prisma/@generated/prisma-nestjs-graphql/wallet/wallet.model';
-import { NotificationGql } from '@libs/notification/notification.dto';
+import { NotificationGql } from '@libs/subscription/subscription.dto';
+
 import { TransactionLog } from '@libs/prisma/@generated/prisma-nestjs-graphql/transaction-log/transaction-log.model';
 import { ProfileGql } from '../auth/auth.type';
 import { UserKycVerification } from '@libs/prisma/@generated/prisma-nestjs-graphql/user-kyc-verification/user-kyc-verification.model';
@@ -31,6 +32,7 @@ export class UserResolver {
   @UseGuards(GqlAuthGuard)
   @Query(() => Wallet, {
     description: 'get balance',
+    nullable: true,
   })
   async getBalance(@CurrentUser() user: AppAuthUser): Promise<Wallet> {
     return await this.userService.getBalance(user.id);
@@ -124,5 +126,20 @@ export class UserResolver {
   @Query(() => VipCard, { nullable: true, description: 'get vip card info' })
   async getVipCard(@CurrentUser() user: AppAuthUser): Promise<VipCard> {
     return this.userService.getVipCard(user.id);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => String, { nullable: true, description: 'get wallet address' })
+  async getWalletAddress(@CurrentUser() user: AppAuthUser): Promise<string> {
+    return this.userService.getWalletAddress(user.id);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => String, { nullable: true, description: 'upadate wallet address' })
+  async updateWalletAddress(
+    @CurrentUser() user: AppAuthUser,
+    @Args('walletAddress') walletAddress: string,
+  ): Promise<string> {
+    return await this.userService.updateWalletAddress(user.id, walletAddress);
   }
 }

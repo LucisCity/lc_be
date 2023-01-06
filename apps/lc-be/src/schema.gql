@@ -91,6 +91,8 @@ type TransactionLog {
 enum TransactionType {
   CLAIM_REFERRAL
   CLAIM_PROFIT
+  BUY_NFT
+  WITHDRAW_BALANCE
 }
 
 """An arbitrary-precision Decimal type"""
@@ -146,31 +148,20 @@ enum UserStatus {
   BANNED
 }
 
-type Notification {
-  id: ID!
-  user_id: String!
-  title: String
-  content: String
-  is_seen: Boolean!
-  link: String
+type UserProfile {
+  user_id: ID!
+  user_name: String
+  display_name: String
+  given_name: String
+  family_name: String
+  phone: String
+  avatar: String
+  date_of_birth: DateTime
+  cover: String
+  country_code: String
   user: User!
   created_at: DateTime!
   updated_at: DateTime!
-}
-
-type NotificationGql {
-  id: ID!
-  user_id: String!
-  title: String
-  content: String
-  is_seen: Boolean!
-  link: String
-  created_at: DateTime!
-}
-
-type UnseenNotifications {
-  user_id: String
-  count: Int
 }
 
 type ProfileGql {
@@ -192,6 +183,7 @@ type UserGql {
   kyc_verification: [UserKycVerification!]
   referral_log: ReferralLog
   wallet: Wallet
+  wallet_address: String
   _count: UserCount!
   profile: ProfileGql!
 }
@@ -226,6 +218,7 @@ type ReferralDataResponse {
   updated_at: DateTime!
   referral_log: ReferralLog
   wallet: Wallet
+  wallet_address: String
   _count: UserCount!
   reward: String
 }
@@ -235,26 +228,52 @@ type TransactionHistoryResponse {
   transactionHistory: [TransactionLog!]
 }
 
-type VipCard {
+type NotificationGql {
   id: ID!
   user_id: String!
-  number: String!
-  name: String!
-  password: String!
-  tier: VipCardTier
-  expired_at: DateTime
+  title: String
+  content: String
+  is_seen: Boolean!
+  link: String
   created_at: DateTime!
-  updated_at: DateTime!
 }
 
-enum VipCardTier {
-  GALAXY_PREMIUM
+type UnseenNotifications {
+  user_id: String
+  count: Int
 }
 
 type ProjectProfitBalance {
   user_id: String!
   project_id: String!
   balance: Decimal!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+type Contract {
+  id: ID!
+  address: String!
+  admin: String
+  admin_prv_key: String
+  abi: String
+  type: ContractType
+  created_at: DateTime!
+  updated_at: DateTime!
+  project: Project
+}
+
+enum ContractType {
+  TOKEN
+  NFT
+}
+
+type ProjectProfitBalance {
+  user_id: String!
+  project_id: String!
+  balance: Decimal!
+  from: DateTime!
+  to: DateTime!
   created_at: DateTime!
   updated_at: DateTime!
 }
@@ -272,7 +291,7 @@ type Project {
   open_sale_at: DateTime!
   take_profit_at: DateTime!
   wait_transfer_at: DateTime
-  ended: Boolean
+  ended: Boolean!
   profit_period: Int!
   profit_period_index: Int!
   created_at: DateTime!
@@ -371,49 +390,14 @@ type ProjectGql {
   open_sale_at: DateTime!
   take_profit_at: DateTime!
   wait_transfer_at: DateTime
-  ended: Boolean
+  ended: Boolean!
   profit_period: Int!
   profit_period_index: Int!
+  contract_address: String
+  contract: Contract
 
   """"""
   profile: ProjectProfileGql!
-}
-
-type ProjectProfitBalanceGql {
-  user_id: String!
-  balance: Decimal!
-}
-
-type ProjectNftBoughtGql {
-  total_nft: Int!
-  currency_amount: Decimal!
-  project_ended: Boolean!
-}
-
-type InvestedProjectGql {
-  id: ID!
-  title: String!
-  price: Int!
-  type: ProjectType!
-  thumbnail: String!
-  address: String!
-  location: String!
-  policy_link: String!
-  open_sale_at: DateTime!
-  take_profit_at: DateTime!
-  wait_transfer_at: DateTime
-  ended: Boolean
-  profit_period: Int!
-  profit_period_index: Int!
-
-  """"""
-  profile: ProjectProfileGql!
-
-  """"""
-  profit_balance: ProjectProfitBalanceGql!
-
-  """"""
-  nft_bought: ProjectNftBoughtGql!
 }
 
 type Query {
@@ -424,7 +408,7 @@ type Query {
   getListReferralUser: [ReferralDataResponse!]!
 
   """get balance"""
-  getBalance: Wallet!
+  getBalance: Wallet
 
   """get account info"""
   getAccountInfo: AccountInfo
@@ -441,8 +425,8 @@ type Query {
   """get kyc verification images"""
   getKycImages: UserKycVerification
 
-  """get vip card info"""
-  getVipCard: VipCard
+  """get wallet address"""
+  getWalletAddress: String
 
   """get OTP"""
   getOneTimePassword(address: String!): String!
@@ -457,7 +441,7 @@ type Query {
   isVoted(projectId: String!): Boolean!
 
   """get list of projects user has invested"""
-  investedProjects: [InvestedProjectGql!]!
+  investedProjects: [ProjectGql!]!
 
   """get list of projects user is following"""
   followingProjects: [ProjectGql!]!
@@ -469,7 +453,7 @@ type Query {
   hotProjects: [ProjectGql!]!
 
   """Get profit balance"""
-  getProfitBalance(projectId: String!): [ProjectProfitBalance!]!
+  getProfitBalance(projectId: String!): ProjectProfitBalance
 }
 
 input ProjectFilter {
@@ -525,9 +509,6 @@ type Mutation {
 
   """Toggle follow project"""
   toggleFollowProject(projectId: String!): Boolean
-
-  """Claim project profit"""
-  claimProjectProfit(projectId: String!): Boolean
 }
 
 input AccountInfoUpdateInput {
@@ -543,6 +524,7 @@ input RateProjectInput {
 }
 
 type Subscription {
-  pushNotification(userId: String!): NotificationGql!
-  unseenNotifications(userId: String!): UnseenNotifications!
+  pushNotification: NotificationGql!
+  unseenNotifications: UnseenNotifications!
+  blockchainWatcher: BlockchainTransaction!
 }

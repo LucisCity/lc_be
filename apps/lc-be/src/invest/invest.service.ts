@@ -1,17 +1,21 @@
 import { PrismaService } from '@libs/prisma';
 import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common';
-import { CACHE_KEY } from './invest.config';
+import { CACHE_KEY, INVEST_SUBSCRIPTION_KEY } from './invest.config';
 import { Cache } from 'cache-manager';
 import { Prisma, ProjectOffer } from '@prisma/client';
 import { InvestedProjectGql, ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
 import { InvalidInput, NotEnoughBalance, NotFoundError } from '@libs/helper/errors/base.error';
 import { KMath } from '@libs/helper/math.helper';
-
+import { PubsubService } from '@libs/pubsub';
 @Injectable()
 export class InvestService {
   private readonly logger = new Logger(InvestService.name);
 
-  constructor(private prisma: PrismaService, @Inject(CACHE_MANAGER) private cacheManager: Cache) {}
+  constructor(
+    private prisma: PrismaService,
+    private pubsubService: PubsubService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
   async getProject(id: string) {
     // get cache
@@ -27,6 +31,7 @@ export class InvestService {
       },
       include: {
         profile: true,
+        contract: true,
       },
     });
     // compute offer object
@@ -49,6 +54,7 @@ export class InvestService {
       where,
       include: {
         profile: true,
+        contract: true,
       },
       take: 20,
     });
@@ -289,11 +295,12 @@ export class InvestService {
         },
       },
     });
-    if (!balance) {
+    console.log('balance: ', balance);
+    if (!balance || balance.balance.lte(0)) {
       throw new NotEnoughBalance('Not enough balance to claim');
     }
     // create log, update balance
-    await this.prisma.$transaction([
+    const result = await this.prisma.$transaction([
       this.prisma.projectProfitBalanceChangeLog.create({
         data: {
           amount: -balance.balance,
@@ -315,6 +322,9 @@ export class InvestService {
         },
       }),
     ]);
+    this.pubsubService.pubSub.publish(INVEST_SUBSCRIPTION_KEY.profitBalanceChange, {
+      [INVEST_SUBSCRIPTION_KEY.profitBalanceChange]: result[1],
+    });
     return true;
   }
 }

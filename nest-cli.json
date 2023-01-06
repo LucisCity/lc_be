@@ -47,13 +47,13 @@
         "tsConfigPath": "libs/pubsub/tsconfig.lib.json"
       }
     },
-    "notification": {
+    "subscription": {
       "type": "library",
-      "root": "libs/notification",
+      "root": "libs/subscription",
       "entryFile": "index",
-      "sourceRoot": "libs/notification/src",
+      "sourceRoot": "libs/subscription/src",
       "compilerOptions": {
-        "tsConfigPath": "libs/notification/tsconfig.lib.json"
+        "tsConfigPath": "libs/subscription/tsconfig.lib.json"
       }
     }
   },

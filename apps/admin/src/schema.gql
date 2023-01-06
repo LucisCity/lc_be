@@ -87,6 +87,8 @@ type TransactionLog {
 enum TransactionType {
   CLAIM_REFERRAL
   CLAIM_PROFIT
+  BUY_NFT
+  WITHDRAW_BALANCE
 }
 
 """An arbitrary-precision Decimal type"""
@@ -128,6 +130,7 @@ type User {
   updated_at: DateTime!
   referral_log: ReferralLog
   wallet: Wallet
+  wallet_address: String
   _count: UserCount!
 }
 
@@ -177,6 +180,7 @@ type UserGql {
   kyc_verification: [UserKycVerification!]
   referral_log: ReferralLog
   wallet: Wallet
+  wallet_address: String
   _count: UserCount!
   profile: ProfileGql!
 }
@@ -186,31 +190,12 @@ type AuthGql {
   user: UserGql!
 }
 
-type VipCard {
-  id: ID!
-  user_id: String!
-  number: String!
-  name: String!
-  password: String!
-  tier: VipCardTier
-  expired_at: DateTime
-  created_at: DateTime!
-  updated_at: DateTime!
-}
-
-enum VipCardTier {
-  GALAXY_PREMIUM
-}
-
 type Query {
   """list pending kycs"""
   getPendingKycs: [UserKycVerification!]
 
   """list kycs with options"""
   getKycs(userId: String, id: Int, status: KycStatus): [UserKycVerification!]
-
-  """list vip cards with options"""
-  getVipCards(userId: String, id: String, number: String, tier: VipCardTier): [VipCard!]
 }
 
 type Mutation {
@@ -225,15 +210,6 @@ type Mutation {
 
   """update kycs"""
   updateKyc(userId: String, status: KycStatus): Boolean
-
-  """create vip card"""
-  createVipCard(input: VipCardCreateInputGql): VipCard
-
-  """update vip card"""
-  updateVipCard(number: String, input: VipCardUpdateInputGql): Boolean
-
-  """delete vip card"""
-  deleteVipCard(number: String): Boolean
 }
 
 input ProjectCreateInputGql {
@@ -245,12 +221,14 @@ input ProjectCreateInputGql {
   policy_link: String!
   profit_period: Int!
   profit_period_index: Int
+  contract: ContractCreateNestedOneWithoutProjectInput
   created_at: DateTime
   updated_at: DateTime
   location: String!
   open_sale_at: DateTime!
   take_profit_at: DateTime!
   profile: ProjectProfileCreateInputGql!
+  contract_address: String
 }
 
 enum ProjectType {
@@ -259,6 +237,38 @@ enum ProjectType {
   HOTEL
   HOMESTAY
   TOURIST_VILLAGE
+}
+
+input ContractCreateNestedOneWithoutProjectInput {
+  create: ContractCreateWithoutProjectInput
+  connectOrCreate: ContractCreateOrConnectWithoutProjectInput
+  connect: ContractWhereUniqueInput
+}
+
+input ContractCreateWithoutProjectInput {
+  id: String
+  address: String!
+  admin: String
+  admin_prv_key: String
+  abi: String
+  type: ContractType
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+enum ContractType {
+  TOKEN
+  NFT
+}
+
+input ContractCreateOrConnectWithoutProjectInput {
+  where: ContractWhereUniqueInput!
+  create: ContractCreateWithoutProjectInput!
+}
+
+input ContractWhereUniqueInput {
+  id: String
+  address: String
 }
 
 input ProjectProfileCreateInputGql {
@@ -296,37 +306,4 @@ input ProjectEvent {
 
   """Event description"""
   description: String!
-}
-
-input VipCardCreateInputGql {
-  user_id: String!
-  name: String!
-  tier: VipCardTier
-  expired_at: DateTime
-  password: String!
-}
-
-input VipCardUpdateInputGql {
-  user_id: StringFieldUpdateOperationsInput
-  number: StringFieldUpdateOperationsInput
-  name: StringFieldUpdateOperationsInput
-  tier: NullableEnumVipCardTierFieldUpdateOperationsInput
-  expired_at: NullableDateTimeFieldUpdateOperationsInput
-  password: PasswordUpdate
-}
-
-input StringFieldUpdateOperationsInput {
-  set: String
-}
-
-input NullableEnumVipCardTierFieldUpdateOperationsInput {
-  set: VipCardTier
-}
-
-input NullableDateTimeFieldUpdateOperationsInput {
-  set: DateTime
-}
-
-input PasswordUpdate {
-  set: String
 }

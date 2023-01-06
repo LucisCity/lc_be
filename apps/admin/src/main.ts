@@ -20,7 +20,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AdminModule, nestAppOpt);
 
   const configService = app.get(ConfigService);
-  const port = configService.get('ADMIN_PORT');
+  const port = configService.get('ADMIN_PORT') ?? '9001';
 
   app.enableCors(buildCorsOption(configService, logger));
 

@@ -8,10 +8,14 @@ import { UserRole } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/u
 
 export const CurrentUser = createParamDecorator((data: unknown, context: ExecutionContext) => {
   const ctx = GqlExecutionContext.create(context);
-  const user = ctx.getContext().req.user;
+  const { req, extra } = ctx.getContext();
+  // http: req.user ; ws: extra.user
+  const user = req && req.user ? req.user : extra.user;
+
   if (!!user && user.id == null) {
     user.id = 0;
   }
+
   return user;
 });
 
