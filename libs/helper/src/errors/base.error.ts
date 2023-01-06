@@ -29,3 +29,9 @@ export class NotEnoughBalance extends ApolloError {
     super(message, 'NOT_ENOUGH_BALANCE');
   }
 }
+
+export class BadRequestError extends ApolloError {
+  constructor(message: string) {
+    super(message, 'BAD_REQUEST');
+  }
+}

@@ -1,11 +1,12 @@
 import { AppAuthUser, CurrentUser } from '@libs/helper/decorator/current_user.decorator';
 import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
+import { ProjectNftBought } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-nft-bought/project-nft-bought.model';
 import { ProjectProfitBalance } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profit-balance/project-profit-balance.model';
 import { PubsubService } from '@libs/pubsub';
 import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver, Subscription } from '@nestjs/graphql';
 import { INVEST_SUBSCRIPTION_KEY } from './invest.config';
-import { ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
+import { InvestedProjectGql, ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
 import { InvestService } from './invest.service';
 
 @Resolver()
@@ -35,7 +36,7 @@ export class InvestResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Query(() => [ProjectGql], {
+  @Query(() => [InvestedProjectGql], {
     description: 'get list of projects user has invested',
   })
   async investedProjects(@CurrentUser() user: AppAuthUser) {
@@ -72,6 +73,15 @@ export class InvestResolver {
   })
   async getProfitBalance(@CurrentUser() user: AppAuthUser, @Args('projectId') projectId: string) {
     return this.service.getProfitBalance(user.id, projectId);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => ProjectNftBought, {
+    description: 'Get nft bought of user',
+    nullable: true,
+  })
+  async getNftBought(@CurrentUser() user: AppAuthUser, @Args('projectId') projectId: string) {
+    return this.service.getNftBought(user.id, projectId);
   }
 
   // @Query(() => Boolean, {
@@ -123,6 +133,20 @@ export class InvestResolver {
     return this.service.claimProjectProfit(user.id, projectId);
   }
 
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => Boolean, {
+    nullable: true,
+    description: 'Vote sell project',
+  })
+  async voteSellProject(
+    @CurrentUser() user: AppAuthUser,
+    @Args('projectId') projectId: string,
+    @Args('isSell') isSell: boolean,
+  ): Promise<boolean> {
+    return this.service.voteSellProject(user.id, projectId, isSell);
+  }
+
+  // Subscription
   @Subscription(() => ProjectProfitBalance, {
     name: INVEST_SUBSCRIPTION_KEY.profitBalanceChange,
     filter: (payload, variables, context) => {

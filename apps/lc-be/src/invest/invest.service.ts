@@ -3,8 +3,14 @@ import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common';
 import { CACHE_KEY, INVEST_SUBSCRIPTION_KEY } from './invest.config';
 import { Cache } from 'cache-manager';
 import { Prisma, ProjectOffer } from '@prisma/client';
-import { ProjectFilter, RateProjectInput } from './invest.dto';
-import { AppError, InvalidInput, NotEnoughBalance, NotFoundError } from '@libs/helper/errors/base.error';
+import {
+  AppError,
+  BadRequestError,
+  InvalidInput,
+  NotEnoughBalance,
+  NotFoundError,
+} from '@libs/helper/errors/base.error';
+import { InvestedProjectGql, InvestErrorCode, ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
 import { KMath } from '@libs/helper/math.helper';
 import { PubsubService } from '@libs/pubsub';
 @Injectable()
@@ -168,11 +174,50 @@ export class InvestService {
   }
 
   async investedProjects(userId: string) {
-    return await this.prisma.project.findMany({
-      include: {
-        profile: true,
-      },
-      take: 20,
+    return await this.prisma.$transaction(async (prisma) => {
+      const nftBought = await prisma.projectNftBought.findMany({
+        where: {
+          user_id: userId,
+        },
+        orderBy: {
+          project_id: 'asc',
+        },
+      });
+      if (nftBought.length > 0) {
+        const investedProjectIds = nftBought.map((i) => i.project_id);
+        const profitBalance = await prisma.projectProfitBalance.findMany({
+          where: {
+            project_id: {
+              in: investedProjectIds,
+            },
+          },
+          select: {
+            balance: true,
+          },
+          orderBy: {
+            project_id: 'asc',
+          },
+        });
+        const projects = await prisma.project.findMany({
+          where: {
+            id: {
+              in: investedProjectIds,
+            },
+          },
+          include: {
+            profile: true,
+          },
+          orderBy: {
+            id: 'asc',
+          },
+        });
+        return projects.map((i, idx) => ({
+          ...i,
+          profit_balance: { ...profitBalance[idx] },
+          nft_bought: { ...nftBought[idx] },
+        }));
+      }
+      return [];
     });
   }
 
@@ -260,7 +305,6 @@ export class InvestService {
         },
       },
     });
-    console.log('balance: ', balance);
     if (!balance || balance.balance.lte(0)) {
       throw new NotEnoughBalance('Not enough balance to claim');
     }
@@ -291,5 +335,79 @@ export class InvestService {
       [INVEST_SUBSCRIPTION_KEY.profitBalanceChange]: result[1],
     });
     return true;
+  }
+
+  async voteSellProject(userId: string, projectId: string, isSell: boolean) {
+    const result = await this.prisma.$transaction([
+      this.prisma.project.findUnique({
+        where: {
+          id: projectId,
+        },
+      }),
+      this.prisma.projectNftBought.findUnique({
+        where: {
+          project_id_user_id: {
+            project_id: projectId,
+            user_id: userId,
+          },
+        },
+      }),
+    ]);
+    const project = result[0];
+    const nftBought = result[1];
+    const now = new Date();
+
+    if (!project || !nftBought) {
+      throw new BadRequestError('Bad request');
+    }
+    if (
+      !project.start_time_vote_sell ||
+      !project.end_time_vote_sell ||
+      now < project.start_time_vote_sell ||
+      now > project.end_time_vote_sell
+    ) {
+      throw new AppError(InvestErrorCode.INVALID_TIME_VOTE_SELL, "Can't vote now");
+    }
+    if (nftBought.total_nft < 1) {
+      throw new AppError(InvestErrorCode.NOT_ENOUGHT_NFT, "Can't vote now");
+    }
+    if (!nftBought.is_sell_voted) {
+      throw new AppError(InvestErrorCode.SELL_VOTED, "Can't vote now");
+    }
+
+    const receiveAmount = project.nft_price.mul(nftBought.total_nft).toNumber();
+    await this.prisma.$transaction([
+      this.prisma.projectNftBought.update({
+        where: {
+          project_id_user_id: {
+            project_id: projectId,
+            user_id: userId,
+          },
+        },
+        data: {
+          is_sell_voted: true,
+        },
+      }),
+      this.prisma.projectSellVoteHistory.create({
+        data: {
+          is_sell: isSell,
+          project_id: projectId,
+          user_id: userId,
+          receive_amount: receiveAmount,
+        },
+      }),
+    ]);
+    return true;
+  }
+
+  async getNftBought(userId: string, projectId: string) {
+    return this.prisma.projectNftBought.findUnique({
+      where: {
+        project_id_user_id: {
+          project_id: projectId,
+          user_id: userId,
+        },
+      },
+    });
   }
 }
