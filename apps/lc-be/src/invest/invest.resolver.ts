@@ -1,15 +1,16 @@
 import { AppAuthUser, CurrentUser } from '@libs/helper/decorator/current_user.decorator';
 import { GqlAuthGuard } from '@libs/helper/guards/auth.guard';
 import { ProjectProfitBalance } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profit-balance/project-profit-balance.model';
+import { PubsubService } from '@libs/pubsub';
 import { UseGuards } from '@nestjs/common';
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver, Subscription } from '@nestjs/graphql';
+import { INVEST_SUBSCRIPTION_KEY } from './invest.config';
 import { ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
-import { InvestJob } from './invest.job';
 import { InvestService } from './invest.service';
 
 @Resolver()
 export class InvestResolver {
-  constructor(private service: InvestService, private job: InvestJob) {}
+  constructor(private service: InvestService, private pubsubService: PubsubService) {}
 
   @Query(() => ProjectGql, {
     description: 'Get list referral user',
@@ -78,7 +79,18 @@ export class InvestResolver {
   //   nullable: true,
   // })
   // async computeProfit() {
-  //   await this.job.computeProfit();
+  //   // await this.job.computeProfit();
+  //   this.pubsubService.pubSub.publish(INVEST_SUBSCRIPTION_KEY.profitBalanceChange, {
+  //     profitBalanceChange: {
+  //       user_id: 'clasiqhjt0000o0pwb4mc5yhf',
+  //       project_id: 'clcavhniw0000qalfi1sn8738',
+  //       balance: 30,
+  //       from: new Date(),
+  //       to: new Date(),
+  //       created_at: new Date(),
+  //       updated_at: new Date(),
+  //     },
+  //   });
   //   return true;
   // }
 
@@ -109,5 +121,22 @@ export class InvestResolver {
   })
   async claimProjectProfit(@CurrentUser() user: AppAuthUser, @Args('projectId') projectId: string): Promise<any> {
     return this.service.claimProjectProfit(user.id, projectId);
+  }
+
+  @Subscription(() => ProjectProfitBalance, {
+    name: INVEST_SUBSCRIPTION_KEY.profitBalanceChange,
+    filter: (payload, variables, context) => {
+      if (!context.user) {
+        return null;
+      }
+      return (
+        payload.profitBalanceChange.user_id == context.user.id &&
+        payload.profitBalanceChange.project_id == variables.projectId
+      );
+    },
+    nullable: true,
+  })
+  profitBalanceChange(@Args('projectId') projectId: String) {
+    return this.pubsubService.pubSub.asyncIterator(INVEST_SUBSCRIPTION_KEY.profitBalanceChange);
   }
 }

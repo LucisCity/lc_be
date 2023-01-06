@@ -374,7 +374,7 @@ type Query {
   getListReferralUser: [ReferralDataResponse!]!
 
   """get balance"""
-  getBalance: Wallet!
+  getBalance: Wallet
 
   """get account info"""
   getAccountInfo: AccountInfo
@@ -492,4 +492,5 @@ input RateProjectInput {
 type Subscription {
   pushNotification(userId: String!): NotificationGql!
   unseenNotifications(userId: String!): UnseenNotifications!
+  profitBalanceChange(projectId: String!): ProjectProfitBalance
 }

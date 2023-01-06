@@ -16,6 +16,8 @@ import { PubsubModule } from '@libs/pubsub';
 import { NotificationModule } from '@libs/notification';
 import { ImageModule } from './image/image.module';
 import { InvestModule } from './invest/invest.module';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -38,7 +40,30 @@ import { InvestModule } from './invest/invest.module';
         autoSchemaFile: process.cwd() + '/apps/lc-be/src/schema.gql',
         dateScalarMode: 'date',
         subscriptions: {
-          'graphql-ws': true,
+          'graphql-ws': {
+            onConnect: (context: any) => {
+              const { connectionParams, extra } = context;
+              if (!connectionParams.authorization || connectionParams.authorization.length === 0) {
+                return;
+              }
+
+              const token = ExtractJwt.fromAuthHeaderAsBearerToken()({
+                headers: { authorization: connectionParams.authorization },
+              });
+              const jwtService = new JwtService({
+                secret: configService.get<string>('JWT_SECRET'),
+              });
+              const payload: { id: string } = jwtService.verify(token);
+              if (!payload || !payload.id) {
+                throw new Error('Token is not valid');
+              }
+              extra.user = { id: payload.id };
+              context.user = { id: payload.id };
+            },
+            context: (ctx) => {
+              return { user: ctx.user };
+            },
+          },
           'subscriptions-transport-ws': false,
         },
       }),

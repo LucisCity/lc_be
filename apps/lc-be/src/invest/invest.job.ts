@@ -4,6 +4,7 @@ import { Cache } from 'cache-manager';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Prisma, Project } from '@prisma/client';
 import { PubsubService } from '@libs/pubsub';
+import { INVEST_SUBSCRIPTION_KEY } from './invest.config';
 
 const PROFIT_RATE = 0.1; // 10%
 
@@ -138,7 +139,9 @@ export class InvestJob {
 
     // public to client
     for (let item of profitBalanceInputs) {
-      this.pubsubService.pubSub.publish('profitBalance', { profitBalance: item.create });
+      this.pubsubService.pubSub.publish(INVEST_SUBSCRIPTION_KEY.profitBalanceChange, {
+        [INVEST_SUBSCRIPTION_KEY.profitBalanceChange]: item.create,
+      });
     }
   }
 }

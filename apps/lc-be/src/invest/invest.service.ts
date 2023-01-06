@@ -1,13 +1,11 @@
 import { PrismaService } from '@libs/prisma';
 import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common';
-import { CACHE_KEY } from './invest.config';
+import { CACHE_KEY, INVEST_SUBSCRIPTION_KEY } from './invest.config';
 import { Cache } from 'cache-manager';
 import { Prisma, ProjectOffer } from '@prisma/client';
-import { ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
+import { ProjectFilter, RateProjectInput } from './invest.dto';
 import { InvalidInput, NotEnoughBalance, NotFoundError } from '@libs/helper/errors/base.error';
 import { KMath } from '@libs/helper/math.helper';
-import { Args, Subscription } from '@nestjs/graphql';
-import { ProjectProfitBalance } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profit-balance/project-profit-balance.model';
 import { PubsubService } from '@libs/pubsub';
 @Injectable()
 export class InvestService {
@@ -256,7 +254,8 @@ export class InvestService {
         },
       },
     });
-    if (!balance) {
+    console.log('balance: ', balance);
+    if (!balance || balance.balance.lte(0)) {
       throw new NotEnoughBalance('Not enough balance to claim');
     }
     // create log, update balance
@@ -282,15 +281,9 @@ export class InvestService {
         },
       }),
     ]);
-    this.pubsubService.pubSub.publish('profitBalance', { profitBalance: result[1] });
+    this.pubsubService.pubSub.publish(INVEST_SUBSCRIPTION_KEY.profitBalanceChange, {
+      [INVEST_SUBSCRIPTION_KEY.profitBalanceChange]: result[1],
+    });
     return true;
-  }
-
-  @Subscription(() => ProjectProfitBalance, {
-    name: 'profitBalance',
-    filter: (payload, variables) => payload.profitBalance.user_id == variables.userId,
-  })
-  pushNotification(@Args('userId') userId: String) {
-    return this.pubsubService.pubSub.asyncIterator('profitBalance');
   }
 }
