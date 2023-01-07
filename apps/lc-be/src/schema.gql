@@ -509,7 +509,7 @@ type Query {
   getProject(id: String!): ProjectGql!
 
   """Get related project"""
-  getProjects(filter: ProjectFilter): [ProjectGql!]!
+  getProjects(filter: ProjectFilter, search: String): [ProjectGql!]!
 
   """"""
   isVoted(projectId: String!): Boolean!

@@ -51,10 +51,15 @@ export class InvestService {
     return result;
   }
 
-  async getProjects(filter: ProjectFilter) {
+  async getProjects(filter?: ProjectFilter, search?: string) {
     const where: Prisma.ProjectWhereInput = {};
-    if (filter.type) {
+    if (filter?.type) {
       where.type = filter.type;
+    }
+    if (search) {
+      where.title = {
+        search: search.split(' ').join(' | '),
+      };
     }
     const result = await this.prisma.project.findMany({
       where,
@@ -353,9 +358,13 @@ export class InvestService {
     const nftBought = result[1];
     const now = new Date();
 
-    if (!project || !nftBought) {
+    if (!project) {
       throw new BadRequestError('Bad request');
     }
+    if (!nftBought || nftBought.total_nft < 1) {
+      throw new AppError(InvestErrorCode.NOT_ENOUGHT_NFT, 'Not enought nft to vote');
+    }
+
     if (
       !project.start_time_vote_sell ||
       !project.end_time_vote_sell ||
@@ -363,9 +372,6 @@ export class InvestService {
       now > project.end_time_vote_sell
     ) {
       throw new AppError(InvestErrorCode.INVALID_TIME_VOTE_SELL, "Can't vote now");
-    }
-    if (nftBought.total_nft < 1) {
-      throw new AppError(InvestErrorCode.NOT_ENOUGHT_NFT, 'Not enought nft to vote');
     }
     if (nftBought.is_sell_voted) {
       throw new AppError(InvestErrorCode.SELL_VOTED, 'You voed');

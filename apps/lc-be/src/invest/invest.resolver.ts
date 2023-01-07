@@ -23,8 +23,11 @@ export class InvestResolver {
   @Query(() => [ProjectGql], {
     description: 'Get related project',
   })
-  async getProjects(@Args('filter', { type: () => ProjectFilter, nullable: true }) filter: ProjectFilter) {
-    return await this.service.getProjects(filter);
+  async getProjects(
+    @Args('filter', { type: () => ProjectFilter, nullable: true }) filter: ProjectFilter,
+    @Args('search', { nullable: true }) search: string,
+  ) {
+    return await this.service.getProjects(filter, search);
   }
 
   @UseGuards(GqlAuthGuard)
