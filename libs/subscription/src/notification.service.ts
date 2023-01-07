@@ -12,11 +12,7 @@ export class NotificationService {
   async createAndPushNoti(userId: string, title: string, content: string, link?: string) {
     // this.logger.log('createAndPushNoti reached');
     const notiInput: Prisma.NotificationCreateInput = {
-      user: {
-        connect: {
-          id: userId,
-        },
-      },
+      user_id: userId,
       title: title,
       content: content,
       link: link,
