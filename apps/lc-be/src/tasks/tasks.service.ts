@@ -13,6 +13,7 @@ import { Prisma } from '@prisma/client';
 import { TransactionType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/transaction-type.enum';
 import { NotificationService } from '@libs/subscription/notification.service';
 import { InvestService } from '../invest/invest.service';
+import { lucisCity721Abi } from '../blockchain/abi/lucisCity721Abi';
 
 const EVERY_3_SECONDS = '*/3 * * * * *';
 @Injectable()
@@ -210,7 +211,7 @@ export class TasksService {
       const listNftInstance: Erc721Service[] = [];
       for (const c of contracts) {
         const nft = new Erc721Service(this.blockChainService);
-        nft.setContract(c.address, c?.abi ?? erc721ABI);
+        nft.setContract(c.address, lucisCity721Abi);
         listNftInstance.push(nft);
       }
 
