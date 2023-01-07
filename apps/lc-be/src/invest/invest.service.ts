@@ -58,24 +58,24 @@ export class InvestService {
 
   async getProjects(filter?: ProjectFilter, search?: string) {
     try {
-    const where: Prisma.ProjectWhereInput = {};
-    if (filter?.type) {
-      where.type = filter.type;
-    }
-    if (search) {
-      where.title = {
-        search: search.trim().split(' ').join(' | '),
-      };
-    }
-    const result = await this.prisma.project.findMany({
-      where,
-      include: {
-        profile: true,
-        contract: true,
-      },
-      take: 20,
-    });
-    return result;
+      const where: Prisma.ProjectWhereInput = {};
+      if (filter?.type) {
+        where.type = filter.type;
+      }
+      if (search) {
+        where.title = {
+          search: search.trim().split(' ').join(' | '),
+        };
+      }
+      const result = await this.prisma.project.findMany({
+        where,
+        include: {
+          profile: true,
+          contract: true,
+        },
+        take: 20,
+      });
+      return result;
     } catch (err) {
       this.logger.error(err);
       return [];
