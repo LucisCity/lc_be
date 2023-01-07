@@ -180,13 +180,10 @@ export class TasksService {
     try {
       const blockNumber = await this.blockChainService.getBlockNumber();
       if (this.startBlock === 0) {
-        // rada 3000 blocks
-        this.startBlock = blockNumber - 3000;
-      }
-      if (blockNumber === this.startBlock) {
+        // rada 4000 blocks
+        this.startBlock = blockNumber - 4000;
+      } else if (this.startBlock === blockNumber) {
         return;
-      } else {
-        this.startBlock = blockNumber;
       }
 
       const contractsString = await this.cacheManager.get('contractsList');
@@ -235,7 +232,7 @@ export class TasksService {
                   data: {
                     token_id: tokenId.toString(),
                     owner: to,
-                    address: instance.getContract().address,
+                    address: contractAddress,
                   },
                 });
               }
@@ -252,22 +249,22 @@ export class TasksService {
                     total_nft_sold: { increment: 1 },
                   },
                 });
-                await this.prismaService.transactionLog.create({
-                  data: {
-                    type: TransactionType.BUY_NFT,
-                    user_id: user?.id ?? '0000000000000000000000000',
-                    description: `Buy nft ${tokenId} in contract: ${contractAddress}`,
-                    amount: new Prisma.Decimal(normalizeFloorPrice),
-                  },
-                });
                 if (user) {
+                  await this.prismaService.transactionLog.create({
+                    data: {
+                      type: TransactionType.BUY_NFT,
+                      user_id: user?.id,
+                      description: `Buy nft ${tokenId} in contract: ${contractAddress}`,
+                      amount: new Prisma.Decimal(normalizeFloorPrice),
+                    },
+                  });
                   if (project?.id) {
                     await this.investService.updateProjectNftOwner(user.id, project.id);
                   }
                   await this.notificationService.createAndPushNoti(
                     user.id,
                     'You just bought one nft',
-                    `Buy nft ${tokenId} in contract: ${contractAddress}`,
+                    `Buy nft #${tokenId} in contract: ${contractAddress}`,
                   );
                 }
 
@@ -292,6 +289,7 @@ export class TasksService {
           // eslint-disable-next-line @typescript-eslint/no-empty-function
           .finally(() => {});
       });
+      this.startBlock = blockNumber;
     } catch (e) {
       // this.logger.error(`Error: ${e.message}`);
     }
