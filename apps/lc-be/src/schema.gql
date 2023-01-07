@@ -279,6 +279,7 @@ type Project {
   price: Int!
   nft_price: Decimal!
   total_nft: Int!
+  total_nft_sold: Int!
   type: ProjectType!
   thumbnail: String!
   address: String!
@@ -310,7 +311,7 @@ enum ProjectType {
 type ProjectProfile {
   project_id: String!
   reason_invest: String
-  hightlight: String
+  highlight: String
   vote: Decimal!
   total_vote: Int!
   follows: Int!
@@ -384,7 +385,7 @@ type ProjectEventGql {
 type ProjectProfileGql {
   project_id: String!
   reason_invest: String
-  hightlight: String
+  highlight: String
   vote: Decimal!
   total_vote: Int!
   follows: Int!
@@ -405,6 +406,7 @@ type ProjectGql {
   price: Int!
   nft_price: Decimal!
   total_nft: Int!
+  total_nft_sold: Int!
   type: ProjectType!
   thumbnail: String!
   address: String!
@@ -446,6 +448,7 @@ type InvestedProjectGql {
   price: Int!
   nft_price: Decimal!
   total_nft: Int!
+  total_nft_sold: Int!
   type: ProjectType!
   thumbnail: String!
   address: String!

@@ -248,6 +248,7 @@ input ProjectCreateInputGql {
   price: Int!
   nft_price: Decimal!
   total_nft: Int
+  total_nft_sold: Int
   type: ProjectType
   thumbnail: String!
   address: String!
@@ -310,7 +311,7 @@ input ProjectProfileCreateInputGql {
 
 input ProjectProfileCreateWithoutProjectInputGql {
   reason_invest: String
-  hightlight: String
+  highlight: String
   medias: [ProjectMedia!]!
   offers: [Int!]!
   events: [ProjectEvent!]!

@@ -245,8 +245,12 @@ export class TasksService {
                 const normalizeFloorPrice = Number(ethers.utils.formatUnits(BigNumber.from(floorPrice))).toString();
 
                 const user = await this.prismaService.user.findUnique({ where: { wallet_address: to } });
-                const project = await this.prismaService.project.findUnique({
+                // find and update total sold project
+                const project = await this.prismaService.project.update({
                   where: { contract_address: contractAddress },
+                  data: {
+                    total_nft_sold: { increment: 1 },
+                  },
                 });
                 await this.prismaService.transactionLog.create({
                   data: {
@@ -262,8 +266,8 @@ export class TasksService {
                   }
                   await this.notificationService.createAndPushNoti(
                     user.id,
-                    'you just bought one nft',
-                    `you just bought one nft`,
+                    'You just bought one nft',
+                    `Buy nft ${tokenId} in contract: ${contractAddress}`,
                   );
                 }
 

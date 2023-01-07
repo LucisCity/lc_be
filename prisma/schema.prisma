@@ -237,6 +237,7 @@ model Project {
   price                Int
   nft_price            Decimal     @db.Decimal(8, 4)
   total_nft            Int         @default(1000)
+  total_nft_sold       Int         @default(0)
   type                 ProjectType @default(HOUSE)
   thumbnail            String
   address              String      @db.VarChar(1024)
@@ -263,7 +264,7 @@ model Project {
 model ProjectProfile {
   project_id    String  @unique
   reason_invest String?
-  hightlight    String?
+  highlight     String?
   vote          Decimal @default(0) @db.Decimal(2, 1)
   total_vote    Int     @default(0)
   follows       Int     @default(0)

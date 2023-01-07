@@ -13,6 +13,7 @@ import {
 import { InvestedProjectGql, InvestErrorCode, ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
 import { KMath } from '@libs/helper/math.helper';
 import { PubsubService } from '@libs/pubsub';
+import { ProjectType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/project-type.enum';
 @Injectable()
 export class InvestService {
   private readonly logger = new Logger(InvestService.name);
@@ -57,8 +58,8 @@ export class InvestService {
 
   async getProjects(filter: ProjectFilter) {
     const where: Prisma.ProjectWhereInput = {};
-    if (filter.type) {
-      where.type = filter.type;
+    if (filter?.type) {
+      where.type = filter?.type ?? null;
     }
     const result = await this.prisma.project.findMany({
       where,
