@@ -63,7 +63,7 @@ export class InvestService {
     }
     if (search) {
       where.title = {
-        search: search.split(' ').join(' | '),
+        search: search.trim().split(' ').join(' | '),
       };
     }
     const result = await this.prisma.project.findMany({
