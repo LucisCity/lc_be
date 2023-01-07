@@ -302,6 +302,11 @@ export class UserService {
     return null;
   }
 
+  async hasVipCard(userId: string) {
+    const vipCard = await this.getVipCard(userId);
+    return !!vipCard;
+  }
+
   async getVipCard(userId: string) {
     return await this.prisma.vipCard.findUnique({
       where: {
