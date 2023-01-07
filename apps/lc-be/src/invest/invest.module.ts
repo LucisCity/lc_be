@@ -5,5 +5,6 @@ import { InvestService } from './invest.service';
 
 @Module({
   providers: [InvestResolver, InvestService, InvestJob],
+  exports: [InvestService],
 })
 export class InvestModule {}

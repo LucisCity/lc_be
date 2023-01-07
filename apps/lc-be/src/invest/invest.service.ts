@@ -13,6 +13,7 @@ import {
 import { InvestedProjectGql, InvestErrorCode, ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
 import { KMath } from '@libs/helper/math.helper';
 import { PubsubService } from '@libs/pubsub';
+import { ProjectType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/project-type.enum';
 @Injectable()
 export class InvestService {
   private readonly logger = new Logger(InvestService.name);
@@ -40,6 +41,10 @@ export class InvestService {
         contract: true,
       },
     });
+
+    if (!result) {
+      throw new AppError('project not found!', 'PROJECT_NOT_FOUND');
+    }
     // compute offer object
     if (result.profile.offers?.length > 0) {
       const profileOffers = result.profile.offers.split(',').map(Number);
@@ -409,6 +414,31 @@ export class InvestService {
           project_id: projectId,
           user_id: userId,
         },
+      },
+    });
+  }
+
+  async updateProjectNftOwner(userId: string, projectId: string) {
+    const project = await this.prisma.project.findUnique({ where: { id: projectId } });
+    if (!project) {
+      return;
+    }
+    return this.prisma.projectNftOwner.upsert({
+      where: {
+        project_id_user_id: {
+          project_id: projectId,
+          user_id: userId,
+        },
+      },
+      create: {
+        project_id: projectId,
+        user_id: userId,
+        total_nft: 1,
+        currency_amount: project.nft_price,
+      },
+      update: {
+        total_nft: { increment: 1 },
+        currency_amount: { increment: project.nft_price },
       },
     });
   }

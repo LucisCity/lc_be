@@ -2,23 +2,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type Notification {
-  id: ID!
-  user_id: String!
-  title: String
-  content: String
-  is_seen: Boolean!
-  link: String
-  user: User!
-  created_at: DateTime!
-  updated_at: DateTime!
-}
-
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
-
 type UserKycVerification {
   id: ID!
   user_id: String!
@@ -36,6 +19,11 @@ enum KycStatus {
   SUCCESS
   FAILED
 }
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
 
 type ReferralLog {
   user_id: ID!
@@ -109,7 +97,6 @@ type Wallet {
 }
 
 type UserCount {
-  notification: Int!
   kyc_verification: Int!
 }
 
@@ -124,7 +111,6 @@ type User {
   facebook_id: String
   password: String
   profile: UserProfile
-  notification: [Notification!]
   kyc_verification: [UserKycVerification!]
   created_at: DateTime!
   updated_at: DateTime!
@@ -176,7 +162,6 @@ type UserGql {
   id: ID!
   email: String
   ref_code: String!
-  notification: [Notification!]
   kyc_verification: [UserKycVerification!]
   referral_log: ReferralLog
   wallet: Wallet
@@ -209,7 +194,6 @@ type ReferralDataResponse {
   facebook_id: String
   password: String
   profile: UserProfile
-  notification: [Notification!]
   kyc_verification: [UserKycVerification!]
   created_at: DateTime!
   updated_at: DateTime!
@@ -256,27 +240,6 @@ enum VipCardTier {
   GALAXY_PREMIUM
 }
 
-type ProjectNftOwner {
-  project_id: String!
-  user_id: String!
-  total_nft: Int!
-  currency_amount: Decimal!
-  project_ended: Boolean!
-  is_sell_voted: Boolean!
-  created_at: DateTime!
-  updated_at: DateTime!
-}
-
-type ProjectProfitBalance {
-  user_id: String!
-  project_id: String!
-  balance: Decimal!
-  from: DateTime!
-  to: DateTime!
-  created_at: DateTime!
-  updated_at: DateTime!
-}
-
 type Contract {
   id: ID!
   address: String!
@@ -300,6 +263,7 @@ type Project {
   price: Int!
   nft_price: Decimal!
   total_nft: Int!
+  total_nft_sold: Int!
   type: ProjectType!
   thumbnail: String!
   address: String!
@@ -331,7 +295,7 @@ enum ProjectType {
 type ProjectProfile {
   project_id: String!
   reason_invest: String
-  hightlight: String
+  highlight: String
   vote: Decimal!
   total_vote: Int!
   follows: Int!
@@ -347,6 +311,27 @@ type ProjectProfile {
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
 scalar JSON
+
+type ProjectProfitBalance {
+  user_id: String!
+  project_id: String!
+  balance: Decimal!
+  from: DateTime!
+  to: DateTime!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+type ProjectNftOwner {
+  project_id: String!
+  user_id: String!
+  total_nft: Int!
+  currency_amount: Decimal!
+  project_ended: Boolean!
+  is_sell_voted: Boolean!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
 
 type ProjectMediaGql {
   """Width of image"""
@@ -384,7 +369,7 @@ type ProjectEventGql {
 type ProjectProfileGql {
   project_id: String!
   reason_invest: String
-  hightlight: String
+  highlight: String
   vote: Decimal!
   total_vote: Int!
   follows: Int!
@@ -405,6 +390,7 @@ type ProjectGql {
   price: Int!
   nft_price: Decimal!
   total_nft: Int!
+  total_nft_sold: Int!
   type: ProjectType!
   thumbnail: String!
   address: String!
@@ -446,6 +432,7 @@ type InvestedProjectGql {
   price: Int!
   nft_price: Decimal!
   total_nft: Int!
+  total_nft_sold: Int!
   type: ProjectType!
   thumbnail: String!
   address: String!
@@ -495,6 +482,9 @@ type Query {
 
   """get kyc verification images"""
   getKycImages: UserKycVerification
+
+  """check if user has vip card"""
+  hasVipCard: Boolean
 
   """get vip card info"""
   getVipCard: VipCard
@@ -610,8 +600,8 @@ input RateProjectInput {
 }
 
 type Subscription {
+  profitBalanceChange(projectId: String!): ProjectProfitBalance
   pushNotification: NotificationGql!
   unseenNotifications: UnseenNotifications!
   blockchainWatcher: BlockchainTransaction!
-  profitBalanceChange(projectId: String!): ProjectProfitBalance
 }

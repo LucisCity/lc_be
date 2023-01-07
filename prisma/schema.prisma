@@ -35,7 +35,6 @@ model User {
   facebook_id      String?               @unique @db.VarChar(45)
   password         String?               @db.VarChar(255)
   profile          UserProfile?
-  notification     Notification[]
   kyc_verification UserKycVerification[]
   created_at       DateTime              @default(now())
   updated_at       DateTime              @updatedAt
@@ -238,6 +237,7 @@ model Project {
   price                Int
   nft_price            Decimal     @db.Decimal(8, 4)
   total_nft            Int         @default(1000)
+  total_nft_sold       Int         @default(0)
   type                 ProjectType @default(HOUSE)
   thumbnail            String
   address              String      @db.VarChar(1024)
@@ -264,7 +264,7 @@ model Project {
 model ProjectProfile {
   project_id    String  @unique
   reason_invest String?
-  hightlight    String?
+  highlight     String?
   vote          Decimal @default(0) @db.Decimal(2, 1)
   total_vote    Int     @default(0)
   follows       Int     @default(0)
@@ -386,7 +386,6 @@ model Notification {
   content String? @db.Text
   is_seen Boolean @default(false)
   link    String? @db.VarChar(512)
-  user    User    @relation(fields: [user_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -398,7 +397,7 @@ model Nft {
   id String @id @default(cuid())
 
   owner    String
-  token_id String @unique
+  token_id String
   address  String @db.VarChar(45)
 
   created_at DateTime @default(now())

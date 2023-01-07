@@ -1,15 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cache } from 'cache-manager';
+
 import { PrismaService } from '@libs/prisma';
 import { BlockchainService } from '../blockchain/blockchain.service';
 import { PubsubService } from '@libs/pubsub';
 import { ContractType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/contract-type.enum';
 import { Erc721Service } from '../blockchain/erc721.service';
 import { erc721ABI } from '../blockchain/abi/erc721ABI';
-import { BigNumber } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { Prisma } from '@prisma/client';
 import { TransactionType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/transaction-type.enum';
 import { NotificationService } from '@libs/subscription/notification.service';
+import { InvestService } from '../invest/invest.service';
 
 const EVERY_2_SECONDS = '*/2 * * * * *';
 @Injectable()
@@ -22,11 +25,13 @@ export class TasksService {
     private blockChainService: BlockchainService,
     private pubsubService: PubsubService,
     private notificationService: NotificationService,
+    private investService: InvestService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {
     this.logger.log(`Cron scan transaction from blockchain ${this.enableCron ? 'ON' : 'OFF'}`);
   }
 
-  @Cron(EVERY_2_SECONDS)
+  @Cron(CronExpression.EVERY_MINUTE)
   async listenerTransactionBlockchain() {
     if (!this.enableCron) {
       return;
@@ -183,15 +188,27 @@ export class TasksService {
       } else {
         this.startBlock = blockNumber;
       }
-      const contracts = await this.prismaService.contract.findMany({
-        where: {
-          OR: [
-            {
-              type: ContractType.NFT,
-            },
-          ],
-        },
-      });
+
+      const contractsString = await this.cacheManager.get('contractsList');
+      let contracts = [];
+      if (!contractsString) {
+        const contractsList = await this.prismaService.contract.findMany({
+          where: {
+            OR: [
+              {
+                type: ContractType.NFT,
+              },
+            ],
+          },
+        });
+
+        if (contractsList.length > 0) {
+          await this.cacheManager.set('contractsList', JSON.stringify(contractsList), 84600);
+        }
+        contracts = contractsList;
+      } else {
+        contracts = JSON.parse(contractsString);
+      }
 
       const listNftInstance: Erc721Service[] = [];
       for (const c of contracts) {
@@ -201,6 +218,7 @@ export class TasksService {
       }
 
       listNftInstance.forEach((instance) => {
+        const contractAddress = instance.getContract().address;
         instance
           .filterEvents('Transfer', this.startBlock, 'latest')
           .then((listEvents) => {
@@ -209,7 +227,9 @@ export class TasksService {
               const to = event.args[1];
               const tokenId = event.args[2] as BigNumber;
               // transfer
-              const nft = await this.prismaService.nft.findUnique({ where: { token_id: tokenId.toString() } });
+              const nft = await this.prismaService.nft.findFirst({
+                where: { token_id: tokenId.toString(), address: contractAddress },
+              });
               if (!nft) {
                 await this.prismaService.nft.create({
                   data: {
@@ -222,31 +242,42 @@ export class TasksService {
               // mint
               if (from === '0x0000000000000000000000000000000000000000') {
                 const floorPrice = await instance.getContract().floorPrice();
-                const normalizeFloorPrice = BigNumber.from(floorPrice).toString();
+                const normalizeFloorPrice = Number(ethers.utils.formatUnits(BigNumber.from(floorPrice))).toString();
 
                 const user = await this.prismaService.user.findUnique({ where: { wallet_address: to } });
+                // find and update total sold project
+                const project = await this.prismaService.project.update({
+                  where: { contract_address: contractAddress },
+                  data: {
+                    total_nft_sold: { increment: 1 },
+                  },
+                });
                 await this.prismaService.transactionLog.create({
                   data: {
                     type: TransactionType.BUY_NFT,
-                    user_id: user?.wallet_address ?? '0000000000000000000000000',
-                    description: 'Claim reward for referral',
+                    user_id: user?.id ?? '0000000000000000000000000',
+                    description: `Buy nft ${tokenId} in contract: ${contractAddress}`,
                     amount: new Prisma.Decimal(normalizeFloorPrice),
                   },
                 });
                 if (user) {
+                  if (project?.id) {
+                    await this.investService.updateProjectNftOwner(user.id, project.id);
+                  }
                   await this.notificationService.createAndPushNoti(
                     user.id,
-                    'you just bought one nft',
-                    `you just bought one nft`,
+                    'You just bought one nft',
+                    `Buy nft ${tokenId} in contract: ${contractAddress}`,
                   );
                 }
 
                 return;
               }
               if (nft.owner === from && to !== nft.owner) {
-                await this.prismaService.nft.update({
+                await this.prismaService.nft.updateMany({
                   where: {
                     token_id: tokenId.toString(),
+                    address: contractAddress,
                   },
                   data: {
                     owner: to,
@@ -257,7 +288,9 @@ export class TasksService {
           })
           .catch((e) => {
             // this.logger.error(`Error: ${e.message}`);
-          });
+          })
+          // eslint-disable-next-line @typescript-eslint/no-empty-function
+          .finally(() => {});
       });
     } catch (e) {
       // this.logger.error(`Error: ${e.message}`);
