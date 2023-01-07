@@ -123,6 +123,12 @@ export class UserResolver {
   }
 
   @UseGuards(GqlAuthGuard)
+  @Query(() => Boolean, { nullable: true, description: 'check if user has vip card' })
+  async hasVipCard(@CurrentUser() user: AppAuthUser): Promise<boolean> {
+    return this.userService.hasVipCard(user.id);
+  }
+
+  @UseGuards(GqlAuthGuard)
   @Query(() => VipCard, { nullable: true, description: 'get vip card info' })
   async getVipCard(@CurrentUser() user: AppAuthUser): Promise<VipCard> {
     return this.userService.getVipCard(user.id);
