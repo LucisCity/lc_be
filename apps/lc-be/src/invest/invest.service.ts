@@ -57,6 +57,7 @@ export class InvestService {
   }
 
   async getProjects(filter?: ProjectFilter, search?: string) {
+    try {
     const where: Prisma.ProjectWhereInput = {};
     if (filter?.type) {
       where.type = filter.type;
@@ -75,6 +76,10 @@ export class InvestService {
       take: 20,
     });
     return result;
+    } catch (err) {
+      this.logger.error(err);
+      return [];
+    }
   }
 
   async isVoted(userId: string, projectId: string) {

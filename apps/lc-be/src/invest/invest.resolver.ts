@@ -7,11 +7,12 @@ import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver, Subscription } from '@nestjs/graphql';
 import { INVEST_SUBSCRIPTION_KEY } from './invest.config';
 import { InvestedProjectGql, ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
+import { InvestJob } from './invest.job';
 import { InvestService } from './invest.service';
 
 @Resolver()
 export class InvestResolver {
-  constructor(private service: InvestService, private pubsubService: PubsubService) {}
+  constructor(private service: InvestService, private pubsubService: PubsubService, private job: InvestJob) {}
 
   @Query(() => ProjectGql, {
     description: 'Get list referral user',
@@ -87,25 +88,14 @@ export class InvestResolver {
     return this.service.getNftBought(user.id, projectId);
   }
 
-  // @Query(() => Boolean, {
-  //   description: 'Test compute profit',
-  //   nullable: true,
-  // })
-  // async computeProfit() {
-  //   // await this.job.computeProfit();
-  //   this.pubsubService.pubSub.publish(INVEST_SUBSCRIPTION_KEY.profitBalanceChange, {
-  //     profitBalanceChange: {
-  //       user_id: 'clasiqhjt0000o0pwb4mc5yhf',
-  //       project_id: 'clcavhniw0000qalfi1sn8738',
-  //       balance: 30,
-  //       from: new Date(),
-  //       to: new Date(),
-  //       created_at: new Date(),
-  //       updated_at: new Date(),
-  //     },
-  //   });
-  //   return true;
-  // }
+  @Query(() => Boolean, {
+    description: 'Test compute profit',
+    nullable: true,
+  })
+  async computeProfit() {
+    await this.job.computeProfit();
+    return true;
+  }
 
   // Mutation
 
