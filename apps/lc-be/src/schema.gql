@@ -521,6 +521,9 @@ type Query {
 
   """Get nft bought of user"""
   getNftBought(projectId: String!): ProjectNftOwner
+
+  """Test compute profit"""
+  computeProfit: Boolean
 }
 
 input ProjectFilter {

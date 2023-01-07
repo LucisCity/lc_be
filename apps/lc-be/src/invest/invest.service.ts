@@ -57,24 +57,29 @@ export class InvestService {
   }
 
   async getProjects(filter?: ProjectFilter, search?: string) {
-    const where: Prisma.ProjectWhereInput = {};
-    if (filter?.type) {
-      where.type = filter.type;
+    try {
+      const where: Prisma.ProjectWhereInput = {};
+      if (filter?.type) {
+        where.type = filter.type;
+      }
+      if (search) {
+        where.title = {
+          search: search.split(' ').join(' | '),
+        };
+      }
+      const result = await this.prisma.project.findMany({
+        where,
+        include: {
+          profile: true,
+          contract: true,
+        },
+        take: 20,
+      });
+      return result;
+    } catch (err) {
+      this.logger.error(err);
+      return [];
     }
-    if (search) {
-      where.title = {
-        search: search.split(' ').join(' | '),
-      };
-    }
-    const result = await this.prisma.project.findMany({
-      where,
-      include: {
-        profile: true,
-        contract: true,
-      },
-      take: 20,
-    });
-    return result;
   }
 
   async isVoted(userId: string, projectId: string) {
