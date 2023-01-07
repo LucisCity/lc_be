@@ -14,7 +14,7 @@ import { TransactionType } from '@libs/prisma/@generated/prisma-nestjs-graphql/p
 import { NotificationService } from '@libs/subscription/notification.service';
 import { InvestService } from '../invest/invest.service';
 
-const EVERY_2_SECONDS = '*/2 * * * * *';
+const EVERY_3_SECONDS = '*/3 * * * * *';
 @Injectable()
 export class TasksService {
   private readonly logger = new Logger(TasksService.name);
@@ -172,7 +172,7 @@ export class TasksService {
     }
   }
 
-  @Cron(EVERY_2_SECONDS)
+  @Cron(EVERY_3_SECONDS)
   async listenerEventNft() {
     if (!this.enableCron) {
       return;
