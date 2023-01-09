@@ -321,6 +321,7 @@ export class InvestService {
     }
     // create log, update balance
     const result = await this.prisma.$transaction([
+      // decrement profit balance
       this.prisma.projectProfitBalanceChangeLog.create({
         data: {
           amount: -balance.balance,
@@ -339,6 +340,25 @@ export class InvestService {
             project_id: projectId,
             user_id: userId,
           },
+        },
+      }),
+      // increment main wallet
+      this.prisma.wallet.update({
+        data: {
+          balance: {
+            increment: balance.balance,
+          },
+        },
+        where: {
+          user_id: userId,
+        },
+      }),
+      this.prisma.transactionLog.create({
+        data: {
+          user_id: userId,
+          amount: balance.balance,
+          type: 'CLAIM_PROFIT',
+          description: `Claim profit from project into wallet with balance ${balance.balance}`,
         },
       }),
     ]);
@@ -418,6 +438,22 @@ export class InvestService {
         project_id_user_id: {
           project_id: projectId,
           user_id: userId,
+        },
+      },
+    });
+  }
+
+  async getInvestor(projectId: string) {
+    return this.prisma.projectNftOwner.findMany({
+      where: {
+        project_id: projectId,
+      },
+      include: {
+        user: {
+          include: {
+            vipCard: true,
+            profile: true,
+          },
         },
       },
     });

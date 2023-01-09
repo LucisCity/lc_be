@@ -96,8 +96,38 @@ type Wallet {
   _count: WalletCount!
 }
 
+type VipCard {
+  id: ID!
+  user_id: String!
+  number: String!
+  name: String!
+  password: String!
+  tier: VipCardTier
+  expired_at: DateTime
+  user: User!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+enum VipCardTier {
+  GALAXY_PREMIUM
+}
+
+type ProjectNftOwner {
+  project_id: String!
+  user_id: String!
+  total_nft: Int!
+  currency_amount: Decimal!
+  project_ended: Boolean!
+  is_sell_voted: Boolean!
+  user: User!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
 type UserCount {
   kyc_verification: Int!
+  projectNfts: Int!
 }
 
 type User {
@@ -117,6 +147,8 @@ type User {
   referral_log: ReferralLog
   wallet: Wallet
   wallet_address: String
+  vipCard: VipCard
+  projectNfts: [ProjectNftOwner!]
   _count: UserCount!
 }
 
@@ -166,7 +198,7 @@ type UserGql {
   referral_log: ReferralLog
   wallet: Wallet
   wallet_address: String
-  _count: UserCount!
+  vipCard: VipCard
   profile: ProfileGql!
 }
 
@@ -200,6 +232,8 @@ type ReferralDataResponse {
   referral_log: ReferralLog
   wallet: Wallet
   wallet_address: String
+  vipCard: VipCard
+  projectNfts: [ProjectNftOwner!]
   _count: UserCount!
   reward: String
 }
@@ -222,22 +256,6 @@ type NotificationGql {
 type UnseenNotifications {
   user_id: String
   count: Int
-}
-
-type VipCard {
-  id: ID!
-  user_id: String!
-  number: String!
-  name: String!
-  password: String!
-  tier: VipCardTier
-  expired_at: DateTime
-  created_at: DateTime!
-  updated_at: DateTime!
-}
-
-enum VipCardTier {
-  GALAXY_PREMIUM
 }
 
 type Contract {
@@ -318,17 +336,6 @@ type ProjectProfitBalance {
   balance: Decimal!
   from: DateTime!
   to: DateTime!
-  created_at: DateTime!
-  updated_at: DateTime!
-}
-
-type ProjectNftOwner {
-  project_id: String!
-  user_id: String!
-  total_nft: Int!
-  currency_amount: Decimal!
-  project_ended: Boolean!
-  is_sell_voted: Boolean!
   created_at: DateTime!
   updated_at: DateTime!
 }
@@ -417,13 +424,29 @@ type ProjectProfitBalanceGql {
   to: DateTime!
 }
 
+type InvestorProfileGql {
+  user_id: ID!
+  display_name: String
+  given_name: String
+  family_name: String
+  avatar: String
+  cover: String
+}
+
+type InvestorGql {
+  id: ID!
+  vipCard: VipCard
+  profile: InvestorProfileGql!
+}
+
 type ProjectNftOwnerGql {
+  project_id: String!
+  user_id: String!
   total_nft: Int!
   currency_amount: Decimal!
-  project_ended: Boolean!
-  is_sell_voted: Boolean!
-  created_at: DateTime!
-  updated_at: DateTime!
+
+  """"""
+  user: InvestorGql!
 }
 
 type InvestedProjectGql {
@@ -521,6 +544,9 @@ type Query {
 
   """Get nft bought of user"""
   getNftBought(projectId: String!): ProjectNftOwner
+
+  """Get nft bought of user"""
+  getInvestor(projectId: String!): [ProjectNftOwnerGql!]
 
   """Test compute profit"""
   computeProfit: Boolean
