@@ -135,7 +135,7 @@ export class UserResolver {
   }
 
   @Query(() => VipCard, { nullable: true, description: 'get vip card info' })
-  async getVipCardFromId(@Args() id: string): Promise<VipCard> {
+  async getVipCardFromId(@Args('id') id: string): Promise<VipCard> {
     return this.userService.getVipCard(null, id);
   }
 

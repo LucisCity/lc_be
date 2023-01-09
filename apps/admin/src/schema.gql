@@ -96,8 +96,38 @@ type Wallet {
   _count: WalletCount!
 }
 
+type VipCard {
+  id: ID!
+  user_id: String!
+  number: String!
+  name: String!
+  password: String!
+  tier: VipCardTier
+  expired_at: DateTime
+  user: User!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+enum VipCardTier {
+  GALAXY_PREMIUM
+}
+
+type ProjectNftOwner {
+  project_id: String!
+  user_id: String!
+  total_nft: Int!
+  currency_amount: Decimal!
+  project_ended: Boolean!
+  is_sell_voted: Boolean!
+  user: User!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
 type UserCount {
   kyc_verification: Int!
+  projectNfts: Int!
 }
 
 type User {
@@ -117,6 +147,8 @@ type User {
   referral_log: ReferralLog
   wallet: Wallet
   wallet_address: String
+  vipCard: VipCard
+  projectNfts: [ProjectNftOwner!]
   _count: UserCount!
 }
 
@@ -166,6 +198,8 @@ type UserGql {
   referral_log: ReferralLog
   wallet: Wallet
   wallet_address: String
+  vipCard: VipCard
+  projectNfts: [ProjectNftOwner!]
   _count: UserCount!
   profile: ProfileGql!
 }
@@ -173,22 +207,6 @@ type UserGql {
 type AuthGql {
   token: String!
   user: UserGql!
-}
-
-type VipCard {
-  id: ID!
-  user_id: String!
-  number: String!
-  name: String!
-  password: String!
-  tier: VipCardTier
-  expired_at: DateTime
-  created_at: DateTime!
-  updated_at: DateTime!
-}
-
-enum VipCardTier {
-  GALAXY_PREMIUM
 }
 
 type Query {
@@ -328,19 +346,287 @@ input ProjectEvent {
 }
 
 input VipCardCreateInputGql {
-  user_id: String!
   name: String!
   tier: VipCardTier
   expired_at: DateTime
+  user: UserCreateNestedOneWithoutVipCardInput!
   password: String!
 }
 
+input UserCreateNestedOneWithoutVipCardInput {
+  create: UserCreateWithoutVipCardInput
+  connectOrCreate: UserCreateOrConnectWithoutVipCardInput
+  connect: UserWhereUniqueInput
+}
+
+input UserCreateWithoutVipCardInput {
+  id: String
+  role: UserRole
+  status: UserStatus
+  email: String
+  ref_code: String!
+  invited_by: String
+  google_id: String
+  facebook_id: String
+  password: String
+  profile: UserProfileCreateNestedOneWithoutUserInput
+  kyc_verification: UserKycVerificationCreateNestedManyWithoutUserInput
+  created_at: DateTime
+  updated_at: DateTime
+  referral_log: ReferralLogCreateNestedOneWithoutUserInput
+  wallet: WalletCreateNestedOneWithoutUserInput
+  wallet_address: String
+  projectNfts: ProjectNftOwnerCreateNestedManyWithoutUserInput
+}
+
+input UserProfileCreateNestedOneWithoutUserInput {
+  create: UserProfileCreateWithoutUserInput
+  connectOrCreate: UserProfileCreateOrConnectWithoutUserInput
+  connect: UserProfileWhereUniqueInput
+}
+
+input UserProfileCreateWithoutUserInput {
+  user_name: String
+  display_name: String
+  given_name: String
+  family_name: String
+  phone: String
+  avatar: String
+  date_of_birth: DateTime
+  cover: String
+  country_code: String
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+input UserProfileCreateOrConnectWithoutUserInput {
+  where: UserProfileWhereUniqueInput!
+  create: UserProfileCreateWithoutUserInput!
+}
+
+input UserProfileWhereUniqueInput {
+  user_id: String
+  user_name: String
+}
+
+input UserKycVerificationCreateNestedManyWithoutUserInput {
+  create: [UserKycVerificationCreateWithoutUserInput!]
+  connectOrCreate: [UserKycVerificationCreateOrConnectWithoutUserInput!]
+  createMany: UserKycVerificationCreateManyUserInputEnvelope
+  connect: [UserKycVerificationWhereUniqueInput!]
+}
+
+input UserKycVerificationCreateWithoutUserInput {
+  front_id: String!
+  back_id: String!
+  holding_id: String!
+  status: KycStatus
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+input UserKycVerificationCreateOrConnectWithoutUserInput {
+  where: UserKycVerificationWhereUniqueInput!
+  create: UserKycVerificationCreateWithoutUserInput!
+}
+
+input UserKycVerificationWhereUniqueInput {
+  id: Int
+}
+
+input UserKycVerificationCreateManyUserInputEnvelope {
+  data: [UserKycVerificationCreateManyUserInput!]!
+  skipDuplicates: Boolean
+}
+
+input UserKycVerificationCreateManyUserInput {
+  id: Int
+  front_id: String!
+  back_id: String!
+  holding_id: String!
+  status: KycStatus
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+input ReferralLogCreateNestedOneWithoutUserInput {
+  create: ReferralLogCreateWithoutUserInput
+  connectOrCreate: ReferralLogCreateOrConnectWithoutUserInput
+  connect: ReferralLogWhereUniqueInput
+}
+
+input ReferralLogCreateWithoutUserInput {
+  invited_by: String!
+  type: ReferralType
+  is_claim: Boolean
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+input ReferralLogCreateOrConnectWithoutUserInput {
+  where: ReferralLogWhereUniqueInput!
+  create: ReferralLogCreateWithoutUserInput!
+}
+
+input ReferralLogWhereUniqueInput {
+  user_id: String
+}
+
+input WalletCreateNestedOneWithoutUserInput {
+  create: WalletCreateWithoutUserInput
+  connectOrCreate: WalletCreateOrConnectWithoutUserInput
+  connect: WalletWhereUniqueInput
+}
+
+input WalletCreateWithoutUserInput {
+  balance: Decimal
+  transaction_log: TransactionLogCreateNestedManyWithoutWalletInput
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+input TransactionLogCreateNestedManyWithoutWalletInput {
+  create: [TransactionLogCreateWithoutWalletInput!]
+  connectOrCreate: [TransactionLogCreateOrConnectWithoutWalletInput!]
+  createMany: TransactionLogCreateManyWalletInputEnvelope
+  connect: [TransactionLogWhereUniqueInput!]
+}
+
+input TransactionLogCreateWithoutWalletInput {
+  id: String
+  type: TransactionType!
+  amount: Decimal!
+  description: String
+  blockchain_transaction: BlockchainTransactionCreateNestedOneWithoutTransaction_logInput
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+input BlockchainTransactionCreateNestedOneWithoutTransaction_logInput {
+  create: BlockchainTransactionCreateWithoutTransaction_logInput
+  connectOrCreate: BlockchainTransactionCreateOrConnectWithoutTransaction_logInput
+  connect: BlockchainTransactionWhereUniqueInput
+}
+
+input BlockchainTransactionCreateWithoutTransaction_logInput {
+  id: String
+  tx_hash: String!
+  status: TransactionStatus
+  message_error: String
+  abi: String
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+input BlockchainTransactionCreateOrConnectWithoutTransaction_logInput {
+  where: BlockchainTransactionWhereUniqueInput!
+  create: BlockchainTransactionCreateWithoutTransaction_logInput!
+}
+
+input BlockchainTransactionWhereUniqueInput {
+  id: String
+  tx_hash: String
+  transaction_log_id: String
+}
+
+input TransactionLogCreateOrConnectWithoutWalletInput {
+  where: TransactionLogWhereUniqueInput!
+  create: TransactionLogCreateWithoutWalletInput!
+}
+
+input TransactionLogWhereUniqueInput {
+  id: String
+}
+
+input TransactionLogCreateManyWalletInputEnvelope {
+  data: [TransactionLogCreateManyWalletInput!]!
+  skipDuplicates: Boolean
+}
+
+input TransactionLogCreateManyWalletInput {
+  id: String
+  type: TransactionType!
+  amount: Decimal!
+  description: String
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+input WalletCreateOrConnectWithoutUserInput {
+  where: WalletWhereUniqueInput!
+  create: WalletCreateWithoutUserInput!
+}
+
+input WalletWhereUniqueInput {
+  user_id: String
+}
+
+input ProjectNftOwnerCreateNestedManyWithoutUserInput {
+  create: [ProjectNftOwnerCreateWithoutUserInput!]
+  connectOrCreate: [ProjectNftOwnerCreateOrConnectWithoutUserInput!]
+  createMany: ProjectNftOwnerCreateManyUserInputEnvelope
+  connect: [ProjectNftOwnerWhereUniqueInput!]
+}
+
+input ProjectNftOwnerCreateWithoutUserInput {
+  project_id: String!
+  total_nft: Int!
+  currency_amount: Decimal!
+  project_ended: Boolean
+  is_sell_voted: Boolean
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+input ProjectNftOwnerCreateOrConnectWithoutUserInput {
+  where: ProjectNftOwnerWhereUniqueInput!
+  create: ProjectNftOwnerCreateWithoutUserInput!
+}
+
+input ProjectNftOwnerWhereUniqueInput {
+  project_id_user_id: ProjectNftOwnerProject_idUser_idCompoundUniqueInput
+}
+
+input ProjectNftOwnerProject_idUser_idCompoundUniqueInput {
+  project_id: String!
+  user_id: String!
+}
+
+input ProjectNftOwnerCreateManyUserInputEnvelope {
+  data: [ProjectNftOwnerCreateManyUserInput!]!
+  skipDuplicates: Boolean
+}
+
+input ProjectNftOwnerCreateManyUserInput {
+  project_id: String!
+  total_nft: Int!
+  currency_amount: Decimal!
+  project_ended: Boolean
+  is_sell_voted: Boolean
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+input UserCreateOrConnectWithoutVipCardInput {
+  where: UserWhereUniqueInput!
+  create: UserCreateWithoutVipCardInput!
+}
+
+input UserWhereUniqueInput {
+  id: String
+  email: String
+  ref_code: String
+  google_id: String
+  facebook_id: String
+  wallet_address: String
+}
+
 input VipCardUpdateInputGql {
-  user_id: StringFieldUpdateOperationsInput
   number: StringFieldUpdateOperationsInput
   name: StringFieldUpdateOperationsInput
   tier: NullableEnumVipCardTierFieldUpdateOperationsInput
   expired_at: NullableDateTimeFieldUpdateOperationsInput
+  user: UserUpdateOneRequiredWithoutVipCardNestedInput
   password: PasswordUpdate
 }
 
@@ -354,6 +640,549 @@ input NullableEnumVipCardTierFieldUpdateOperationsInput {
 
 input NullableDateTimeFieldUpdateOperationsInput {
   set: DateTime
+}
+
+input UserUpdateOneRequiredWithoutVipCardNestedInput {
+  create: UserCreateWithoutVipCardInput
+  connectOrCreate: UserCreateOrConnectWithoutVipCardInput
+  upsert: UserUpsertWithoutVipCardInput
+  connect: UserWhereUniqueInput
+  update: UserUpdateWithoutVipCardInput
+}
+
+input UserUpsertWithoutVipCardInput {
+  update: UserUpdateWithoutVipCardInput!
+  create: UserCreateWithoutVipCardInput!
+}
+
+input UserUpdateWithoutVipCardInput {
+  id: StringFieldUpdateOperationsInput
+  role: EnumUserRoleFieldUpdateOperationsInput
+  status: EnumUserStatusFieldUpdateOperationsInput
+  email: NullableStringFieldUpdateOperationsInput
+  ref_code: StringFieldUpdateOperationsInput
+  invited_by: NullableStringFieldUpdateOperationsInput
+  google_id: NullableStringFieldUpdateOperationsInput
+  facebook_id: NullableStringFieldUpdateOperationsInput
+  password: NullableStringFieldUpdateOperationsInput
+  profile: UserProfileUpdateOneWithoutUserNestedInput
+  kyc_verification: UserKycVerificationUpdateManyWithoutUserNestedInput
+  created_at: DateTimeFieldUpdateOperationsInput
+  updated_at: DateTimeFieldUpdateOperationsInput
+  referral_log: ReferralLogUpdateOneWithoutUserNestedInput
+  wallet: WalletUpdateOneWithoutUserNestedInput
+  wallet_address: NullableStringFieldUpdateOperationsInput
+  projectNfts: ProjectNftOwnerUpdateManyWithoutUserNestedInput
+}
+
+input EnumUserRoleFieldUpdateOperationsInput {
+  set: UserRole
+}
+
+input EnumUserStatusFieldUpdateOperationsInput {
+  set: UserStatus
+}
+
+input NullableStringFieldUpdateOperationsInput {
+  set: String
+}
+
+input UserProfileUpdateOneWithoutUserNestedInput {
+  create: UserProfileCreateWithoutUserInput
+  connectOrCreate: UserProfileCreateOrConnectWithoutUserInput
+  upsert: UserProfileUpsertWithoutUserInput
+  disconnect: Boolean
+  delete: Boolean
+  connect: UserProfileWhereUniqueInput
+  update: UserProfileUpdateWithoutUserInput
+}
+
+input UserProfileUpsertWithoutUserInput {
+  update: UserProfileUpdateWithoutUserInput!
+  create: UserProfileCreateWithoutUserInput!
+}
+
+input UserProfileUpdateWithoutUserInput {
+  user_name: NullableStringFieldUpdateOperationsInput
+  display_name: NullableStringFieldUpdateOperationsInput
+  given_name: NullableStringFieldUpdateOperationsInput
+  family_name: NullableStringFieldUpdateOperationsInput
+  phone: NullableStringFieldUpdateOperationsInput
+  avatar: NullableStringFieldUpdateOperationsInput
+  date_of_birth: NullableDateTimeFieldUpdateOperationsInput
+  cover: NullableStringFieldUpdateOperationsInput
+  country_code: NullableStringFieldUpdateOperationsInput
+  created_at: DateTimeFieldUpdateOperationsInput
+  updated_at: DateTimeFieldUpdateOperationsInput
+}
+
+input DateTimeFieldUpdateOperationsInput {
+  set: DateTime
+}
+
+input UserKycVerificationUpdateManyWithoutUserNestedInput {
+  create: [UserKycVerificationCreateWithoutUserInput!]
+  connectOrCreate: [UserKycVerificationCreateOrConnectWithoutUserInput!]
+  upsert: [UserKycVerificationUpsertWithWhereUniqueWithoutUserInput!]
+  createMany: UserKycVerificationCreateManyUserInputEnvelope
+  set: [UserKycVerificationWhereUniqueInput!]
+  disconnect: [UserKycVerificationWhereUniqueInput!]
+  delete: [UserKycVerificationWhereUniqueInput!]
+  connect: [UserKycVerificationWhereUniqueInput!]
+  update: [UserKycVerificationUpdateWithWhereUniqueWithoutUserInput!]
+  updateMany: [UserKycVerificationUpdateManyWithWhereWithoutUserInput!]
+  deleteMany: [UserKycVerificationScalarWhereInput!]
+}
+
+input UserKycVerificationUpsertWithWhereUniqueWithoutUserInput {
+  where: UserKycVerificationWhereUniqueInput!
+  update: UserKycVerificationUpdateWithoutUserInput!
+  create: UserKycVerificationCreateWithoutUserInput!
+}
+
+input UserKycVerificationUpdateWithoutUserInput {
+  front_id: StringFieldUpdateOperationsInput
+  back_id: StringFieldUpdateOperationsInput
+  holding_id: StringFieldUpdateOperationsInput
+  status: EnumKycStatusFieldUpdateOperationsInput
+  created_at: DateTimeFieldUpdateOperationsInput
+  updated_at: DateTimeFieldUpdateOperationsInput
+}
+
+input EnumKycStatusFieldUpdateOperationsInput {
+  set: KycStatus
+}
+
+input UserKycVerificationUpdateWithWhereUniqueWithoutUserInput {
+  where: UserKycVerificationWhereUniqueInput!
+  data: UserKycVerificationUpdateWithoutUserInput!
+}
+
+input UserKycVerificationUpdateManyWithWhereWithoutUserInput {
+  where: UserKycVerificationScalarWhereInput!
+  data: UserKycVerificationUpdateManyMutationInput!
+}
+
+input UserKycVerificationScalarWhereInput {
+  AND: [UserKycVerificationScalarWhereInput!]
+  OR: [UserKycVerificationScalarWhereInput!]
+  NOT: [UserKycVerificationScalarWhereInput!]
+  id: IntFilter
+  user_id: StringFilter
+  front_id: StringFilter
+  back_id: StringFilter
+  holding_id: StringFilter
+  status: EnumKycStatusFilter
+  created_at: DateTimeFilter
+  updated_at: DateTimeFilter
+}
+
+input IntFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: NestedIntFilter
+}
+
+input NestedIntFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: NestedIntFilter
+}
+
+input StringFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  search: String
+  mode: QueryMode
+  not: NestedStringFilter
+}
+
+enum QueryMode {
+  default
+  insensitive
+}
+
+input NestedStringFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  search: String
+  not: NestedStringFilter
+}
+
+input EnumKycStatusFilter {
+  equals: KycStatus
+  in: [KycStatus!]
+  notIn: [KycStatus!]
+  not: NestedEnumKycStatusFilter
+}
+
+input NestedEnumKycStatusFilter {
+  equals: KycStatus
+  in: [KycStatus!]
+  notIn: [KycStatus!]
+  not: NestedEnumKycStatusFilter
+}
+
+input DateTimeFilter {
+  equals: DateTime
+  in: [DateTime!]
+  notIn: [DateTime!]
+  lt: DateTime
+  lte: DateTime
+  gt: DateTime
+  gte: DateTime
+  not: NestedDateTimeFilter
+}
+
+input NestedDateTimeFilter {
+  equals: DateTime
+  in: [DateTime!]
+  notIn: [DateTime!]
+  lt: DateTime
+  lte: DateTime
+  gt: DateTime
+  gte: DateTime
+  not: NestedDateTimeFilter
+}
+
+input UserKycVerificationUpdateManyMutationInput {
+  front_id: StringFieldUpdateOperationsInput
+  back_id: StringFieldUpdateOperationsInput
+  holding_id: StringFieldUpdateOperationsInput
+  status: EnumKycStatusFieldUpdateOperationsInput
+  created_at: DateTimeFieldUpdateOperationsInput
+  updated_at: DateTimeFieldUpdateOperationsInput
+}
+
+input ReferralLogUpdateOneWithoutUserNestedInput {
+  create: ReferralLogCreateWithoutUserInput
+  connectOrCreate: ReferralLogCreateOrConnectWithoutUserInput
+  upsert: ReferralLogUpsertWithoutUserInput
+  disconnect: Boolean
+  delete: Boolean
+  connect: ReferralLogWhereUniqueInput
+  update: ReferralLogUpdateWithoutUserInput
+}
+
+input ReferralLogUpsertWithoutUserInput {
+  update: ReferralLogUpdateWithoutUserInput!
+  create: ReferralLogCreateWithoutUserInput!
+}
+
+input ReferralLogUpdateWithoutUserInput {
+  invited_by: StringFieldUpdateOperationsInput
+  type: NullableEnumReferralTypeFieldUpdateOperationsInput
+  is_claim: BoolFieldUpdateOperationsInput
+  created_at: DateTimeFieldUpdateOperationsInput
+  updated_at: DateTimeFieldUpdateOperationsInput
+}
+
+input NullableEnumReferralTypeFieldUpdateOperationsInput {
+  set: ReferralType
+}
+
+input BoolFieldUpdateOperationsInput {
+  set: Boolean
+}
+
+input WalletUpdateOneWithoutUserNestedInput {
+  create: WalletCreateWithoutUserInput
+  connectOrCreate: WalletCreateOrConnectWithoutUserInput
+  upsert: WalletUpsertWithoutUserInput
+  disconnect: Boolean
+  delete: Boolean
+  connect: WalletWhereUniqueInput
+  update: WalletUpdateWithoutUserInput
+}
+
+input WalletUpsertWithoutUserInput {
+  update: WalletUpdateWithoutUserInput!
+  create: WalletCreateWithoutUserInput!
+}
+
+input WalletUpdateWithoutUserInput {
+  balance: DecimalFieldUpdateOperationsInput
+  transaction_log: TransactionLogUpdateManyWithoutWalletNestedInput
+  created_at: DateTimeFieldUpdateOperationsInput
+  updated_at: DateTimeFieldUpdateOperationsInput
+}
+
+input DecimalFieldUpdateOperationsInput {
+  set: Decimal
+  increment: Decimal
+  decrement: Decimal
+  multiply: Decimal
+  divide: Decimal
+}
+
+input TransactionLogUpdateManyWithoutWalletNestedInput {
+  create: [TransactionLogCreateWithoutWalletInput!]
+  connectOrCreate: [TransactionLogCreateOrConnectWithoutWalletInput!]
+  upsert: [TransactionLogUpsertWithWhereUniqueWithoutWalletInput!]
+  createMany: TransactionLogCreateManyWalletInputEnvelope
+  set: [TransactionLogWhereUniqueInput!]
+  disconnect: [TransactionLogWhereUniqueInput!]
+  delete: [TransactionLogWhereUniqueInput!]
+  connect: [TransactionLogWhereUniqueInput!]
+  update: [TransactionLogUpdateWithWhereUniqueWithoutWalletInput!]
+  updateMany: [TransactionLogUpdateManyWithWhereWithoutWalletInput!]
+  deleteMany: [TransactionLogScalarWhereInput!]
+}
+
+input TransactionLogUpsertWithWhereUniqueWithoutWalletInput {
+  where: TransactionLogWhereUniqueInput!
+  update: TransactionLogUpdateWithoutWalletInput!
+  create: TransactionLogCreateWithoutWalletInput!
+}
+
+input TransactionLogUpdateWithoutWalletInput {
+  id: StringFieldUpdateOperationsInput
+  type: EnumTransactionTypeFieldUpdateOperationsInput
+  amount: DecimalFieldUpdateOperationsInput
+  description: NullableStringFieldUpdateOperationsInput
+  blockchain_transaction: BlockchainTransactionUpdateOneWithoutTransaction_logNestedInput
+  created_at: DateTimeFieldUpdateOperationsInput
+  updated_at: DateTimeFieldUpdateOperationsInput
+}
+
+input EnumTransactionTypeFieldUpdateOperationsInput {
+  set: TransactionType
+}
+
+input BlockchainTransactionUpdateOneWithoutTransaction_logNestedInput {
+  create: BlockchainTransactionCreateWithoutTransaction_logInput
+  connectOrCreate: BlockchainTransactionCreateOrConnectWithoutTransaction_logInput
+  upsert: BlockchainTransactionUpsertWithoutTransaction_logInput
+  disconnect: Boolean
+  delete: Boolean
+  connect: BlockchainTransactionWhereUniqueInput
+  update: BlockchainTransactionUpdateWithoutTransaction_logInput
+}
+
+input BlockchainTransactionUpsertWithoutTransaction_logInput {
+  update: BlockchainTransactionUpdateWithoutTransaction_logInput!
+  create: BlockchainTransactionCreateWithoutTransaction_logInput!
+}
+
+input BlockchainTransactionUpdateWithoutTransaction_logInput {
+  id: StringFieldUpdateOperationsInput
+  tx_hash: StringFieldUpdateOperationsInput
+  status: EnumTransactionStatusFieldUpdateOperationsInput
+  message_error: NullableStringFieldUpdateOperationsInput
+  abi: NullableStringFieldUpdateOperationsInput
+  created_at: DateTimeFieldUpdateOperationsInput
+  updated_at: DateTimeFieldUpdateOperationsInput
+}
+
+input EnumTransactionStatusFieldUpdateOperationsInput {
+  set: TransactionStatus
+}
+
+input TransactionLogUpdateWithWhereUniqueWithoutWalletInput {
+  where: TransactionLogWhereUniqueInput!
+  data: TransactionLogUpdateWithoutWalletInput!
+}
+
+input TransactionLogUpdateManyWithWhereWithoutWalletInput {
+  where: TransactionLogScalarWhereInput!
+  data: TransactionLogUpdateManyMutationInput!
+}
+
+input TransactionLogScalarWhereInput {
+  AND: [TransactionLogScalarWhereInput!]
+  OR: [TransactionLogScalarWhereInput!]
+  NOT: [TransactionLogScalarWhereInput!]
+  id: StringFilter
+  type: EnumTransactionTypeFilter
+  user_id: StringFilter
+  amount: DecimalFilter
+  description: StringNullableFilter
+  created_at: DateTimeFilter
+  updated_at: DateTimeFilter
+}
+
+input EnumTransactionTypeFilter {
+  equals: TransactionType
+  in: [TransactionType!]
+  notIn: [TransactionType!]
+  not: NestedEnumTransactionTypeFilter
+}
+
+input NestedEnumTransactionTypeFilter {
+  equals: TransactionType
+  in: [TransactionType!]
+  notIn: [TransactionType!]
+  not: NestedEnumTransactionTypeFilter
+}
+
+input DecimalFilter {
+  equals: Decimal
+  in: [Decimal!]
+  notIn: [Decimal!]
+  lt: Decimal
+  lte: Decimal
+  gt: Decimal
+  gte: Decimal
+  not: NestedDecimalFilter
+}
+
+input NestedDecimalFilter {
+  equals: Decimal
+  in: [Decimal!]
+  notIn: [Decimal!]
+  lt: Decimal
+  lte: Decimal
+  gt: Decimal
+  gte: Decimal
+  not: NestedDecimalFilter
+}
+
+input StringNullableFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  search: String
+  mode: QueryMode
+  not: NestedStringNullableFilter
+}
+
+input NestedStringNullableFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  search: String
+  not: NestedStringNullableFilter
+}
+
+input TransactionLogUpdateManyMutationInput {
+  id: StringFieldUpdateOperationsInput
+  type: EnumTransactionTypeFieldUpdateOperationsInput
+  amount: DecimalFieldUpdateOperationsInput
+  description: NullableStringFieldUpdateOperationsInput
+  created_at: DateTimeFieldUpdateOperationsInput
+  updated_at: DateTimeFieldUpdateOperationsInput
+}
+
+input ProjectNftOwnerUpdateManyWithoutUserNestedInput {
+  create: [ProjectNftOwnerCreateWithoutUserInput!]
+  connectOrCreate: [ProjectNftOwnerCreateOrConnectWithoutUserInput!]
+  upsert: [ProjectNftOwnerUpsertWithWhereUniqueWithoutUserInput!]
+  createMany: ProjectNftOwnerCreateManyUserInputEnvelope
+  set: [ProjectNftOwnerWhereUniqueInput!]
+  disconnect: [ProjectNftOwnerWhereUniqueInput!]
+  delete: [ProjectNftOwnerWhereUniqueInput!]
+  connect: [ProjectNftOwnerWhereUniqueInput!]
+  update: [ProjectNftOwnerUpdateWithWhereUniqueWithoutUserInput!]
+  updateMany: [ProjectNftOwnerUpdateManyWithWhereWithoutUserInput!]
+  deleteMany: [ProjectNftOwnerScalarWhereInput!]
+}
+
+input ProjectNftOwnerUpsertWithWhereUniqueWithoutUserInput {
+  where: ProjectNftOwnerWhereUniqueInput!
+  update: ProjectNftOwnerUpdateWithoutUserInput!
+  create: ProjectNftOwnerCreateWithoutUserInput!
+}
+
+input ProjectNftOwnerUpdateWithoutUserInput {
+  project_id: StringFieldUpdateOperationsInput
+  total_nft: IntFieldUpdateOperationsInput
+  currency_amount: DecimalFieldUpdateOperationsInput
+  project_ended: BoolFieldUpdateOperationsInput
+  is_sell_voted: BoolFieldUpdateOperationsInput
+  created_at: DateTimeFieldUpdateOperationsInput
+  updated_at: DateTimeFieldUpdateOperationsInput
+}
+
+input IntFieldUpdateOperationsInput {
+  set: Int
+  increment: Int
+  decrement: Int
+  multiply: Int
+  divide: Int
+}
+
+input ProjectNftOwnerUpdateWithWhereUniqueWithoutUserInput {
+  where: ProjectNftOwnerWhereUniqueInput!
+  data: ProjectNftOwnerUpdateWithoutUserInput!
+}
+
+input ProjectNftOwnerUpdateManyWithWhereWithoutUserInput {
+  where: ProjectNftOwnerScalarWhereInput!
+  data: ProjectNftOwnerUpdateManyMutationInput!
+}
+
+input ProjectNftOwnerScalarWhereInput {
+  AND: [ProjectNftOwnerScalarWhereInput!]
+  OR: [ProjectNftOwnerScalarWhereInput!]
+  NOT: [ProjectNftOwnerScalarWhereInput!]
+  project_id: StringFilter
+  user_id: StringFilter
+  total_nft: IntFilter
+  currency_amount: DecimalFilter
+  project_ended: BoolFilter
+  is_sell_voted: BoolFilter
+  created_at: DateTimeFilter
+  updated_at: DateTimeFilter
+}
+
+input BoolFilter {
+  equals: Boolean
+  not: NestedBoolFilter
+}
+
+input NestedBoolFilter {
+  equals: Boolean
+  not: NestedBoolFilter
+}
+
+input ProjectNftOwnerUpdateManyMutationInput {
+  project_id: StringFieldUpdateOperationsInput
+  total_nft: IntFieldUpdateOperationsInput
+  currency_amount: DecimalFieldUpdateOperationsInput
+  project_ended: BoolFieldUpdateOperationsInput
+  is_sell_voted: BoolFieldUpdateOperationsInput
+  created_at: DateTimeFieldUpdateOperationsInput
+  updated_at: DateTimeFieldUpdateOperationsInput
 }
 
 input PasswordUpdate {

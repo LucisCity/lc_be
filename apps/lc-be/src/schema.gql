@@ -512,6 +512,9 @@ type Query {
   """get vip card info"""
   getVipCard: VipCard
 
+  """get vip card info"""
+  getVipCardFromId(id: String!): VipCard
+
   """get wallet address"""
   getWalletAddress: String
 
