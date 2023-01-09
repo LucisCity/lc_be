@@ -42,7 +42,9 @@ model User {
   referral_log ReferralLog?
   wallet       Wallet?
 
-  wallet_address String? @unique
+  wallet_address String?           @unique
+  vipCard        VipCard?
+  projectNfts    ProjectNftOwner[]
 
   @@map("user")
 }
@@ -317,6 +319,7 @@ model ProjectNftOwner {
   currency_amount Decimal
   project_ended   Boolean @default(false)
   is_sell_voted   Boolean @default(false)
+  user            User    @relation(fields: [user_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -419,6 +422,7 @@ model VipCard {
   password   String       @db.VarChar(255)
   tier       VipCardTier?
   expired_at DateTime?
+  user       User         @relation(fields: [user_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

@@ -18,6 +18,8 @@ export class UserGql extends OmitType(User, [
   'profile',
   'role',
   'status',
+  '_count',
+  'projectNfts',
 ]) {
   @Field(() => ProfileGql, { nullable: false })
   'profile': ProfileGql;
