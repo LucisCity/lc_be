@@ -97,15 +97,4 @@ export class TransactionService {
 
     return response;
   }
-
-  async setPoolWallet(address: string, privateKey: string) {
-    const prvKeyHash = await encrypt(privateKey);
-    await this.prismaService.poolWallet.create({
-      data: {
-        prv: prvKeyHash,
-        address,
-        type: 'USDT_POOL',
-      },
-    });
-  }
 }

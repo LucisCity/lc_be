@@ -23,29 +23,6 @@ export class BlockchainResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => Boolean, {
-    description: 'set pool wallet',
-  })
-  async setPoolWallet(
-    @CurrentUser() user: AppAuthUser,
-    @Args('address') address: string,
-    @Args('privateKey') privateKey: string,
-  ) {
-    if (user.role !== UserRole.ADMIN)
-      throw new UnauthorizedException({
-        statusCode: 401,
-        message: 'Admin only!',
-      });
-    try {
-      await this.transactionService.setPoolWallet(address, privateKey);
-      return true;
-    } catch (e) {
-      this.logger.error(e);
-      return false;
-    }
-  }
-
-  @UseGuards(GqlAuthGuard)
   @Mutation(() => TransactionLog, {
     description: 'withdraw balance',
   })

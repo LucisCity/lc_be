@@ -12,6 +12,7 @@ import { AdminService } from './admin.service';
 import { AuthModule } from './auth/auth.module';
 import { ProjectModule } from './project/project.module';
 import { UserModule } from './user/user.module';
+import { BlockchainModule } from './blockchain/blockchain.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { UserModule } from './user/user.module';
     ProjectModule,
     AuthModule,
     UserModule,
+    BlockchainModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],
