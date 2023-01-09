@@ -2,23 +2,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type Notification {
-  id: ID!
-  user_id: String!
-  title: String
-  content: String
-  is_seen: Boolean!
-  link: String
-  user: User!
-  created_at: DateTime!
-  updated_at: DateTime!
-}
-
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
-
 type UserKycVerification {
   id: ID!
   user_id: String!
@@ -36,6 +19,11 @@ enum KycStatus {
   SUCCESS
   FAILED
 }
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
 
 type ReferralLog {
   user_id: ID!
@@ -109,7 +97,6 @@ type Wallet {
 }
 
 type UserCount {
-  notification: Int!
   kyc_verification: Int!
 }
 
@@ -124,7 +111,6 @@ type User {
   facebook_id: String
   password: String
   profile: UserProfile
-  notification: [Notification!]
   kyc_verification: [UserKycVerification!]
   created_at: DateTime!
   updated_at: DateTime!
@@ -176,7 +162,6 @@ type UserGql {
   id: ID!
   email: String
   ref_code: String!
-  notification: [Notification!]
   kyc_verification: [UserKycVerification!]
   referral_log: ReferralLog
   wallet: Wallet

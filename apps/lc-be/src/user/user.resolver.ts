@@ -134,6 +134,11 @@ export class UserResolver {
     return this.userService.getVipCard(user.id);
   }
 
+  @Query(() => VipCard, { nullable: true, description: 'get vip card info' })
+  async getVipCardFromId(@Args() id: string): Promise<VipCard> {
+    return this.userService.getVipCard(null, id);
+  }
+
   @UseGuards(GqlAuthGuard)
   @Query(() => String, { nullable: true, description: 'get wallet address' })
   async getWalletAddress(@CurrentUser() user: AppAuthUser): Promise<string> {
