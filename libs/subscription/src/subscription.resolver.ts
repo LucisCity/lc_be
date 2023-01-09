@@ -13,7 +13,7 @@ export class SubscriptionResolver {
    * @param context
    */
   public static _filter(payload, _, context) {
-    const user = context?.extra?.user;
+    const user = context?.user;
     if (user && user.id) {
       const receiver = (payload?.listReceiverId ?? []).find((id) => id === user.id);
       return !!receiver;
@@ -22,7 +22,6 @@ export class SubscriptionResolver {
   }
   constructor(private pubsubService: PubsubService) {}
 
-  @UseGuards(AuthWsGuard)
   @Subscription(() => NotificationGql, {
     name: 'pushNotification',
     filter: SubscriptionResolver._filter,
@@ -31,7 +30,6 @@ export class SubscriptionResolver {
     return this.pubsubService.pubSub.asyncIterator('pushNotification');
   }
 
-  @UseGuards(AuthWsGuard)
   @Subscription(() => UnseenNotifications, {
     name: 'unseenNotifications',
     filter: SubscriptionResolver._filter,
@@ -40,7 +38,6 @@ export class SubscriptionResolver {
     return this.pubsubService.pubSub.asyncIterator('unseenNotifications');
   }
 
-  @UseGuards(AuthWsGuard)
   @Subscription(() => BlockchainTransaction, {
     name: 'blockchainWatcher',
     filter: SubscriptionResolver._filter,
