@@ -88,7 +88,6 @@ export class InvestResolver {
     return this.service.getNftBought(user.id, projectId);
   }
 
-  @UseGuards(GqlAuthGuard)
   @Query(() => [ProjectNftOwnerGql], {
     description: 'Get nft bought of user',
     nullable: true,
