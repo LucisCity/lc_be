@@ -403,6 +403,7 @@ model Nft {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
+  @@unique([token_id, address])
   @@map("nft")
 }
 

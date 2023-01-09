@@ -21,6 +21,7 @@ export class TasksService {
   private readonly logger = new Logger(TasksService.name);
   private readonly enableCron = process.env.SCAN_BLOCKCHAIN_CRON_ENABLE === 'true';
   private startBlock = 0;
+  private lockProcess = false;
   constructor(
     private prismaService: PrismaService,
     private blockChainService: BlockchainService,
@@ -178,6 +179,11 @@ export class TasksService {
     if (!this.enableCron) {
       return;
     }
+    if (this.lockProcess) {
+      return;
+    }
+    // lock process
+    this.lockProcess = true;
     try {
       const blockNumber = await this.blockChainService.getBlockNumber();
       if (this.startBlock === 0) {
@@ -214,85 +220,87 @@ export class TasksService {
         nft.setContract(c.address, lucisCity721Abi);
         listNftInstance.push(nft);
       }
-
-      listNftInstance.forEach((instance) => {
+      for (const instance of listNftInstance) {
         const contractAddress = instance.getContract().address;
-        instance
-          .filterEvents('Transfer', this.startBlock, 'latest')
-          .then((listEvents) => {
-            listEvents.forEach(async (event) => {
-              const from = event.args[0];
-              const to = event.args[1];
-              const tokenId = event.args[2] as BigNumber;
-              // transfer
-              const nft = await this.prismaService.nft.findFirst({
-                where: { token_id: tokenId.toString(), address: contractAddress },
-              });
-              if (!nft) {
-                await this.prismaService.nft.create({
-                  data: {
-                    token_id: tokenId.toString(),
-                    owner: to,
-                    address: contractAddress,
-                  },
-                });
-              }
-              // mint
-              if (from === '0x0000000000000000000000000000000000000000') {
-                const floorPrice = await instance.getContract().floorPrice();
-                const normalizeFloorPrice = Number(ethers.utils.formatUnits(BigNumber.from(floorPrice))).toString();
+        const listEvents = await instance.filterEvents('Transfer', this.startBlock, 'latest');
 
-                const user = await this.prismaService.user.findUnique({ where: { wallet_address: to } });
-                // find and update total sold project
-                const project = await this.prismaService.project.update({
-                  where: { contract_address: contractAddress },
-                  data: {
-                    total_nft_sold: { increment: 1 },
-                  },
-                });
-                if (user) {
-                  await this.prismaService.transactionLog.create({
-                    data: {
-                      type: TransactionType.BUY_NFT,
-                      user_id: user?.id,
-                      description: `Buy nft ${tokenId} in contract: ${contractAddress}`,
-                      amount: new Prisma.Decimal(normalizeFloorPrice),
-                    },
-                  });
-                  if (project?.id) {
-                    await this.investService.updateProjectNftOwner(user.id, project.id);
-                  }
-                  await this.notificationService.createAndPushNoti(
-                    user.id,
-                    'You just bought one nft',
-                    `Buy nft #${tokenId} in contract: ${contractAddress}`,
-                  );
-                }
-
-                return;
-              }
-              if (nft.owner === from && to !== nft.owner) {
-                await this.prismaService.nft.updateMany({
-                  where: {
-                    token_id: tokenId.toString(),
-                    address: contractAddress,
-                  },
-                  data: {
-                    owner: to,
-                  },
-                });
-              }
+        for (const event of listEvents) {
+          const from = event.args[0];
+          const to = event.args[1];
+          const tokenId = event.args[2] as BigNumber;
+          // transfer
+          const nft = await this.prismaService.nft.findFirst({
+            where: { token_id: tokenId.toString(), address: contractAddress },
+          });
+          if (!nft) {
+            await this.prismaService.nft.create({
+              data: {
+                token_id: tokenId.toString(),
+                owner: to,
+                address: contractAddress,
+              },
             });
-          })
-          .catch((e) => {
-            // this.logger.error(`Error: ${e.message}`);
-          })
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          .finally(() => {});
-      });
+
+            // mint
+            if (from === '0x0000000000000000000000000000000000000000') {
+              const floorPrice = await instance.getContract().floorPrice();
+              const normalizeFloorPrice = Number(ethers.utils.formatUnits(BigNumber.from(floorPrice))).toString();
+
+              const user = await this.prismaService.user.findUnique({ where: { wallet_address: to } });
+              // find and update total sold project
+              const project = await this.prismaService.project.update({
+                where: { contract_address: contractAddress },
+                data: {
+                  total_nft_sold: { increment: 1 },
+                },
+              });
+              if (user) {
+                await this.prismaService.transactionLog.create({
+                  data: {
+                    type: TransactionType.BUY_NFT,
+                    user_id: user?.id,
+                    description: `Buy nft ${tokenId} in contract: ${contractAddress}`,
+                    amount: new Prisma.Decimal(normalizeFloorPrice),
+                  },
+                });
+                if (project?.id) {
+                  await this.investService.updateProjectNftOwner(user.id, project.id);
+                }
+                await this.notificationService.createAndPushNoti(
+                  user.id,
+                  'You just bought one nft',
+                  `Buy nft #${tokenId} in contract: ${contractAddress}`,
+                );
+              }
+            }
+            // TODO: if transaction is transfer
+            continue;
+          }
+          if (nft.owner === from && to !== nft.owner) {
+            await this.prismaService.nft.update({
+              where: {
+                token_id_address: {
+                  token_id: tokenId.toString(),
+                  address: contractAddress,
+                },
+              },
+              data: {
+                owner: to,
+              },
+            });
+          }
+        }
+      }
       this.startBlock = blockNumber;
+      // unlock process
+      this.lockProcess = false;
     } catch (e) {
       // this.logger.error(`Error: ${e.message}`);
+      // unlock process
+      this.lockProcess = false;
+    } finally {
+      // unlock process
+      this.lockProcess = false;
     }
   }
 }
