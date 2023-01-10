@@ -6,6 +6,7 @@ import { registerEnumType } from '@nestjs/graphql';
 import { ProjectType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/project-type.enum';
 import { ProjectProfitBalance } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profit-balance/project-profit-balance.model';
 import { ProjectNftOwner } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-nft-owner/project-nft-owner.model';
+import { ProfileGql, UserGql } from '../auth/auth.type';
 
 @ObjectType()
 export class ProjectMediaGql {
@@ -68,8 +69,35 @@ export abstract class ProjectProfitBalanceGql extends OmitType(ProjectProfitBala
   'created_at',
   'updated_at',
 ]) {}
+
 @ObjectType()
-export abstract class ProjectNftOwnerGql extends OmitType(ProjectNftOwner, ['project_id', 'user_id']) {}
+export class InvestorProfileGql extends OmitType(ProfileGql, ['date_of_birth', 'user_name']) {}
+
+@ObjectType()
+export class InvestorGql extends OmitType(UserGql, [
+  'email',
+  'kyc_verification',
+  'ref_code',
+  'referral_log',
+  'wallet',
+  'wallet_address',
+  'profile',
+]) {
+  @Field(() => InvestorProfileGql, { nullable: false })
+  'profile': InvestorProfileGql;
+}
+
+@ObjectType()
+export abstract class ProjectNftOwnerGql extends OmitType(ProjectNftOwner, [
+  'created_at',
+  'updated_at',
+  'is_sell_voted',
+  'project_ended',
+  'user',
+]) {
+  @Field(() => InvestorGql, { nullable: false, description: '' })
+  user: InvestorGql;
+}
 
 @ObjectType()
 export abstract class InvestedProjectGql extends OmitType(Project, ['created_at', 'enable', 'updated_at', 'profile']) {

@@ -307,12 +307,20 @@ export class UserService {
     return !!vipCard;
   }
 
-  async getVipCard(userId: string) {
-    return await this.prisma.vipCard.findUnique({
-      where: {
-        user_id: userId,
-      },
-    });
+  async getVipCard(userId?: string, id?: string) {
+    if (userId) {
+      return await this.prisma.vipCard.findUnique({
+        where: {
+          user_id: userId,
+        },
+      });
+    } else if (id) {
+      return await this.prisma.vipCard.findUnique({
+        where: {
+          id: id,
+        },
+      });
+    }
   }
 
   async getWalletAddress(userId: string): Promise<string | null | undefined> {

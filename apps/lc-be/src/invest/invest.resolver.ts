@@ -6,7 +6,7 @@ import { PubsubService } from '@libs/pubsub';
 import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver, Subscription } from '@nestjs/graphql';
 import { INVEST_SUBSCRIPTION_KEY } from './invest.config';
-import { InvestedProjectGql, ProjectFilter, ProjectGql, RateProjectInput } from './invest.dto';
+import { InvestedProjectGql, ProjectFilter, ProjectGql, ProjectNftOwnerGql, RateProjectInput } from './invest.dto';
 import { InvestJob } from './invest.job';
 import { InvestService } from './invest.service';
 
@@ -86,6 +86,14 @@ export class InvestResolver {
   })
   async getNftBought(@CurrentUser() user: AppAuthUser, @Args('projectId') projectId: string) {
     return this.service.getNftBought(user.id, projectId);
+  }
+
+  @Query(() => [ProjectNftOwnerGql], {
+    description: 'Get nft bought of user',
+    nullable: true,
+  })
+  async getInvestor(@Args('projectId') projectId: string) {
+    return this.service.getInvestor(projectId);
   }
 
   @Query(() => Boolean, {
