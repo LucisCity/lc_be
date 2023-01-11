@@ -71,7 +71,7 @@ export class UserService {
           created_at: 'desc',
         },
         include: {
-          wallet: true,
+          user: true,
           blockchain_transaction: true,
         },
         skip,
