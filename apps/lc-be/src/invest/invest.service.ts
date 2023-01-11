@@ -311,26 +311,27 @@ export class InvestService {
   }
 
   async claimProjectProfit(userId: string, projectId: string) {
-    try {
-      const balance = await this.prisma.projectProfitBalance.findUnique({
-        where: {
-          user_id_project_id: {
-            user_id: userId,
-            project_id: projectId,
-          },
-        },
-      });
-      if (!balance || balance.balance.lte(0)) {
-        throw new NotEnoughBalance('Not enough balance to claim');
-      }
-      const wallet = await this.prisma.wallet.findUnique({
-        where: {
+    const balance = await this.prisma.projectProfitBalance.findUnique({
+      where: {
+        user_id_project_id: {
           user_id: userId,
+          project_id: projectId,
         },
-      });
-      if (!wallet) {
-        throw new BadRequestError('Wallet not found');
-      }
+      },
+    });
+    if (!balance || balance.balance.lte(0)) {
+      throw new NotEnoughBalance('Not enough balance to claim');
+    }
+    const wallet = await this.prisma.wallet.findUnique({
+      where: {
+        user_id: userId,
+      },
+    });
+    if (!wallet) {
+      throw new BadRequestError('Wallet not found');
+    }
+
+    try {
       // create log, update balance
       const result = await this.prisma.$transaction([
         // decrement profit balance
