@@ -66,16 +66,15 @@ export class TransactionService {
       this.logger.error('Out of money');
       throw new AppError('Balance pool not enough!', 'BALANCE_POOL_NOT_ENOUGH');
     }
+    await this.prismaService.wallet.update({
+      where: { user_id: userId },
+      data: { balance: wallet.balance.minus(amount) },
+    });
 
     const prk = await decrypt(poolWallet.prv);
     const hash = await erc20Service.transfer(address, ethers.utils.parseUnits(amount).toString(), prk);
     // add transaction hash to db
     const response = await this.prismaService.$transaction(async (tx) => {
-      await tx.wallet.update({
-        where: { user_id: userId },
-        data: { balance: wallet.balance.minus(amount) },
-      });
-
       return await tx.transactionLog.create({
         data: {
           type: 'WITHDRAW_BALANCE',
