@@ -269,7 +269,7 @@ model ProjectProfile {
   project_id    String  @unique
   reason_invest String?
   highlight     String?
-  vote          Decimal @default(0) @db.Decimal(2, 1)
+  vote          Decimal @default(0) @db.Decimal(3, 1)
   total_vote    Int     @default(0)
   follows       Int     @default(0)
   medias        Json
@@ -425,23 +425,23 @@ model VipCard {
   valid_from DateTime?
   user       User         @relation(fields: [user_id], references: [id])
 
-  card_value Decimal      @default(200000000)
+  card_value Decimal                       @default(200000000)
   change_log VipUserClaimProfitChangeLog[]
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  created_at DateTime                      @default(now())
+  updated_at DateTime                      @updatedAt
 
   @@map("vip_card")
 }
 
 model VipUserClaimProfitChangeLog {
-  id         String       @id @default(cuid()) @db.VarChar(45)
-  card_id    String
+  id      String @id @default(cuid()) @db.VarChar(45)
+  card_id String
 
-  vipCard    VipCard      @relation(fields: [card_id], references: [id])
-  amount     Decimal
+  vipCard VipCard @relation(fields: [card_id], references: [id])
+  amount  Decimal
 
   number_quarter Int
-  is_claim   Boolean      @default(false)
+  is_claim       Boolean @default(false)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
