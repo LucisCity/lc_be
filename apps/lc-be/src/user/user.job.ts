@@ -17,7 +17,7 @@ export class UserJob {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async computeProfit() {
     const vipUsersList = await this.prisma.vipCard.findMany({
       include: {
@@ -29,6 +29,9 @@ export class UserJob {
     const now = Date.now();
     const aQuarter = 3 * 30 * 86400 * 1000;
     for (const vipCard of vipUsersList) {
+      if (vipCard?.valid_from) {
+        continue;
+      }
       const validFrom = new Date(vipCard.valid_from).getTime();
 
       // not time to take profit

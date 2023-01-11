@@ -90,7 +90,7 @@ export class TransactionService {
         },
         include: {
           blockchain_transaction: true,
-          wallet: true,
+          user: true,
         },
       });
     });
