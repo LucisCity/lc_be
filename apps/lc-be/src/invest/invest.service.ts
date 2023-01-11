@@ -126,9 +126,12 @@ export class InvestService {
             total_vote: {
               increment: 1,
             },
-            vote: KMath.plus(projectProfile.vote?.toNumber() ?? 0, input.value)
-              .div(2)
-              .toNumber(),
+            vote:
+              projectProfile.vote?.toNumber() > 0
+                ? KMath.plus(projectProfile.vote?.toNumber() ?? 0, input.value)
+                    .div(2)
+                    .toNumber()
+                : input.value,
           },
         }),
       ]);
