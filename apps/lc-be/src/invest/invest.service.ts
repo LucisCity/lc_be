@@ -311,64 +311,77 @@ export class InvestService {
   }
 
   async claimProjectProfit(userId: string, projectId: string) {
-    const balance = await this.prisma.projectProfitBalance.findUnique({
-      where: {
-        user_id_project_id: {
-          user_id: userId,
-          project_id: projectId,
-        },
-      },
-    });
-    if (!balance || balance.balance.lte(0)) {
-      throw new NotEnoughBalance('Not enough balance to claim');
-    }
-    // create log, update balance
-    const result = await this.prisma.$transaction([
-      // decrement profit balance
-      this.prisma.projectProfitBalanceChangeLog.create({
-        data: {
-          amount: -balance.balance,
-          project_id: projectId,
-          user_id: userId,
-        },
-      }),
-      this.prisma.projectProfitBalance.update({
-        data: {
-          balance: {
-            decrement: balance.balance,
-          },
-        },
+    try {
+      const balance = await this.prisma.projectProfitBalance.findUnique({
         where: {
           user_id_project_id: {
+            user_id: userId,
+            project_id: projectId,
+          },
+        },
+      });
+      if (!balance || balance.balance.lte(0)) {
+        throw new NotEnoughBalance('Not enough balance to claim');
+      }
+      const wallet = await this.prisma.wallet.findUnique({
+        where: {
+          user_id: userId,
+        },
+      });
+      if (!wallet) {
+        throw new BadRequestError('Wallet not found');
+      }
+      // create log, update balance
+      const result = await this.prisma.$transaction([
+        // decrement profit balance
+        this.prisma.projectProfitBalanceChangeLog.create({
+          data: {
+            amount: -balance.balance,
             project_id: projectId,
             user_id: userId,
           },
-        },
-      }),
-      // increment main wallet
-      this.prisma.wallet.update({
-        data: {
-          balance: {
-            increment: balance.balance,
+        }),
+        this.prisma.projectProfitBalance.update({
+          data: {
+            balance: {
+              decrement: balance.balance,
+            },
           },
-        },
-        where: {
-          user_id: userId,
-        },
-      }),
-      this.prisma.transactionLog.create({
-        data: {
-          user_id: userId,
-          amount: balance.balance,
-          type: 'CLAIM_PROFIT',
-          description: `Claim profit from project into wallet with balance ${balance.balance}`,
-        },
-      }),
-    ]);
-    this.pubsubService.pubSub.publish(INVEST_SUBSCRIPTION_KEY.profitBalanceChange, {
-      [INVEST_SUBSCRIPTION_KEY.profitBalanceChange]: result[1],
-    });
-    return true;
+          where: {
+            user_id_project_id: {
+              project_id: projectId,
+              user_id: userId,
+            },
+          },
+        }),
+        // increment main wallet
+        this.prisma.wallet.update({
+          data: {
+            balance: {
+              increment: balance.balance,
+            },
+          },
+          where: {
+            user_id: userId,
+          },
+        }),
+        this.prisma.transactionLog.create({
+          data: {
+            user_id: userId,
+            amount: balance.balance,
+            type: 'CLAIM_PROFIT',
+            description: `Claim profit from project into wallet with balance ${balance.balance}`,
+          },
+        }),
+      ]);
+      this.pubsubService.pubSub.publish(INVEST_SUBSCRIPTION_KEY.profitBalanceChange, {
+        [INVEST_SUBSCRIPTION_KEY.profitBalanceChange]: result[1],
+      });
+      return true;
+    } catch (err) {
+      this.logger.error(err);
+      throw new BadRequestError('Something went wrong, please try againt later');
+    }
   }
 
   async voteSellProject(userId: string, projectId: string, isSell: boolean) {
