@@ -17,6 +17,7 @@ import { TransactionLog } from '@libs/prisma/@generated/prisma-nestjs-graphql/tr
 import { ProfileGql } from '../auth/auth.type';
 import { UserKycVerification } from '@libs/prisma/@generated/prisma-nestjs-graphql/user-kyc-verification/user-kyc-verification.model';
 import { VipCard } from '@libs/prisma/@generated/prisma-nestjs-graphql/vip-card/vip-card.model';
+import { User } from '@libs/prisma/@generated/prisma-nestjs-graphql/user/user.model';
 @Resolver()
 export class UserResolver {
   constructor(private userService: UserService) {}
@@ -152,5 +153,18 @@ export class UserResolver {
     @Args('walletAddress') walletAddress: string,
   ): Promise<string> {
     return await this.userService.updateWalletAddress(user.id, walletAddress);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => [User], { nullable: true, description: 'get vip user' })
+  async getVipUsers(@CurrentUser() user: AppAuthUser): Promise<User[]> {
+    return await this.userService.getVipUser(user.id);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => String, { nullable: true, description: 'claim profit vip user' })
+  async claimProfitForVipUser(@CurrentUser() user: AppAuthUser): Promise<boolean> {
+    await this.userService.claimProfitForVipUser(user.id);
+    return true;
   }
 }

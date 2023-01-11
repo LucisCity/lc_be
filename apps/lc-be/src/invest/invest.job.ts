@@ -48,7 +48,7 @@ export class InvestJob {
     const now = currentDate.getTime();
     const MS_IN_DAY = 1000 * 24 * 60 * 60;
 
-    for (let item of projects) {
+    for (const item of projects) {
       if (item.start_time_vote_sell != null && currentDate >= item.start_time_vote_sell) {
         // not allow take profit
         continue;
@@ -77,7 +77,7 @@ export class InvestJob {
     const profitBalanceInputs: Prisma.ProjectProfitBalanceUpsertArgs[] = [];
     const profitBalanceChangeLogInputs: Prisma.ProjectProfitBalanceChangeLogCreateArgs[] = [];
 
-    for (let item of nftBoughts) {
+    for (const item of nftBoughts) {
       const project = projectById[item.project_id];
       if (!project) {
         // project can not compute profit
@@ -138,7 +138,7 @@ export class InvestJob {
     ]);
 
     // public to client
-    for (let item of profitBalanceInputs) {
+    for (const item of profitBalanceInputs) {
       this.pubsubService.pubSub.publish(INVEST_SUBSCRIPTION_KEY.profitBalanceChange, {
         [INVEST_SUBSCRIPTION_KEY.profitBalanceChange]: item.create,
       });

@@ -345,4 +345,67 @@ export class UserService {
     });
     return walletAddress;
   }
+
+  ///// vip user ////
+  async getVipUser(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+
+    if (user.role !== 'VIP_USER') {
+      throw new AppError('Vip user can query', 'NOT_VIP_USER');
+    }
+    return await this.prisma.user.findMany({
+      where: {
+        role: 'VIP_USER',
+      },
+      include: {
+        vipCard: true,
+      },
+      orderBy: {
+        vipCard: {
+          card_value: 'desc',
+        },
+      },
+      take: 10,
+    });
+  }
+
+  async claimProfitForVipUser(userId: string) {
+    const vipCard = await this.prisma.vipCard.findUnique({ where: { user_id: userId } });
+    if (!vipCard) {
+      throw new AppError('vip user not exist!', 'NOT_VIP_USER');
+    }
+
+    const listLogHasProfit = await this.prisma.vipUserClaimProfitChangeLog.findMany({
+      where: { card_id: vipCard.id, is_claim: false },
+    });
+
+    if (listLogHasProfit && listLogHasProfit.length === 0) {
+      throw new AppError('Profit is zero!', 'PROFIT_IS_ZERO');
+    }
+    const profit = listLogHasProfit.reduce((pre, currentItem) => pre.add(currentItem.amount), new Prisma.Decimal(0));
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.transactionLog.create({
+        data: {
+          type: 'VIP_USER_CLAIM_PROFIT',
+          amount: profit,
+          user_id: userId,
+          description: 'return profit to vip user quarterly',
+        },
+      });
+      await tx.wallet.update({
+        where: { user_id: userId },
+        data: {
+          balance: { increment: profit },
+        },
+      });
+
+      await tx.vipUserClaimProfitChangeLog.updateMany({
+        where: { card_id: vipCard.id, is_claim: false },
+        data: {
+          is_claim: true,
+        },
+      });
+    });
+  }
 }

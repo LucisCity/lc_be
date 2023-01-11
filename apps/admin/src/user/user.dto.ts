@@ -25,18 +25,7 @@ export class UserGql extends OmitType(User, [
 }
 
 @InputType()
-export class VipCardCreateInputGql extends OmitType(VipCardCreateInput, [
-  'created_at',
-  'updated_at',
-  'id',
-  'number',
-  'password',
-]) {
-  @Field(() => String, { nullable: false })
-  @Length(6, 6, { message: 'password must be exactly 6 characters, containing only numbers' })
-  @IsNumberString()
-  'password': string;
-}
+export class VipCardCreateInputGql extends OmitType(VipCardCreateInput, ['created_at', 'updated_at', 'id', 'number']) {}
 
 @InputType()
 export class PasswordUpdate {
@@ -47,12 +36,4 @@ export class PasswordUpdate {
 }
 
 @InputType()
-export class VipCardUpdateInputGql extends OmitType(VipCardUpdateInput, [
-  'created_at',
-  'updated_at',
-  'id',
-  'password',
-]) {
-  @Field(() => PasswordUpdate, { nullable: true })
-  password: PasswordUpdate;
-}
+export class VipCardUpdateInputGql extends OmitType(VipCardUpdateInput, ['created_at', 'updated_at', 'id']) {}

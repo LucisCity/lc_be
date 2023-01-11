@@ -4,7 +4,6 @@ import { KycStatus } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/
 import { AppError } from '@libs/helper/errors/base.error';
 import { VipCardTier } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/vip-card-tier.enum';
 import { VipCardCreateInputGql, VipCardUpdateInputGql } from './user.dto';
-import { PasswordUtils } from '@libs/helper/password.util';
 import { randString } from '@libs/helper/string.helper';
 
 @Injectable()
@@ -66,22 +65,26 @@ export class UserService {
   }
 
   async createVipCard(input: VipCardCreateInputGql) {
-    const hashPass = await PasswordUtils.hashPassword(input.password);
-    return await this.prisma.vipCard.create({
-      data: {
-        ...input,
-        password: hashPass,
-        number: randString(16, '1234567890'),
-      },
+    return await this.prisma.$transaction(async (tx) => {
+      const vipcard = await tx.vipCard.create({
+        data: {
+          ...input,
+          number: randString(16, '1234567890'),
+        },
+      });
+
+      await tx.user.update({
+        where: { id: vipcard.user_id },
+        data: {
+          role: 'VIP_USER',
+        },
+      });
+
+      return vipcard;
     });
   }
 
   async updateVipCard(number: string, input: VipCardUpdateInputGql) {
-    if (input.password.set) {
-      const hashPass = await PasswordUtils.hashPassword(input.password.set);
-      input.password.set = hashPass;
-      // console.log(`hashPass ${hashPass}`);
-    }
     await this.prisma.vipCard.update({
       where: {
         number,

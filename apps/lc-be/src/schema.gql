@@ -77,6 +77,7 @@ enum TransactionType {
   CLAIM_PROFIT
   BUY_NFT
   WITHDRAW_BALANCE
+  VIP_USER_CLAIM_PROFIT
 }
 
 """An arbitrary-precision Decimal type"""
@@ -96,17 +97,34 @@ type Wallet {
   _count: WalletCount!
 }
 
+type VipUserClaimProfitChangeLog {
+  id: ID!
+  card_id: String!
+  vipCard: VipCard!
+  amount: Decimal!
+  number_quarter: Int!
+  is_claim: Boolean!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+type VipCardCount {
+  change_log: Int!
+}
+
 type VipCard {
   id: ID!
   user_id: String!
   number: String!
   name: String!
-  password: String!
   tier: VipCardTier
-  expired_at: DateTime
+  valid_from: DateTime
   user: User!
+  card_value: Decimal!
+  change_log: [VipUserClaimProfitChangeLog!]
   created_at: DateTime!
   updated_at: DateTime!
+  _count: VipCardCount!
 }
 
 enum VipCardTier {
@@ -155,6 +173,7 @@ type User {
 enum UserRole {
   ADMIN
   USER
+  VIP_USER
 }
 
 enum UserStatus {
@@ -518,6 +537,9 @@ type Query {
   """get wallet address"""
   getWalletAddress: String
 
+  """get vip user"""
+  getVipUsers: [User!]
+
   """get OTP"""
   getOneTimePassword(address: String!): String!
 
@@ -596,6 +618,9 @@ type Mutation {
 
   """upadate wallet address"""
   updateWalletAddress(walletAddress: String!): String
+
+  """claim profit vip user"""
+  claimProfitForVipUser: String
 
   """Send tx transaction"""
   sendTransaction(txHash: String!, abi: String): Boolean!
