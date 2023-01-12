@@ -92,6 +92,7 @@ type ProjectNftOwner {
   currency_amount: Decimal!
   project_ended: Boolean!
   is_sell_voted: Boolean!
+  is_burned: Boolean!
   user: User!
   created_at: DateTime!
   updated_at: DateTime!
@@ -135,6 +136,7 @@ enum TransactionType {
   BUY_NFT
   WITHDRAW_BALANCE
   VIP_USER_CLAIM_PROFIT
+  BURN_NFT
 }
 
 type UserCount {
@@ -285,6 +287,7 @@ type ProjectProfitBalance {
   user_id: String!
   project_id: String!
   balance: Decimal!
+  balance_claimed: Decimal!
   from: DateTime!
   to: DateTime!
   created_at: DateTime!
@@ -443,6 +446,7 @@ type ProjectGql {
 type ProjectProfitBalanceGql {
   user_id: String!
   balance: Decimal!
+  balance_claimed: Decimal!
   from: DateTime!
   to: DateTime!
 }
@@ -468,6 +472,7 @@ type ProjectNftOwnerGql {
   user_id: String!
   total_nft: Int!
   currency_amount: Decimal!
+  is_burned: Boolean!
 
   """"""
   user: InvestorGql!

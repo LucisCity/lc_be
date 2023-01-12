@@ -293,7 +293,7 @@ export class TasksService {
           }
         }
       }
-      this.startBlock = blockNumber;
+      this.startBlock = blockNumber - 1; // always check block
       // unlock process
       this.lockProcess = false;
     } catch (e) {
