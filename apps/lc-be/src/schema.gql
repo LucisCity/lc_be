@@ -260,6 +260,12 @@ type TransactionHistoryResponse {
   transactionHistory: [TransactionLog!]
 }
 
+type DashboardData {
+  totalAssetsBalance: String
+  totalInvestedBalance: String
+  profitRate: String
+}
+
 type NotificationGql {
   id: ID!
   user_id: String!
@@ -538,6 +544,9 @@ type Query {
 
   """get vip user"""
   getVipUsers: [User!]
+
+  """claim profit vip user"""
+  getDashboard: DashboardData
 
   """get OTP"""
   getOneTimePassword(address: String!): String!

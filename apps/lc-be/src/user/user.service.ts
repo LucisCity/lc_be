@@ -420,4 +420,54 @@ export class UserService {
       },
     });
   }
+
+  async getDashboard(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    let totalAssetsBalance: Prisma.Decimal = null;
+    let totalInvestedBalance: Prisma.Decimal = null;
+    let profitRate: Prisma.Decimal = null;
+    const nfts = await this.prisma.nft.findMany({
+      where: {
+        owner: user.wallet_address,
+      },
+    });
+
+    let truncateNfts = {};
+
+    nfts.forEach((item) => {
+      if (!truncateNfts?.[item.address]) {
+        truncateNfts = {
+          ...truncateNfts,
+          [item.address]: 1,
+        };
+        return;
+      }
+
+      truncateNfts[item.address] = truncateNfts[item.address] + 1;
+    });
+    console.log(nfts);
+    for (const address of Object.keys(truncateNfts)) {
+      const p = await this.prisma.project.findUnique({ where: { contract_address: address } });
+      const nftPrice = p.nft_price;
+      totalInvestedBalance = nftPrice.mul(truncateNfts[address]);
+    }
+    if (!totalInvestedBalance) totalInvestedBalance = new Prisma.Decimal(0);
+
+    const referrals = await this.prisma.referralLog.findMany({ where: { invited_by: userId } });
+
+    const referralsBalance = referrals.length * Number(this.rewardReferral);
+
+    totalAssetsBalance = totalInvestedBalance.add(referralsBalance);
+    if (totalAssetsBalance.equals(0)) {
+      profitRate = new Prisma.Decimal(0);
+    } else {
+      profitRate = totalAssetsBalance.sub(totalInvestedBalance).div(totalInvestedBalance).mul(100);
+    }
+
+    return {
+      profitRate: profitRate?.toString() ?? null,
+      totalAssetsBalance: totalAssetsBalance?.toString() ?? null,
+      totalInvestedBalance: totalInvestedBalance?.toString() ?? null,
+    };
+  }
 }

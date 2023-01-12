@@ -7,6 +7,7 @@ import { AppError } from '@libs/helper/errors/base.error';
 import {
   AccountInfo,
   AccountInfoUpdateInput,
+  DashboardData,
   ReferralDataResponse,
   TransactionHistoryResponse,
 } from './user.dto/user.dto';
@@ -178,5 +179,11 @@ export class UserResolver {
   ): Promise<boolean> {
     await this.userService.contactUs(name, phone, email, question, userId);
     return true;
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => DashboardData, { nullable: true, description: 'claim profit vip user' })
+  async getDashboard(@CurrentUser() user: AppAuthUser): Promise<DashboardData> {
+    return await this.userService.getDashboard(user.id);
   }
 }
