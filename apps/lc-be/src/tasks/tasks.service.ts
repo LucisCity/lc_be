@@ -233,7 +233,6 @@ export class TasksService {
 
           const nftsDb = await this.prismaService.nft.findMany({
             where: {
-              owner: owner,
               address: contractAddress,
             },
           });
@@ -294,7 +293,7 @@ export class TasksService {
           }
         }
       }
-      this.startBlock = blockNumber - 1; // always check block
+      this.startBlock = blockNumber; // always check block
       // unlock process
       this.lockProcess = false;
     } catch (e) {
