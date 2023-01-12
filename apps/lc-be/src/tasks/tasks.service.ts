@@ -236,22 +236,16 @@ export class TasksService {
               address: contractAddress,
             },
           });
-          const nftStored = [];
+
           for (let i = Number(tokenIdFrom.toString()); i <= Number(tokenIdTo.toString()); i++) {
             const index = nftsDb.findIndex((item) => item.token_id == i.toString());
-            if (index > -1) {
-              nftStored.push(nftsDb[index]);
+            if (index === -1) {
+              data.push({
+                token_id: i.toString(),
+                owner: owner,
+                address: contractAddress,
+              });
             }
-          }
-          for (let i = Number(tokenIdFrom.toString()); i <= Number(tokenIdTo.toString()); i++) {
-            if (nftStored.findIndex((item) => item.token_id == i.toString()) > -1) {
-              continue;
-            }
-            data.push({
-              token_id: i.toString(),
-              owner: owner,
-              address: contractAddress,
-            });
           }
 
           if (data.length === 0) {
