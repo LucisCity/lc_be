@@ -30,6 +30,7 @@ export enum ErrorCode {
   NOT_VIP_USER = 'NOT_VIP_USER',
   PROFIT_IS_ZERO = 'PROFIT_IS_ZERO',
   WRONG_PASSWORD = 'WRONG_PASSWORD',
+  USER_DONT_HAVE_PASSWORD = 'USER_DONT_HAVE_PASSWORD',
 }
 
 registerEnumType(ErrorCode, {
