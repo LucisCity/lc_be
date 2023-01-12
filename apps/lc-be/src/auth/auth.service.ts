@@ -41,9 +41,12 @@ export class AuthService {
         kyc_verification: true,
       },
     });
-    if (!user || !user.password) {
+    if (!user) {
       this.logger.debug('login: user not found');
       throw new AppError('User not found', ErrorCode.USER_NOT_FOUND);
+    }
+    if (!user.password) {
+      throw new AppError('This user doesnt have password', ErrorCode.USER_DONT_HAVE_PASSWORD);
     }
     const isValid = await PasswordUtils.comparePassword(pass, user.password);
     if (!isValid) {
