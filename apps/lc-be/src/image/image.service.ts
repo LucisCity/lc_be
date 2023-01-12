@@ -5,6 +5,7 @@ import { AppError } from '@libs/helper/errors/base.error';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@libs/prisma';
 import { UserKycVerification } from '@libs/prisma/@generated/prisma-nestjs-graphql/user-kyc-verification/user-kyc-verification.model';
+import { ErrorCode } from '@libs/helper/error-code/error-code.dto';
 
 @Injectable()
 export class ImageService {
@@ -29,12 +30,12 @@ export class ImageService {
       },
     });
     if (existedKyc) {
-      throw new AppError('Kyc is being processed or has succeed', 'KYC_PENDING_OR_SUCCEED');
+      throw new AppError('Kyc is being processed or has succeed', ErrorCode.KYC_PENDING_OR_SUCCEED);
     }
-    // throw new AppError('Test Server Error', 'TEST_SERVER_ERROR');
+    // throw new AppError('Test Server Error', ErrorCode.TEST_SERVER_ERROR);
     // console.log(`upload files image service ${files}`);
     if (files.length !== 3) {
-      throw new AppError('Kyc images must be exactly 3', 'BAD_REQUEST');
+      throw new AppError('Kyc images must be exactly 3', ErrorCode.BAD_REQUEST);
     }
     // files.forEach((i) => {
     //   console.log(`file fieldName ${i.fieldname}`);

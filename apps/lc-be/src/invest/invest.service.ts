@@ -14,6 +14,7 @@ import { InvestedProjectGql, InvestErrorCode, ProjectFilter, ProjectGql, RatePro
 import { KMath } from '@libs/helper/math.helper';
 import { PubsubService } from '@libs/pubsub';
 import { ProjectType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/project-type.enum';
+import { ErrorCode } from '@libs/helper/error-code/error-code.dto';
 @Injectable()
 export class InvestService {
   private readonly logger = new Logger(InvestService.name);
@@ -43,7 +44,7 @@ export class InvestService {
     });
 
     if (!result) {
-      throw new AppError('project not found!', 'PROJECT_NOT_FOUND');
+      throw new AppError('project not found!', ErrorCode.PROJECT_NOT_FOUND);
     }
     // compute offer object
     if (result.profile.offers?.length > 0) {
@@ -425,7 +426,7 @@ export class InvestService {
       throw new BadRequestError('Bad request');
     }
     if (!nftBought || nftBought.total_nft < 1) {
-      throw new AppError(InvestErrorCode.NOT_ENOUGHT_NFT, 'Not enought nft to vote');
+      throw new AppError('Not enought nft to vote', ErrorCode.NOT_ENOUGH_NFT);
     }
 
     if (
@@ -434,10 +435,10 @@ export class InvestService {
       now < project.start_time_vote_sell ||
       now > project.end_time_vote_sell
     ) {
-      throw new AppError(InvestErrorCode.INVALID_TIME_VOTE_SELL, "Can't vote now");
+      throw new AppError("Can't vote now", ErrorCode.INVALID_TIME_VOTE_SELL);
     }
     if (nftBought.is_sell_voted) {
-      throw new AppError(InvestErrorCode.SELL_VOTED, 'You voed');
+      throw new AppError('You voed', ErrorCode.SELL_VOTED);
     }
 
     const receiveAmount = project.nft_price.mul(nftBought.total_nft).toNumber();

@@ -40,6 +40,63 @@ enum ReferralType {
   BUY_GALAXY_CARD
 }
 
+type Wallet {
+  user_id: ID!
+  user: User!
+  balance: Decimal!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+"""An arbitrary-precision Decimal type"""
+scalar Decimal
+
+type VipUserClaimProfitChangeLog {
+  id: ID!
+  card_id: String!
+  vipCard: VipCard!
+  amount: Decimal!
+  number_quarter: Int!
+  is_claim: Boolean!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+type VipCardCount {
+  change_log: Int!
+}
+
+type VipCard {
+  id: ID!
+  user_id: String!
+  number: String!
+  name: String!
+  tier: VipCardTier
+  valid_from: DateTime
+  user: User!
+  card_value: Decimal!
+  change_log: [VipUserClaimProfitChangeLog!]
+  created_at: DateTime!
+  updated_at: DateTime!
+  _count: VipCardCount!
+}
+
+enum VipCardTier {
+  GALAXY_PREMIUM
+}
+
+type ProjectNftOwner {
+  project_id: String!
+  user_id: String!
+  total_nft: Int!
+  currency_amount: Decimal!
+  project_ended: Boolean!
+  is_sell_voted: Boolean!
+  user: User!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
 type BlockchainTransaction {
   id: ID!
   tx_hash: String!
@@ -64,7 +121,7 @@ type TransactionLog {
   id: ID!
   type: TransactionType!
   user_id: String!
-  wallet: Wallet!
+  user: User!
   amount: Decimal!
   description: String
   blockchain_transaction: BlockchainTransaction
@@ -77,57 +134,13 @@ enum TransactionType {
   CLAIM_PROFIT
   BUY_NFT
   WITHDRAW_BALANCE
-}
-
-"""An arbitrary-precision Decimal type"""
-scalar Decimal
-
-type WalletCount {
-  transaction_log: Int!
-}
-
-type Wallet {
-  user_id: ID!
-  user: User!
-  balance: Decimal!
-  transaction_log: [TransactionLog!]
-  created_at: DateTime!
-  updated_at: DateTime!
-  _count: WalletCount!
-}
-
-type VipCard {
-  id: ID!
-  user_id: String!
-  number: String!
-  name: String!
-  password: String!
-  tier: VipCardTier
-  expired_at: DateTime
-  user: User!
-  created_at: DateTime!
-  updated_at: DateTime!
-}
-
-enum VipCardTier {
-  GALAXY_PREMIUM
-}
-
-type ProjectNftOwner {
-  project_id: String!
-  user_id: String!
-  total_nft: Int!
-  currency_amount: Decimal!
-  project_ended: Boolean!
-  is_sell_voted: Boolean!
-  user: User!
-  created_at: DateTime!
-  updated_at: DateTime!
+  VIP_USER_CLAIM_PROFIT
 }
 
 type UserCount {
   kyc_verification: Int!
   projectNfts: Int!
+  transaction_log: Int!
 }
 
 type User {
@@ -149,12 +162,14 @@ type User {
   wallet_address: String
   vipCard: VipCard
   projectNfts: [ProjectNftOwner!]
+  transaction_log: [TransactionLog!]
   _count: UserCount!
 }
 
 enum UserRole {
   ADMIN
   USER
+  VIP_USER
 }
 
 enum UserStatus {
@@ -200,6 +215,7 @@ type UserGql {
   wallet_address: String
   vipCard: VipCard
   projectNfts: [ProjectNftOwner!]
+  transaction_log: [TransactionLog!]
   _count: UserCount!
   profile: ProfileGql!
 }
@@ -354,9 +370,10 @@ input ProjectEvent {
 input VipCardCreateInputGql {
   name: String!
   tier: VipCardTier
-  expired_at: DateTime
+  valid_from: DateTime
   user: UserCreateNestedOneWithoutVipCardInput!
-  password: String!
+  card_value: Decimal
+  change_log: VipUserClaimProfitChangeLogCreateNestedManyWithoutVipCardInput
 }
 
 input UserCreateNestedOneWithoutVipCardInput {
@@ -383,6 +400,7 @@ input UserCreateWithoutVipCardInput {
   wallet: WalletCreateNestedOneWithoutUserInput
   wallet_address: String
   projectNfts: ProjectNftOwnerCreateNestedManyWithoutUserInput
+  transaction_log: TransactionLogCreateNestedManyWithoutUserInput
 }
 
 input UserProfileCreateNestedOneWithoutUserInput {
@@ -486,74 +504,6 @@ input WalletCreateNestedOneWithoutUserInput {
 
 input WalletCreateWithoutUserInput {
   balance: Decimal
-  transaction_log: TransactionLogCreateNestedManyWithoutWalletInput
-  created_at: DateTime
-  updated_at: DateTime
-}
-
-input TransactionLogCreateNestedManyWithoutWalletInput {
-  create: [TransactionLogCreateWithoutWalletInput!]
-  connectOrCreate: [TransactionLogCreateOrConnectWithoutWalletInput!]
-  createMany: TransactionLogCreateManyWalletInputEnvelope
-  connect: [TransactionLogWhereUniqueInput!]
-}
-
-input TransactionLogCreateWithoutWalletInput {
-  id: String
-  type: TransactionType!
-  amount: Decimal!
-  description: String
-  blockchain_transaction: BlockchainTransactionCreateNestedOneWithoutTransaction_logInput
-  created_at: DateTime
-  updated_at: DateTime
-}
-
-input BlockchainTransactionCreateNestedOneWithoutTransaction_logInput {
-  create: BlockchainTransactionCreateWithoutTransaction_logInput
-  connectOrCreate: BlockchainTransactionCreateOrConnectWithoutTransaction_logInput
-  connect: BlockchainTransactionWhereUniqueInput
-}
-
-input BlockchainTransactionCreateWithoutTransaction_logInput {
-  id: String
-  tx_hash: String!
-  status: TransactionStatus
-  message_error: String
-  abi: String
-  created_at: DateTime
-  updated_at: DateTime
-}
-
-input BlockchainTransactionCreateOrConnectWithoutTransaction_logInput {
-  where: BlockchainTransactionWhereUniqueInput!
-  create: BlockchainTransactionCreateWithoutTransaction_logInput!
-}
-
-input BlockchainTransactionWhereUniqueInput {
-  id: String
-  tx_hash: String
-  transaction_log_id: String
-}
-
-input TransactionLogCreateOrConnectWithoutWalletInput {
-  where: TransactionLogWhereUniqueInput!
-  create: TransactionLogCreateWithoutWalletInput!
-}
-
-input TransactionLogWhereUniqueInput {
-  id: String
-}
-
-input TransactionLogCreateManyWalletInputEnvelope {
-  data: [TransactionLogCreateManyWalletInput!]!
-  skipDuplicates: Boolean
-}
-
-input TransactionLogCreateManyWalletInput {
-  id: String
-  type: TransactionType!
-  amount: Decimal!
-  description: String
   created_at: DateTime
   updated_at: DateTime
 }
@@ -613,6 +563,73 @@ input ProjectNftOwnerCreateManyUserInput {
   updated_at: DateTime
 }
 
+input TransactionLogCreateNestedManyWithoutUserInput {
+  create: [TransactionLogCreateWithoutUserInput!]
+  connectOrCreate: [TransactionLogCreateOrConnectWithoutUserInput!]
+  createMany: TransactionLogCreateManyUserInputEnvelope
+  connect: [TransactionLogWhereUniqueInput!]
+}
+
+input TransactionLogCreateWithoutUserInput {
+  id: String
+  type: TransactionType!
+  amount: Decimal!
+  description: String
+  blockchain_transaction: BlockchainTransactionCreateNestedOneWithoutTransaction_logInput
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+input BlockchainTransactionCreateNestedOneWithoutTransaction_logInput {
+  create: BlockchainTransactionCreateWithoutTransaction_logInput
+  connectOrCreate: BlockchainTransactionCreateOrConnectWithoutTransaction_logInput
+  connect: BlockchainTransactionWhereUniqueInput
+}
+
+input BlockchainTransactionCreateWithoutTransaction_logInput {
+  id: String
+  tx_hash: String!
+  status: TransactionStatus
+  message_error: String
+  abi: String
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+input BlockchainTransactionCreateOrConnectWithoutTransaction_logInput {
+  where: BlockchainTransactionWhereUniqueInput!
+  create: BlockchainTransactionCreateWithoutTransaction_logInput!
+}
+
+input BlockchainTransactionWhereUniqueInput {
+  id: String
+  tx_hash: String
+  transaction_log_id: String
+}
+
+input TransactionLogCreateOrConnectWithoutUserInput {
+  where: TransactionLogWhereUniqueInput!
+  create: TransactionLogCreateWithoutUserInput!
+}
+
+input TransactionLogWhereUniqueInput {
+  id: String
+}
+
+input TransactionLogCreateManyUserInputEnvelope {
+  data: [TransactionLogCreateManyUserInput!]!
+  skipDuplicates: Boolean
+}
+
+input TransactionLogCreateManyUserInput {
+  id: String
+  type: TransactionType!
+  amount: Decimal!
+  description: String
+  created_at: DateTime
+  updated_at: DateTime
+}
+
 input UserCreateOrConnectWithoutVipCardInput {
   where: UserWhereUniqueInput!
   create: UserCreateWithoutVipCardInput!
@@ -627,13 +644,53 @@ input UserWhereUniqueInput {
   wallet_address: String
 }
 
+input VipUserClaimProfitChangeLogCreateNestedManyWithoutVipCardInput {
+  create: [VipUserClaimProfitChangeLogCreateWithoutVipCardInput!]
+  connectOrCreate: [VipUserClaimProfitChangeLogCreateOrConnectWithoutVipCardInput!]
+  createMany: VipUserClaimProfitChangeLogCreateManyVipCardInputEnvelope
+  connect: [VipUserClaimProfitChangeLogWhereUniqueInput!]
+}
+
+input VipUserClaimProfitChangeLogCreateWithoutVipCardInput {
+  id: String
+  amount: Decimal!
+  number_quarter: Int!
+  is_claim: Boolean
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+input VipUserClaimProfitChangeLogCreateOrConnectWithoutVipCardInput {
+  where: VipUserClaimProfitChangeLogWhereUniqueInput!
+  create: VipUserClaimProfitChangeLogCreateWithoutVipCardInput!
+}
+
+input VipUserClaimProfitChangeLogWhereUniqueInput {
+  id: String
+}
+
+input VipUserClaimProfitChangeLogCreateManyVipCardInputEnvelope {
+  data: [VipUserClaimProfitChangeLogCreateManyVipCardInput!]!
+  skipDuplicates: Boolean
+}
+
+input VipUserClaimProfitChangeLogCreateManyVipCardInput {
+  id: String
+  amount: Decimal!
+  number_quarter: Int!
+  is_claim: Boolean
+  created_at: DateTime
+  updated_at: DateTime
+}
+
 input VipCardUpdateInputGql {
   number: StringFieldUpdateOperationsInput
   name: StringFieldUpdateOperationsInput
   tier: NullableEnumVipCardTierFieldUpdateOperationsInput
-  expired_at: NullableDateTimeFieldUpdateOperationsInput
+  valid_from: NullableDateTimeFieldUpdateOperationsInput
   user: UserUpdateOneRequiredWithoutVipCardNestedInput
-  password: PasswordUpdate
+  card_value: DecimalFieldUpdateOperationsInput
+  change_log: VipUserClaimProfitChangeLogUpdateManyWithoutVipCardNestedInput
 }
 
 input StringFieldUpdateOperationsInput {
@@ -679,6 +736,7 @@ input UserUpdateWithoutVipCardInput {
   wallet: WalletUpdateOneWithoutUserNestedInput
   wallet_address: NullableStringFieldUpdateOperationsInput
   projectNfts: ProjectNftOwnerUpdateManyWithoutUserNestedInput
+  transaction_log: TransactionLogUpdateManyWithoutUserNestedInput
 }
 
 input EnumUserRoleFieldUpdateOperationsInput {
@@ -934,7 +992,6 @@ input WalletUpsertWithoutUserInput {
 
 input WalletUpdateWithoutUserInput {
   balance: DecimalFieldUpdateOperationsInput
-  transaction_log: TransactionLogUpdateManyWithoutWalletNestedInput
   created_at: DateTimeFieldUpdateOperationsInput
   updated_at: DateTimeFieldUpdateOperationsInput
 }
@@ -945,168 +1002,6 @@ input DecimalFieldUpdateOperationsInput {
   decrement: Decimal
   multiply: Decimal
   divide: Decimal
-}
-
-input TransactionLogUpdateManyWithoutWalletNestedInput {
-  create: [TransactionLogCreateWithoutWalletInput!]
-  connectOrCreate: [TransactionLogCreateOrConnectWithoutWalletInput!]
-  upsert: [TransactionLogUpsertWithWhereUniqueWithoutWalletInput!]
-  createMany: TransactionLogCreateManyWalletInputEnvelope
-  set: [TransactionLogWhereUniqueInput!]
-  disconnect: [TransactionLogWhereUniqueInput!]
-  delete: [TransactionLogWhereUniqueInput!]
-  connect: [TransactionLogWhereUniqueInput!]
-  update: [TransactionLogUpdateWithWhereUniqueWithoutWalletInput!]
-  updateMany: [TransactionLogUpdateManyWithWhereWithoutWalletInput!]
-  deleteMany: [TransactionLogScalarWhereInput!]
-}
-
-input TransactionLogUpsertWithWhereUniqueWithoutWalletInput {
-  where: TransactionLogWhereUniqueInput!
-  update: TransactionLogUpdateWithoutWalletInput!
-  create: TransactionLogCreateWithoutWalletInput!
-}
-
-input TransactionLogUpdateWithoutWalletInput {
-  id: StringFieldUpdateOperationsInput
-  type: EnumTransactionTypeFieldUpdateOperationsInput
-  amount: DecimalFieldUpdateOperationsInput
-  description: NullableStringFieldUpdateOperationsInput
-  blockchain_transaction: BlockchainTransactionUpdateOneWithoutTransaction_logNestedInput
-  created_at: DateTimeFieldUpdateOperationsInput
-  updated_at: DateTimeFieldUpdateOperationsInput
-}
-
-input EnumTransactionTypeFieldUpdateOperationsInput {
-  set: TransactionType
-}
-
-input BlockchainTransactionUpdateOneWithoutTransaction_logNestedInput {
-  create: BlockchainTransactionCreateWithoutTransaction_logInput
-  connectOrCreate: BlockchainTransactionCreateOrConnectWithoutTransaction_logInput
-  upsert: BlockchainTransactionUpsertWithoutTransaction_logInput
-  disconnect: Boolean
-  delete: Boolean
-  connect: BlockchainTransactionWhereUniqueInput
-  update: BlockchainTransactionUpdateWithoutTransaction_logInput
-}
-
-input BlockchainTransactionUpsertWithoutTransaction_logInput {
-  update: BlockchainTransactionUpdateWithoutTransaction_logInput!
-  create: BlockchainTransactionCreateWithoutTransaction_logInput!
-}
-
-input BlockchainTransactionUpdateWithoutTransaction_logInput {
-  id: StringFieldUpdateOperationsInput
-  tx_hash: StringFieldUpdateOperationsInput
-  status: EnumTransactionStatusFieldUpdateOperationsInput
-  message_error: NullableStringFieldUpdateOperationsInput
-  abi: NullableStringFieldUpdateOperationsInput
-  created_at: DateTimeFieldUpdateOperationsInput
-  updated_at: DateTimeFieldUpdateOperationsInput
-}
-
-input EnumTransactionStatusFieldUpdateOperationsInput {
-  set: TransactionStatus
-}
-
-input TransactionLogUpdateWithWhereUniqueWithoutWalletInput {
-  where: TransactionLogWhereUniqueInput!
-  data: TransactionLogUpdateWithoutWalletInput!
-}
-
-input TransactionLogUpdateManyWithWhereWithoutWalletInput {
-  where: TransactionLogScalarWhereInput!
-  data: TransactionLogUpdateManyMutationInput!
-}
-
-input TransactionLogScalarWhereInput {
-  AND: [TransactionLogScalarWhereInput!]
-  OR: [TransactionLogScalarWhereInput!]
-  NOT: [TransactionLogScalarWhereInput!]
-  id: StringFilter
-  type: EnumTransactionTypeFilter
-  user_id: StringFilter
-  amount: DecimalFilter
-  description: StringNullableFilter
-  created_at: DateTimeFilter
-  updated_at: DateTimeFilter
-}
-
-input EnumTransactionTypeFilter {
-  equals: TransactionType
-  in: [TransactionType!]
-  notIn: [TransactionType!]
-  not: NestedEnumTransactionTypeFilter
-}
-
-input NestedEnumTransactionTypeFilter {
-  equals: TransactionType
-  in: [TransactionType!]
-  notIn: [TransactionType!]
-  not: NestedEnumTransactionTypeFilter
-}
-
-input DecimalFilter {
-  equals: Decimal
-  in: [Decimal!]
-  notIn: [Decimal!]
-  lt: Decimal
-  lte: Decimal
-  gt: Decimal
-  gte: Decimal
-  not: NestedDecimalFilter
-}
-
-input NestedDecimalFilter {
-  equals: Decimal
-  in: [Decimal!]
-  notIn: [Decimal!]
-  lt: Decimal
-  lte: Decimal
-  gt: Decimal
-  gte: Decimal
-  not: NestedDecimalFilter
-}
-
-input StringNullableFilter {
-  equals: String
-  in: [String!]
-  notIn: [String!]
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  contains: String
-  startsWith: String
-  endsWith: String
-  search: String
-  mode: QueryMode
-  not: NestedStringNullableFilter
-}
-
-input NestedStringNullableFilter {
-  equals: String
-  in: [String!]
-  notIn: [String!]
-  lt: String
-  lte: String
-  gt: String
-  gte: String
-  contains: String
-  startsWith: String
-  endsWith: String
-  search: String
-  not: NestedStringNullableFilter
-}
-
-input TransactionLogUpdateManyMutationInput {
-  id: StringFieldUpdateOperationsInput
-  type: EnumTransactionTypeFieldUpdateOperationsInput
-  amount: DecimalFieldUpdateOperationsInput
-  description: NullableStringFieldUpdateOperationsInput
-  created_at: DateTimeFieldUpdateOperationsInput
-  updated_at: DateTimeFieldUpdateOperationsInput
 }
 
 input ProjectNftOwnerUpdateManyWithoutUserNestedInput {
@@ -1171,6 +1066,28 @@ input ProjectNftOwnerScalarWhereInput {
   updated_at: DateTimeFilter
 }
 
+input DecimalFilter {
+  equals: Decimal
+  in: [Decimal!]
+  notIn: [Decimal!]
+  lt: Decimal
+  lte: Decimal
+  gt: Decimal
+  gte: Decimal
+  not: NestedDecimalFilter
+}
+
+input NestedDecimalFilter {
+  equals: Decimal
+  in: [Decimal!]
+  notIn: [Decimal!]
+  lt: Decimal
+  lte: Decimal
+  gt: Decimal
+  gte: Decimal
+  not: NestedDecimalFilter
+}
+
 input BoolFilter {
   equals: Boolean
   not: NestedBoolFilter
@@ -1191,6 +1108,203 @@ input ProjectNftOwnerUpdateManyMutationInput {
   updated_at: DateTimeFieldUpdateOperationsInput
 }
 
-input PasswordUpdate {
-  set: String
+input TransactionLogUpdateManyWithoutUserNestedInput {
+  create: [TransactionLogCreateWithoutUserInput!]
+  connectOrCreate: [TransactionLogCreateOrConnectWithoutUserInput!]
+  upsert: [TransactionLogUpsertWithWhereUniqueWithoutUserInput!]
+  createMany: TransactionLogCreateManyUserInputEnvelope
+  set: [TransactionLogWhereUniqueInput!]
+  disconnect: [TransactionLogWhereUniqueInput!]
+  delete: [TransactionLogWhereUniqueInput!]
+  connect: [TransactionLogWhereUniqueInput!]
+  update: [TransactionLogUpdateWithWhereUniqueWithoutUserInput!]
+  updateMany: [TransactionLogUpdateManyWithWhereWithoutUserInput!]
+  deleteMany: [TransactionLogScalarWhereInput!]
+}
+
+input TransactionLogUpsertWithWhereUniqueWithoutUserInput {
+  where: TransactionLogWhereUniqueInput!
+  update: TransactionLogUpdateWithoutUserInput!
+  create: TransactionLogCreateWithoutUserInput!
+}
+
+input TransactionLogUpdateWithoutUserInput {
+  id: StringFieldUpdateOperationsInput
+  type: EnumTransactionTypeFieldUpdateOperationsInput
+  amount: DecimalFieldUpdateOperationsInput
+  description: NullableStringFieldUpdateOperationsInput
+  blockchain_transaction: BlockchainTransactionUpdateOneWithoutTransaction_logNestedInput
+  created_at: DateTimeFieldUpdateOperationsInput
+  updated_at: DateTimeFieldUpdateOperationsInput
+}
+
+input EnumTransactionTypeFieldUpdateOperationsInput {
+  set: TransactionType
+}
+
+input BlockchainTransactionUpdateOneWithoutTransaction_logNestedInput {
+  create: BlockchainTransactionCreateWithoutTransaction_logInput
+  connectOrCreate: BlockchainTransactionCreateOrConnectWithoutTransaction_logInput
+  upsert: BlockchainTransactionUpsertWithoutTransaction_logInput
+  disconnect: Boolean
+  delete: Boolean
+  connect: BlockchainTransactionWhereUniqueInput
+  update: BlockchainTransactionUpdateWithoutTransaction_logInput
+}
+
+input BlockchainTransactionUpsertWithoutTransaction_logInput {
+  update: BlockchainTransactionUpdateWithoutTransaction_logInput!
+  create: BlockchainTransactionCreateWithoutTransaction_logInput!
+}
+
+input BlockchainTransactionUpdateWithoutTransaction_logInput {
+  id: StringFieldUpdateOperationsInput
+  tx_hash: StringFieldUpdateOperationsInput
+  status: EnumTransactionStatusFieldUpdateOperationsInput
+  message_error: NullableStringFieldUpdateOperationsInput
+  abi: NullableStringFieldUpdateOperationsInput
+  created_at: DateTimeFieldUpdateOperationsInput
+  updated_at: DateTimeFieldUpdateOperationsInput
+}
+
+input EnumTransactionStatusFieldUpdateOperationsInput {
+  set: TransactionStatus
+}
+
+input TransactionLogUpdateWithWhereUniqueWithoutUserInput {
+  where: TransactionLogWhereUniqueInput!
+  data: TransactionLogUpdateWithoutUserInput!
+}
+
+input TransactionLogUpdateManyWithWhereWithoutUserInput {
+  where: TransactionLogScalarWhereInput!
+  data: TransactionLogUpdateManyMutationInput!
+}
+
+input TransactionLogScalarWhereInput {
+  AND: [TransactionLogScalarWhereInput!]
+  OR: [TransactionLogScalarWhereInput!]
+  NOT: [TransactionLogScalarWhereInput!]
+  id: StringFilter
+  type: EnumTransactionTypeFilter
+  user_id: StringFilter
+  amount: DecimalFilter
+  description: StringNullableFilter
+  created_at: DateTimeFilter
+  updated_at: DateTimeFilter
+}
+
+input EnumTransactionTypeFilter {
+  equals: TransactionType
+  in: [TransactionType!]
+  notIn: [TransactionType!]
+  not: NestedEnumTransactionTypeFilter
+}
+
+input NestedEnumTransactionTypeFilter {
+  equals: TransactionType
+  in: [TransactionType!]
+  notIn: [TransactionType!]
+  not: NestedEnumTransactionTypeFilter
+}
+
+input StringNullableFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  search: String
+  mode: QueryMode
+  not: NestedStringNullableFilter
+}
+
+input NestedStringNullableFilter {
+  equals: String
+  in: [String!]
+  notIn: [String!]
+  lt: String
+  lte: String
+  gt: String
+  gte: String
+  contains: String
+  startsWith: String
+  endsWith: String
+  search: String
+  not: NestedStringNullableFilter
+}
+
+input TransactionLogUpdateManyMutationInput {
+  id: StringFieldUpdateOperationsInput
+  type: EnumTransactionTypeFieldUpdateOperationsInput
+  amount: DecimalFieldUpdateOperationsInput
+  description: NullableStringFieldUpdateOperationsInput
+  created_at: DateTimeFieldUpdateOperationsInput
+  updated_at: DateTimeFieldUpdateOperationsInput
+}
+
+input VipUserClaimProfitChangeLogUpdateManyWithoutVipCardNestedInput {
+  create: [VipUserClaimProfitChangeLogCreateWithoutVipCardInput!]
+  connectOrCreate: [VipUserClaimProfitChangeLogCreateOrConnectWithoutVipCardInput!]
+  upsert: [VipUserClaimProfitChangeLogUpsertWithWhereUniqueWithoutVipCardInput!]
+  createMany: VipUserClaimProfitChangeLogCreateManyVipCardInputEnvelope
+  set: [VipUserClaimProfitChangeLogWhereUniqueInput!]
+  disconnect: [VipUserClaimProfitChangeLogWhereUniqueInput!]
+  delete: [VipUserClaimProfitChangeLogWhereUniqueInput!]
+  connect: [VipUserClaimProfitChangeLogWhereUniqueInput!]
+  update: [VipUserClaimProfitChangeLogUpdateWithWhereUniqueWithoutVipCardInput!]
+  updateMany: [VipUserClaimProfitChangeLogUpdateManyWithWhereWithoutVipCardInput!]
+  deleteMany: [VipUserClaimProfitChangeLogScalarWhereInput!]
+}
+
+input VipUserClaimProfitChangeLogUpsertWithWhereUniqueWithoutVipCardInput {
+  where: VipUserClaimProfitChangeLogWhereUniqueInput!
+  update: VipUserClaimProfitChangeLogUpdateWithoutVipCardInput!
+  create: VipUserClaimProfitChangeLogCreateWithoutVipCardInput!
+}
+
+input VipUserClaimProfitChangeLogUpdateWithoutVipCardInput {
+  id: StringFieldUpdateOperationsInput
+  amount: DecimalFieldUpdateOperationsInput
+  number_quarter: IntFieldUpdateOperationsInput
+  is_claim: BoolFieldUpdateOperationsInput
+  created_at: DateTimeFieldUpdateOperationsInput
+  updated_at: DateTimeFieldUpdateOperationsInput
+}
+
+input VipUserClaimProfitChangeLogUpdateWithWhereUniqueWithoutVipCardInput {
+  where: VipUserClaimProfitChangeLogWhereUniqueInput!
+  data: VipUserClaimProfitChangeLogUpdateWithoutVipCardInput!
+}
+
+input VipUserClaimProfitChangeLogUpdateManyWithWhereWithoutVipCardInput {
+  where: VipUserClaimProfitChangeLogScalarWhereInput!
+  data: VipUserClaimProfitChangeLogUpdateManyMutationInput!
+}
+
+input VipUserClaimProfitChangeLogScalarWhereInput {
+  AND: [VipUserClaimProfitChangeLogScalarWhereInput!]
+  OR: [VipUserClaimProfitChangeLogScalarWhereInput!]
+  NOT: [VipUserClaimProfitChangeLogScalarWhereInput!]
+  id: StringFilter
+  card_id: StringFilter
+  amount: DecimalFilter
+  number_quarter: IntFilter
+  is_claim: BoolFilter
+  created_at: DateTimeFilter
+  updated_at: DateTimeFilter
+}
+
+input VipUserClaimProfitChangeLogUpdateManyMutationInput {
+  id: StringFieldUpdateOperationsInput
+  amount: DecimalFieldUpdateOperationsInput
+  number_quarter: IntFieldUpdateOperationsInput
+  is_claim: BoolFieldUpdateOperationsInput
+  created_at: DateTimeFieldUpdateOperationsInput
+  updated_at: DateTimeFieldUpdateOperationsInput
 }

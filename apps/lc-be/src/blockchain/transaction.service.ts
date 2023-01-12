@@ -9,6 +9,7 @@ import { Erc20Service } from './erc20.service';
 import { BlockchainService } from './blockchain.service';
 import { erc20ABI } from './abi/erc20ABI';
 import { BigNumber, ethers } from 'ethers';
+import { ErrorCode } from '@libs/helper/error-code/error-code.dto';
 
 const usdtAddress = process.env.USDT_ADDRESS ?? '0xa9Ee5E11f26E9F6F9A1952AEbd5A91C138380B82';
 @Injectable()
@@ -38,22 +39,22 @@ export class TransactionService {
   async withdrawBalance(userId: string, address: string, amount: string, signatureOTP: string) {
     const password = await this.cacheManager.get<string>(address);
     if (!password) {
-      throw new AppError('claim time expired!', 'SIGNATURE_EXPIRED');
+      throw new AppError('claim time expired!', ErrorCode.SIGNATURE_EXPIRED);
     }
     await this.cacheManager.del(address);
     const signer = ethers.utils.verifyMessage(password, signatureOTP);
     if (signer !== address) {
-      throw new AppError('signature was wrong!', 'SIGNATURE_WRONG');
+      throw new AppError('signature was wrong!', ErrorCode.SIGNATURE_WRONG);
     }
     const wallet = await this.prismaService.wallet.findUnique({
       where: { user_id: userId },
     });
     if (!wallet) {
-      throw new AppError('wallet not exist!', 'WALLET_NOT_EXIST');
+      throw new AppError('wallet not exist!', ErrorCode.WALLET_NOT_FOUND);
     }
 
     if (wallet.balance.lessThan(amount)) {
-      throw new AppError('Balance not enough!', 'BALANCE_NOT_ENOUGH');
+      throw new AppError('Balance not enough!', ErrorCode.BALANCE_NOT_ENOUGH);
     }
 
     const erc20Service = new Erc20Service(this.blockchainService);
@@ -64,7 +65,7 @@ export class TransactionService {
 
     if (ethers.utils.parseUnits(balancePool.toString()).lt(ethers.utils.parseUnits(amount))) {
       this.logger.error('Out of money');
-      throw new AppError('Balance pool not enough!', 'BALANCE_POOL_NOT_ENOUGH');
+      throw new AppError('Balance pool not enough!', ErrorCode.BALANCE_POOL_NOT_ENOUGH);
     }
     await this.prismaService.wallet.update({
       where: { user_id: userId },

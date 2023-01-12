@@ -9,6 +9,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotificationService } from '@libs/subscription/notification.service';
 import { ProfileGql } from '../auth/auth.type';
 import { UserKycVerification } from '@libs/prisma/@generated/prisma-nestjs-graphql/user-kyc-verification/user-kyc-verification.model';
+import { ErrorCode } from '@libs/helper/error-code/error-code.dto';
 
 @Injectable()
 export class UserService {
@@ -92,11 +93,11 @@ export class UserService {
     });
 
     if (!invitee) {
-      throw new AppError('Invitee not exist!', 'INVITEE_NOT_EXIST');
+      throw new AppError('Invitee not exist!', ErrorCode.INVITEE_NOT_EXIST);
     }
 
     if (invitee.is_claim) {
-      throw new AppError('Referral claimed!', 'CLAIMED');
+      throw new AppError('Referral claimed!', ErrorCode.REFERRAL_CLAIMED);
     }
 
     const response = await this.prisma.$transaction(async (tx) => {
@@ -156,20 +157,20 @@ export class UserService {
       },
     });
     if (!user) {
-      throw new AppError('User not found', 'USER_NOT_FOUND');
+      throw new AppError('User not found', ErrorCode.USER_NOT_FOUND);
     }
     if (oldPass === newPass) {
-      throw new AppError('New password must be different from old password', 'NEW_PASS_SAME_OLD_PASS');
+      throw new AppError('New password must be different from old password', ErrorCode.NEW_PASS_SAME_OLD_PASS);
     }
     // check old password
     if (!(await PasswordUtils.comparePassword(oldPass, user.password))) {
-      throw new AppError('Wrong old password, please try again', 'WRONG_OLD_PASS');
+      throw new AppError('Wrong old password, please try again', ErrorCode.WRONG_OLD_PASS);
     }
     // check strong pass
     if (PasswordUtils.validate(newPass) !== true) {
       throw new AppError(
         'New password invalid, password must length from 8-32, contain letter and digit',
-        'INVALID_NEW_PASS',
+        ErrorCode.INVALID_NEW_PASS,
       );
     }
     // update password
@@ -230,7 +231,7 @@ export class UserService {
       });
     } catch (e) {
       if (e.code === 'P2002') {
-        throw new AppError('Username not available', 'USERNAME_DUPLICATED');
+        throw new AppError('Username not available', ErrorCode.USERNAME_DUPLICATED);
       }
     }
   }
@@ -331,11 +332,11 @@ export class UserService {
   async updateWalletAddress(userId: string, walletAddress: string) {
     const user = await this.prisma.user.findUnique({ where: { wallet_address: walletAddress } });
     if (user) {
-      throw new AppError('Duplicate address!', 'DUPLICATE_ADDRESS');
+      throw new AppError('Duplicate address!', ErrorCode.DUPLICATE_WALLET_ADDRESS);
     }
     const u = await this.prisma.user.findFirst({ where: { id: userId } });
     if (u.wallet_address) {
-      throw new AppError('User connected to 1 address.', 'USER_CONNECTED');
+      throw new AppError('User connected to 1 address.', ErrorCode.USER_CONNECTED_WALLET);
     }
     await this.prisma.user.update({
       where: { id: userId },
@@ -351,7 +352,7 @@ export class UserService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
     if (user.role !== 'VIP_USER') {
-      throw new AppError('Vip user can query', 'NOT_VIP_USER');
+      throw new AppError('Vip user can query', ErrorCode.NOT_VIP_USER);
     }
     return await this.prisma.user.findMany({
       where: {
@@ -372,7 +373,7 @@ export class UserService {
   async claimProfitForVipUser(userId: string) {
     const vipCard = await this.prisma.vipCard.findUnique({ where: { user_id: userId } });
     if (!vipCard) {
-      throw new AppError('vip user not exist!', 'NOT_VIP_USER');
+      throw new AppError('vip user not exist!', ErrorCode.NOT_VIP_USER);
     }
 
     const listLogHasProfit = await this.prisma.vipUserClaimProfitChangeLog.findMany({
@@ -380,7 +381,7 @@ export class UserService {
     });
 
     if (listLogHasProfit && listLogHasProfit.length === 0) {
-      throw new AppError('Profit is zero!', 'PROFIT_IS_ZERO');
+      throw new AppError('Profit is zero!', ErrorCode.PROFIT_IS_ZERO);
     }
     const profit = listLogHasProfit.reduce((pre, currentItem) => pre.add(currentItem.amount), new Prisma.Decimal(0));
 
