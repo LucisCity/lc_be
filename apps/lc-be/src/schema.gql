@@ -574,6 +574,9 @@ type Query {
 
   """Test compute profit"""
   computeProfit: Boolean
+
+  """get user following project state"""
+  isFollowingProject(projectId: String!): Boolean
 }
 
 input ProjectFilter {

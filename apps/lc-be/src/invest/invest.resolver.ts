@@ -121,8 +121,17 @@ export class InvestResolver {
     nullable: true,
     description: 'Toggle follow project',
   })
-  async toggleFollowProject(@CurrentUser() user: AppAuthUser, @Args('projectId') projectId: string): Promise<any> {
+  async toggleFollowProject(@CurrentUser() user: AppAuthUser, @Args('projectId') projectId: string): Promise<boolean> {
     return this.service.toggleFollowProject(user.id, projectId);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => Boolean, {
+    nullable: true,
+    description: 'get user following project state',
+  })
+  async isFollowingProject(@CurrentUser() user: AppAuthUser, @Args('projectId') projectId: string): Promise<boolean> {
+    return this.service.isFollowingProject(user.id, projectId);
   }
 
   @UseGuards(GqlAuthGuard)

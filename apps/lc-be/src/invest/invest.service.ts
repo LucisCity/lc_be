@@ -143,6 +143,21 @@ export class InvestService {
     return true;
   }
 
+  async isFollowingProject(userId: string, projectId: string) {
+    const isFollowing = await this.prisma.projectFollower.findUnique({
+      where: {
+        project_id_user_id: {
+          project_id: projectId,
+          user_id: userId,
+        },
+      },
+      select: {
+        is_follow: true,
+      },
+    });
+    return !!(isFollowing?.is_follow);
+  }
+
   async toggleFollowProject(userId: string, projectId: string) {
     const follower = await this.prisma.projectFollower.findUnique({
       where: {
@@ -184,7 +199,8 @@ export class InvestService {
         },
       }),
     ]);
-    return true;
+    return !follower ? true :
+      !follower.is_follow;
   }
 
   async investedProjects(userId: string) {
