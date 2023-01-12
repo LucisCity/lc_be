@@ -159,7 +159,7 @@ export class UserService {
     return !!user.password;
   }
 
-  async changePassword(userId: string, newPass: string, oldPass?: string,): Promise<boolean> {
+  async changePassword(userId: string, newPass: string, oldPass?: string): Promise<boolean> {
     const user = await this.prisma.user.findUnique({
       where: {
         id: userId,
@@ -463,7 +463,7 @@ export class UserService {
 
     for (const address of Object.keys(truncateNfts)) {
       const p = await this.prisma.project.findUnique({ where: { contract_address: address } });
-      const nftPrice = p.nft_price;
+      const nftPrice = p?.nft_price ?? new Prisma.Decimal(0);
       totalInvestedBalance = nftPrice.mul(truncateNfts[address]);
     }
     if (!totalInvestedBalance) totalInvestedBalance = new Prisma.Decimal(0);
