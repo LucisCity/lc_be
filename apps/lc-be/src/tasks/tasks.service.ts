@@ -234,6 +234,7 @@ export class TasksService {
           const nftsDb = await this.prismaService.nft.findMany({
             where: {
               owner: owner,
+              address: contractAddress,
             },
           });
           const nftStored = [];
