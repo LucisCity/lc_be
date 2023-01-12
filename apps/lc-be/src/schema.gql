@@ -657,6 +657,9 @@ type Mutation {
   """claim profit vip user"""
   claimProfitForVipUser: String
 
+  """claim profit vip user"""
+  contactUs(phone: String!, userId: String, name: String, email: String, question: String): Boolean
+
   """Send tx transaction"""
   sendTransaction(txHash: String!, abi: String): Boolean!
 

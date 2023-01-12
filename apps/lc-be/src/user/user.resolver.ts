@@ -168,4 +168,16 @@ export class UserResolver {
     await this.userService.claimProfitForVipUser(user.id);
     return true;
   }
+
+  @Mutation(() => Boolean, { nullable: true, description: 'claim profit vip user' })
+  async contactUs(
+    @Args('phone', { type: () => String }) phone: string,
+    @Args('userId', { type: () => String, nullable: true }) userId?: string,
+    @Args('name', { type: () => String, nullable: true }) name?: string,
+    @Args('email', { type: () => String, nullable: true }) email?: string,
+    @Args('question', { type: () => String, nullable: true }) question?: string,
+  ): Promise<boolean> {
+    await this.userService.contactUs(name, phone, email, question, userId);
+    return true;
+  }
 }
