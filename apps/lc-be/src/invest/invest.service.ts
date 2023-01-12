@@ -525,6 +525,7 @@ export class InvestService {
     if (!project || !nftBought || !profitBalance) {
       throw new NotFoundError('Data not found');
     }
+
     const profitWhenSellProject = project.nft_price.mul(nftBought.total_nft).minus(nftBought.currency_amount);
     const profitRate = profitBalance.balance
       .plus(profitBalance.balance_claimed)
