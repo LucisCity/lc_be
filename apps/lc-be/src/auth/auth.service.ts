@@ -12,6 +12,7 @@ import { EmailService, EventType, VerifyInput } from '@libs/helper/email';
 import { ReferralType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/referral-type.enum';
 import { User } from '@prisma/client';
 import { NotificationService } from '@libs/subscription/notification.service';
+import { ErrorCode } from '@libs/helper/error-code/error-code.dto';
 
 @Injectable()
 export class AuthService {
@@ -42,11 +43,11 @@ export class AuthService {
     });
     if (!user || !user.password) {
       this.logger.debug('login: user not found');
-      throw new AppError('Bad request');
+      throw new AppError('User not found', ErrorCode.USER_NOT_FOUND);
     }
     const isValid = await PasswordUtils.comparePassword(pass, user.password);
     if (!isValid) {
-      throw new AppError('Bad request', 'BAD_REQUEST');
+      throw new AppError('Bad request', ErrorCode.BAD_REQUEST);
     }
     const jwtToken = this.jwt.sign({
       id: user.id,
@@ -104,7 +105,7 @@ export class AuthService {
     } catch (err) {
       this.logger.warn(err);
       throw err;
-      // throw new AppError('ACCOUNT EXIST', 'ACCOUNT_EXIST');
+      // throw new AppError('ACCOUNT EXIST', ErrorCode.ACCOUNT_EXISTED);
     }
   }
 
@@ -131,10 +132,10 @@ export class AuthService {
         // locale,
       } = response.data;
       if (!sub) {
-        throw new AppError('Something went wrong', '500');
+        throw new AppError('Something went wrong', ErrorCode.ERROR_500);
       }
       if (!email || !email_verified) {
-        throw new AppError('Please provide email!', 'INPUT_NOT_VALID');
+        throw new AppError('Email invalid!', ErrorCode.EMAIL_INVALID);
       }
 
       // Valid, is owner
@@ -200,7 +201,7 @@ export class AuthService {
       };
     } catch (err) {
       this.logger.debug(err);
-      throw new AppError('Bad request', 'BAD_REQUEST');
+      throw new AppError('Bad request', ErrorCode.BAD_REQUEST);
     }
   }
 
@@ -218,14 +219,14 @@ export class AuthService {
       // console.log("debug_fb: ", response.data)
     } catch (err) {
       this.logger.debug(err);
-      throw new AppError('Bad request', 'BAD_REQUEST');
+      throw new AppError('Bad request', ErrorCode.BAD_REQUEST);
     }
     const data: FbDebugResponse = response.data;
     if (data.error) {
-      throw new AppError(data.error.message || 'Check token error', '500');
+      throw new AppError(data.error.message || 'Check token error', ErrorCode.ERROR_500);
     }
     if (!data.is_valid) {
-      throw new AppError('Bad request', 'BAD_REQUEST');
+      throw new AppError('Bad request', ErrorCode.BAD_REQUEST);
     }
     // get user info
     try {
@@ -238,7 +239,7 @@ export class AuthService {
       // console.log("me_fb: ", response)
     } catch (err) {
       this.logger.debug(err);
-      throw new AppError('Bad request', 'BAD_REQUEST');
+      throw new AppError('Bad request', ErrorCode.BAD_REQUEST);
     }
 
     const facebook_id = response.id;
@@ -250,7 +251,7 @@ export class AuthService {
     const avatar = response.picture && response.picture.data && response.picture.data.url;
 
     if (!facebook_id) {
-      throw new AppError('Info not enough', 'INPUT_NOT_VALID');
+      throw new AppError('Facebook Id Not found', ErrorCode.FB_ID_NOT_FOUND);
     }
 
     // Valid, is owner
@@ -316,7 +317,7 @@ export class AuthService {
     try {
       const payload: { email: string } = this.jwt.verify(token);
       if (!payload || !payload.email) {
-        throw new AppError('Token invalid', 'TOKEN_INVALID');
+        throw new AppError('Token invalid', ErrorCode.TOKEN_INVALID);
       }
 
       const user = await this.prisma.user.findUnique({
@@ -325,7 +326,7 @@ export class AuthService {
         },
       });
       if (!user) {
-        throw new AppError('Token invalid', 'TOKEN_INVALID');
+        throw new AppError('Token invalid', ErrorCode.TOKEN_INVALID);
       }
       await this.prisma.user.update({
         where: {
@@ -337,7 +338,7 @@ export class AuthService {
       });
     } catch (err) {
       if (err.name === 'JsonWebTokenError') {
-        throw new AppError('Token invalid', 'TOKEN_INVALID');
+        throw new AppError('Token invalid', ErrorCode.TOKEN_INVALID);
       }
       throw err;
     }
@@ -353,7 +354,7 @@ export class AuthService {
       },
     });
     if (!user) {
-      throw new AppError('Bad request', 'BAD_REQUEST');
+      throw new AppError('User not found', ErrorCode.USER_NOT_FOUND);
     }
 
     // Send email verify
@@ -377,7 +378,7 @@ export class AuthService {
   async resetPassword(token: string, newPass: string) {
     const data: { id: string } = this.jwt.verify(token);
     if (!data) {
-      throw new AppError('Token invalid', 'TOKEN_INVALID');
+      throw new AppError('Token invalid', ErrorCode.TOKEN_INVALID);
     }
     console.log('data: ', data);
     await this._resetPassword(newPass, data.id);
@@ -388,7 +389,7 @@ export class AuthService {
     if (PasswordUtils.validate(newPass) !== true) {
       throw new AppError(
         'New password invalid, password must length from 8-32, contain letter and digit ',
-        'NEW_PASS_INVALID',
+        ErrorCode.INVALID_NEW_PASS,
       );
     }
     const user = await this.prisma.user.findUnique({
@@ -397,11 +398,11 @@ export class AuthService {
       },
     });
     if (!user) {
-      throw new AppError('Bad request', 'BAD_REQUEST');
+      throw new AppError('Bad request', ErrorCode.BAD_REQUEST);
     }
     const newHashPass = await PasswordUtils.hashPassword(newPass);
     if (newHashPass === user.password) {
-      throw new AppError('New password must not same old password', 'NEW_PASS_SAME_OLD_PASS');
+      throw new AppError('New password must not same old password', ErrorCode.NEW_PASS_SAME_OLD_PASS);
     }
 
     await this.prisma.user.update({

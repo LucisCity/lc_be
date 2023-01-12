@@ -18,6 +18,7 @@ import { InvestModule } from './invest/invest.module';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JwtService } from '@nestjs/jwt';
 import { SubscriptionModule } from '@libs/subscription';
+import { ErrorCodeModule } from '@libs/helper/error-code/error-code.module';
 
 @Module({
   imports: [
@@ -78,6 +79,7 @@ import { SubscriptionModule } from '@libs/subscription';
     SubscriptionModule,
     ImageModule,
     InvestModule,
+    ErrorCodeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -14,6 +14,8 @@ import { InvestedProjectGql, InvestErrorCode, ProjectFilter, ProjectGql, RatePro
 import { KMath } from '@libs/helper/math.helper';
 import { PubsubService } from '@libs/pubsub';
 import { ProjectType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/project-type.enum';
+import { ErrorCode } from '@libs/helper/error-code/error-code.dto';
+
 @Injectable()
 export class InvestService {
   private readonly logger = new Logger(InvestService.name);
@@ -43,7 +45,7 @@ export class InvestService {
     });
 
     if (!result) {
-      throw new AppError('project not found!', 'PROJECT_NOT_FOUND');
+      throw new AppError('project not found!', ErrorCode.PROJECT_NOT_FOUND);
     }
     // compute offer object
     if (result.profile.offers?.length > 0) {
@@ -155,7 +157,7 @@ export class InvestService {
         is_follow: true,
       },
     });
-    return !!(isFollowing?.is_follow);
+    return !!isFollowing?.is_follow;
   }
 
   async toggleFollowProject(userId: string, projectId: string) {
@@ -199,8 +201,7 @@ export class InvestService {
         },
       }),
     ]);
-    return !follower ? true :
-      !follower.is_follow;
+    return !follower ? true : !follower.is_follow;
   }
 
   async investedProjects(userId: string) {
@@ -336,7 +337,7 @@ export class InvestService {
       },
     });
     if (!balance || balance.balance.lte(0)) {
-      throw new NotEnoughBalance('Not enough balance to claim');
+      throw new AppError('Not enough balance to claim', ErrorCode.BALANCE_NOT_ENOUGH);
     }
     const wallet = await this.prisma.wallet.findUnique({
       where: {
@@ -344,7 +345,7 @@ export class InvestService {
       },
     });
     if (!wallet) {
-      throw new BadRequestError('Wallet not found');
+      throw new AppError('Wallet not found', ErrorCode.WALLET_NOT_FOUND);
     }
 
     try {
@@ -362,6 +363,9 @@ export class InvestService {
           data: {
             balance: {
               decrement: balance.balance,
+            },
+            balance_claimed: {
+              increment: balance.balance,
             },
           },
           where: {
@@ -397,7 +401,7 @@ export class InvestService {
       return true;
     } catch (err) {
       this.logger.error(err);
-      throw new BadRequestError('Something went wrong, please try againt later');
+      throw new AppError('Bad Request', ErrorCode.BAD_REQUEST);
     }
   }
 
@@ -425,7 +429,7 @@ export class InvestService {
       throw new BadRequestError('Bad request');
     }
     if (!nftBought || nftBought.total_nft < 1) {
-      throw new AppError(InvestErrorCode.NOT_ENOUGHT_NFT, 'Not enought nft to vote');
+      throw new AppError('Not enought nft to vote', ErrorCode.NOT_ENOUGH_NFT);
     }
 
     if (
@@ -434,10 +438,10 @@ export class InvestService {
       now < project.start_time_vote_sell ||
       now > project.end_time_vote_sell
     ) {
-      throw new AppError(InvestErrorCode.INVALID_TIME_VOTE_SELL, "Can't vote now");
+      throw new AppError("Can't vote now", ErrorCode.INVALID_TIME_VOTE_SELL);
     }
     if (nftBought.is_sell_voted) {
-      throw new AppError(InvestErrorCode.SELL_VOTED, 'You voed');
+      throw new AppError('You voed', ErrorCode.SELL_VOTED);
     }
 
     const receiveAmount = project.nft_price.mul(nftBought.total_nft).toNumber();
@@ -458,7 +462,6 @@ export class InvestService {
           is_sell: isSell,
           project_id: projectId,
           user_id: userId,
-          receive_amount: receiveAmount,
         },
       }),
     ]);
@@ -490,6 +493,48 @@ export class InvestService {
         },
       },
     });
+  }
+
+  async getProfitRate(userId: string, projectId: string) {
+    const result = await this.prisma.$transaction([
+      this.prisma.project.findUnique({
+        where: {
+          id: projectId,
+        },
+      }),
+      this.prisma.projectNftOwner.findUnique({
+        where: {
+          project_id_user_id: {
+            project_id: projectId,
+            user_id: userId,
+          },
+        },
+      }),
+      this.prisma.projectProfitBalance.findUnique({
+        where: {
+          user_id_project_id: {
+            project_id: projectId,
+            user_id: userId,
+          },
+        },
+      }),
+    ]);
+    const project = result[0];
+    const nftBought = result[1];
+    const profitBalance = result[2];
+    if (!project || !nftBought || !profitBalance) {
+      throw new NotFoundError('Data not found');
+    }
+
+    const profitWhenSellProject = project.nft_price.mul(nftBought.total_nft).minus(nftBought.currency_amount);
+    const profitRate = profitBalance.balance
+      .plus(profitBalance.balance_claimed)
+      .plus(profitWhenSellProject)
+      .div(nftBought.currency_amount)
+      .mul(100)
+      .toNumber();
+
+    return profitRate;
   }
 
   async updateProjectNftOwner(userId: string, projectId: string) {

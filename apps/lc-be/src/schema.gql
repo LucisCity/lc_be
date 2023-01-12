@@ -92,6 +92,7 @@ type ProjectNftOwner {
   currency_amount: Decimal!
   project_ended: Boolean!
   is_sell_voted: Boolean!
+  is_burned: Boolean!
   user: User!
   created_at: DateTime!
   updated_at: DateTime!
@@ -135,6 +136,7 @@ enum TransactionType {
   BUY_NFT
   WITHDRAW_BALANCE
   VIP_USER_CLAIM_PROFIT
+  BURN_NFT
 }
 
 type UserCount {
@@ -281,6 +283,17 @@ type UnseenNotifications {
   count: Int
 }
 
+type ProjectProfitBalance {
+  user_id: String!
+  project_id: String!
+  balance: Decimal!
+  balance_claimed: Decimal!
+  from: DateTime!
+  to: DateTime!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
 type Contract {
   id: ID!
   address: String!
@@ -352,16 +365,6 @@ type ProjectProfile {
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
 scalar JSON
-
-type ProjectProfitBalance {
-  user_id: String!
-  project_id: String!
-  balance: Decimal!
-  from: DateTime!
-  to: DateTime!
-  created_at: DateTime!
-  updated_at: DateTime!
-}
 
 type ProjectMediaGql {
   """Width of image"""
@@ -443,6 +446,7 @@ type ProjectGql {
 type ProjectProfitBalanceGql {
   user_id: String!
   balance: Decimal!
+  balance_claimed: Decimal!
   from: DateTime!
   to: DateTime!
 }
@@ -468,6 +472,7 @@ type ProjectNftOwnerGql {
   user_id: String!
   total_nft: Int!
   currency_amount: Decimal!
+  is_burned: Boolean!
 
   """"""
   user: InvestorGql!
@@ -581,15 +586,51 @@ type Query {
   """Get nft bought of user"""
   getInvestor(projectId: String!): [ProjectNftOwnerGql!]
 
+  """Get profit rate"""
+  getProfitRate(projectId: String!): Float
+
   """Test compute profit"""
   computeProfit: Boolean
 
   """get user following project state"""
   isFollowingProject(projectId: String!): Boolean
+  getAppErrorCode(error_code: ErrorCode): Boolean
 }
 
 input ProjectFilter {
   type: ProjectType
+}
+
+"""all back-end error code"""
+enum ErrorCode {
+  USER_NOT_FOUND
+  BAD_REQUEST
+  PROJECT_NOT_FOUND
+  NOT_ENOUGH_NFT
+  INVALID_TIME_VOTE_SELL
+  SELL_VOTED
+  EMAIL_INVALID
+  ERROR_500
+  FB_ID_NOT_FOUND
+  TOKEN_INVALID
+  NEW_PASS_SAME_OLD_PASS
+  SIGNATURE_EXPIRED
+  SIGNATURE_WRONG
+  WALLET_NOT_FOUND
+  BALANCE_NOT_ENOUGH
+  BALANCE_POOL_NOT_ENOUGH
+  USERNAME_DUPLICATED
+  DUPLICATE_WALLET_ADDRESS
+  KYC_PENDING_OR_SUCCEED
+  USER_CONNECTED_WALLET
+  TEST_SERVER_ERROR
+  ACCOUNT_EXISTED
+  INVITEE_NOT_EXIST
+  REFERRAL_CLAIMED
+  WRONG_OLD_PASS
+  INVALID_NEW_PASS
+  NOT_VIP_USER
+  PROFIT_IS_ZERO
 }
 
 type Mutation {

@@ -43,9 +43,9 @@ model User {
   referral_log ReferralLog?
   wallet       Wallet?
 
-  wallet_address String?           @unique
-  vipCard        VipCard?
-  projectNfts    ProjectNftOwner[]
+  wallet_address  String?           @unique
+  vipCard         VipCard?
+  projectNfts     ProjectNftOwner[]
   transaction_log TransactionLog[]
 
   @@map("user")
@@ -208,13 +208,14 @@ enum TransactionType {
   BUY_NFT
   WITHDRAW_BALANCE
   VIP_USER_CLAIM_PROFIT
+  BURN_NFT
 }
 
 model TransactionLog {
   id          String          @id @default(cuid()) @db.VarChar(45)
   type        TransactionType
   user_id     String          @db.VarChar(45)
-  user        User          @relation(fields: [user_id], references: [id])
+  user        User            @relation(fields: [user_id], references: [id])
   amount      Decimal
   description String?
 
@@ -321,6 +322,7 @@ model ProjectNftOwner {
   currency_amount Decimal
   project_ended   Boolean @default(false)
   is_sell_voted   Boolean @default(false)
+  is_burned       Boolean @default(false)
   user            User    @relation(fields: [user_id], references: [id])
 
   created_at DateTime @default(now())
@@ -331,11 +333,12 @@ model ProjectNftOwner {
 }
 
 model ProjectProfitBalance {
-  user_id    String
-  project_id String
-  balance    Decimal  @default(0)
-  from       DateTime
-  to         DateTime
+  user_id         String
+  project_id      String
+  balance         Decimal  @default(0)
+  balance_claimed Decimal  @default(0)
+  from            DateTime
+  to              DateTime
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -371,11 +374,9 @@ model ProjectSellVoter {
 }
 
 model ProjectSellVoteHistory {
-  project_id     String
-  user_id        String
-  is_sell        Boolean
-  receive_amount Decimal
-  is_receive     Boolean @default(false)
+  project_id String
+  user_id    String
+  is_sell    Boolean
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -450,11 +451,11 @@ model VipUserClaimProfitChangeLog {
 }
 
 model ContactData {
-  id      String  @id @default(cuid()) @db.VarChar(45)
-  user_id String?
-  name    String? @db.VarChar(100)
-  phone   String? @db.VarChar(20)
-  email   String? @db.VarChar(100)
+  id       String  @id @default(cuid()) @db.VarChar(45)
+  user_id  String?
+  name     String? @db.VarChar(100)
+  phone    String? @db.VarChar(20)
+  email    String? @db.VarChar(100)
   question String? @db.Text
 
   created_at DateTime @default(now())

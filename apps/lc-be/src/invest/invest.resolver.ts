@@ -4,7 +4,7 @@ import { ProjectNftOwner } from '@libs/prisma/@generated/prisma-nestjs-graphql/p
 import { ProjectProfitBalance } from '@libs/prisma/@generated/prisma-nestjs-graphql/project-profit-balance/project-profit-balance.model';
 import { PubsubService } from '@libs/pubsub';
 import { UseGuards } from '@nestjs/common';
-import { Args, Mutation, Query, Resolver, Subscription } from '@nestjs/graphql';
+import { Args, Float, Mutation, Query, Resolver, Subscription } from '@nestjs/graphql';
 import { INVEST_SUBSCRIPTION_KEY } from './invest.config';
 import { InvestedProjectGql, ProjectFilter, ProjectGql, ProjectNftOwnerGql, RateProjectInput } from './invest.dto';
 import { InvestJob } from './invest.job';
@@ -94,6 +94,15 @@ export class InvestResolver {
   })
   async getInvestor(@Args('projectId') projectId: string) {
     return this.service.getInvestor(projectId);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => Float, {
+    description: 'Get profit rate',
+    nullable: true,
+  })
+  async getProfitRate(@CurrentUser() user: AppAuthUser, @Args('projectId') projectId: string) {
+    return this.service.getProfitRate(user.id, projectId);
   }
 
   @Query(() => Boolean, {

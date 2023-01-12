@@ -19,6 +19,7 @@ import { ProfileGql } from '../auth/auth.type';
 import { UserKycVerification } from '@libs/prisma/@generated/prisma-nestjs-graphql/user-kyc-verification/user-kyc-verification.model';
 import { VipCard } from '@libs/prisma/@generated/prisma-nestjs-graphql/vip-card/vip-card.model';
 import { User } from '@libs/prisma/@generated/prisma-nestjs-graphql/user/user.model';
+import { ErrorCode } from '@libs/helper/error-code/error-code.dto';
 @Resolver()
 export class UserResolver {
   constructor(private userService: UserService) {}
@@ -44,7 +45,7 @@ export class UserResolver {
   @Query(() => AccountInfo, { nullable: true, description: 'get account info' })
   async getAccountInfo(@CurrentUser() user: AppAuthUser): Promise<AccountInfo> {
     if (!user.id) {
-      throw new AppError('Bad request');
+      throw new AppError('Bad request', ErrorCode.BAD_REQUEST);
     }
     return this.userService.getAccountInfo(user.id);
   }
