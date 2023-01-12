@@ -448,3 +448,17 @@ model VipUserClaimProfitChangeLog {
 
   @@map("vip_user_claim_profit_change_log")
 }
+
+model ContactData {
+  id      String  @id @default(cuid()) @db.VarChar(45)
+  user_id String?
+  name    String? @db.VarChar(100)
+  phone   String? @db.VarChar(20)
+  email   String? @db.VarChar(100)
+  question String? @db.Text
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("contact_data")
+}

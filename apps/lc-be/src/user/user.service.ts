@@ -408,4 +408,16 @@ export class UserService {
       });
     });
   }
+
+  async contactUs(name: string, phone: string, email: string, question: string, userId?: string) {
+    await this.prisma.contactData.create({
+      data: {
+        name,
+        phone,
+        email,
+        question,
+        user_id: userId,
+      },
+    });
+  }
 }
