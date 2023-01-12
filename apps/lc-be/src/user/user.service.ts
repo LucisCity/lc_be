@@ -147,7 +147,19 @@ export class UserService {
     return response;
   }
 
-  async changePassword(userId: string, oldPass: string, newPass: string): Promise<boolean> {
+  async hasPassWord(userId): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        password: true,
+      },
+    });
+    return !!user.password;
+  }
+
+  async changePassword(userId: string, newPass: string, oldPass?: string,): Promise<boolean> {
     const user = await this.prisma.user.findUnique({
       where: {
         id: userId,
@@ -159,12 +171,14 @@ export class UserService {
     if (!user) {
       throw new AppError('User not found', ErrorCode.USER_NOT_FOUND);
     }
-    if (oldPass === newPass) {
-      throw new AppError('New password must be different from old password', ErrorCode.NEW_PASS_SAME_OLD_PASS);
-    }
-    // check old password
-    if (!(await PasswordUtils.comparePassword(oldPass, user.password))) {
-      throw new AppError('Wrong old password, please try again', ErrorCode.WRONG_OLD_PASS);
+    if (oldPass) {
+      if (oldPass === newPass) {
+        throw new AppError('New password must be different from old password', ErrorCode.NEW_PASS_SAME_OLD_PASS);
+      }
+      // check old password
+      if (!(await PasswordUtils.comparePassword(oldPass, user.password))) {
+        throw new AppError('Wrong old password, please try again', ErrorCode.WRONG_OLD_PASS);
+      }
     }
     // check strong pass
     if (PasswordUtils.validate(newPass) !== true) {
