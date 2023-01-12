@@ -337,7 +337,7 @@ export class InvestService {
       },
     });
     if (!balance || balance.balance.lte(0)) {
-      throw new NotEnoughBalance('Not enough balance to claim');
+      throw new AppError('Not enough balance to claim', ErrorCode.BALANCE_NOT_ENOUGH);
     }
     const wallet = await this.prisma.wallet.findUnique({
       where: {
@@ -345,7 +345,7 @@ export class InvestService {
       },
     });
     if (!wallet) {
-      throw new BadRequestError('Wallet not found');
+      throw new AppError('Wallet not found', ErrorCode.WALLET_NOT_FOUND);
     }
 
     try {
@@ -398,7 +398,7 @@ export class InvestService {
       return true;
     } catch (err) {
       this.logger.error(err);
-      throw new BadRequestError('Something went wrong, please try againt later');
+      throw new AppError('Bad Request', ErrorCode.BAD_REQUEST);
     }
   }
 
