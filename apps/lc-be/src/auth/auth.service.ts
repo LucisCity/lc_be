@@ -132,7 +132,7 @@ export class AuthService {
         // locale,
       } = response.data;
       if (!sub) {
-        throw new AppError('Something went wrong', ErrorCode._500);
+        throw new AppError('Something went wrong', ErrorCode.ERROR_500);
       }
       if (!email || !email_verified) {
         throw new AppError('Email invalid!', ErrorCode.EMAIL_INVALID);
@@ -223,7 +223,7 @@ export class AuthService {
     }
     const data: FbDebugResponse = response.data;
     if (data.error) {
-      throw new AppError(data.error.message || 'Check token error', ErrorCode._500);
+      throw new AppError(data.error.message || 'Check token error', ErrorCode.ERROR_500);
     }
     if (!data.is_valid) {
       throw new AppError('Bad request', ErrorCode.BAD_REQUEST);
