@@ -96,6 +96,15 @@ export class InvestResolver {
     return this.service.getInvestor(projectId);
   }
 
+  @UseGuards(GqlAuthGuard)
+  @Query(() => [ProjectNftOwnerGql], {
+    description: 'Get profit rate',
+    nullable: true,
+  })
+  async getProfitRate(@CurrentUser() user: AppAuthUser, @Args('projectId') projectId: string) {
+    return this.service.getProfitRate(user.id, projectId);
+  }
+
   @Query(() => Boolean, {
     description: 'Test compute profit',
     nullable: true,

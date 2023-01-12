@@ -48,20 +48,29 @@ export class ProjectService {
     }
 
     // send money bought nft back to user
-    const histories = await this.prisma.projectSellVoteHistory.findMany({
+    const nftOwner = await this.prisma.projectNftOwner.findMany({
       where: {
         project_id: projectId,
       },
     });
     await this.prisma.$transaction([
-      ...histories.map((item) =>
+      ...nftOwner.map((item) =>
         this.prisma.wallet.update({
           data: {
             balance: {
-              increment: item.receive_amount,
+              increment: project.nft_price.mul(item.total_nft).toNumber(),
             },
           },
           where: {
+            user_id: item.user_id,
+          },
+        }),
+      ),
+      ...nftOwner.map((item) =>
+        this.prisma.transactionLog.create({
+          data: {
+            amount: project.nft_price.mul(item.total_nft).toNumber(),
+            type: 'BURN_NFT',
             user_id: item.user_id,
           },
         }),
