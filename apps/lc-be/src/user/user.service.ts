@@ -446,7 +446,7 @@ export class UserService {
 
       truncateNfts[item.address] = truncateNfts[item.address] + 1;
     });
-    console.log(nfts);
+
     for (const address of Object.keys(truncateNfts)) {
       const p = await this.prisma.project.findUnique({ where: { contract_address: address } });
       const nftPrice = p.nft_price;
@@ -455,10 +455,14 @@ export class UserService {
     if (!totalInvestedBalance) totalInvestedBalance = new Prisma.Decimal(0);
 
     const referrals = await this.prisma.referralLog.findMany({ where: { invited_by: userId } });
+    const profitProject = await this.prisma.projectProfitBalance.findMany({ where: { user_id: userId } });
 
+    const profitProjectBalance = profitProject.reduce((pre, current) => {
+      return pre.add(current.balance).add(current.balance_claimed);
+    }, new Prisma.Decimal(0));
     const referralsBalance = referrals.length * Number(this.rewardReferral);
 
-    totalAssetsBalance = totalInvestedBalance.add(referralsBalance);
+    totalAssetsBalance = totalInvestedBalance.add(referralsBalance).add(profitProjectBalance);
     if (totalAssetsBalance.equals(0)) {
       profitRate = new Prisma.Decimal(0);
     } else {
