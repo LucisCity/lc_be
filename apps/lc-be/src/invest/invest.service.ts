@@ -15,6 +15,7 @@ import { KMath } from '@libs/helper/math.helper';
 import { PubsubService } from '@libs/pubsub';
 import { ProjectType } from '@libs/prisma/@generated/prisma-nestjs-graphql/prisma/project-type.enum';
 import { ErrorCode } from '@libs/helper/error-code/error-code.dto';
+
 @Injectable()
 export class InvestService {
   private readonly logger = new Logger(InvestService.name);
@@ -156,7 +157,7 @@ export class InvestService {
         is_follow: true,
       },
     });
-    return !!(isFollowing?.is_follow);
+    return !!isFollowing?.is_follow;
   }
 
   async toggleFollowProject(userId: string, projectId: string) {
@@ -200,8 +201,7 @@ export class InvestService {
         },
       }),
     ]);
-    return !follower ? true :
-      !follower.is_follow;
+    return !follower ? true : !follower.is_follow;
   }
 
   async investedProjects(userId: string) {
@@ -364,6 +364,9 @@ export class InvestService {
             balance: {
               decrement: balance.balance,
             },
+            balance_claimed: {
+              increment: balance.balance,
+            },
           },
           where: {
             user_id_project_id: {
@@ -459,7 +462,6 @@ export class InvestService {
           is_sell: isSell,
           project_id: projectId,
           user_id: userId,
-          receive_amount: receiveAmount,
         },
       }),
     ]);
@@ -491,6 +493,48 @@ export class InvestService {
         },
       },
     });
+  }
+
+  async getProfitRate(userId: string, projectId: string) {
+    const result = await this.prisma.$transaction([
+      this.prisma.project.findUnique({
+        where: {
+          id: projectId,
+        },
+      }),
+      this.prisma.projectNftOwner.findUnique({
+        where: {
+          project_id_user_id: {
+            project_id: projectId,
+            user_id: userId,
+          },
+        },
+      }),
+      this.prisma.projectProfitBalance.findUnique({
+        where: {
+          user_id_project_id: {
+            project_id: projectId,
+            user_id: userId,
+          },
+        },
+      }),
+    ]);
+    const project = result[0];
+    const nftBought = result[1];
+    const profitBalance = result[2];
+    if (!project || !nftBought || !profitBalance) {
+      throw new NotFoundError('Data not found');
+    }
+
+    const profitWhenSellProject = project.nft_price.mul(nftBought.total_nft).minus(nftBought.currency_amount);
+    const profitRate = profitBalance.balance
+      .plus(profitBalance.balance_claimed)
+      .plus(profitWhenSellProject)
+      .div(nftBought.currency_amount)
+      .mul(100)
+      .toNumber();
+
+    return profitRate;
   }
 
   async updateProjectNftOwner(userId: string, projectId: string) {
