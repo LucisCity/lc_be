@@ -63,13 +63,21 @@ export class UserResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => Boolean, { nullable: true, description: 'change password' })
+  @Query(() => Boolean, {nullable: true, description: 'check if user has password'})
+  async hasPassWord(
+    @CurrentUser() user: AppAuthUser,
+  ): Promise<boolean> {
+    return await this.userService.hasPassWord(user.id);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => Boolean, {nullable: true, description: 'change password'})
   async changePassword(
     @CurrentUser() user: AppAuthUser,
-    @Args('oldPass') oldPass: string,
     @Args('newPass') newPass: string,
+    @Args('oldPass', {nullable: true}) oldPass?: string,
   ): Promise<boolean> {
-    await this.userService.changePassword(user.id, oldPass, newPass);
+    await this.userService.changePassword(user.id, newPass, oldPass);
     return true;
   }
   @UseGuards(GqlAuthGuard)

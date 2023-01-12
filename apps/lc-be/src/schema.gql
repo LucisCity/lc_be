@@ -523,6 +523,9 @@ type Query {
   """get account info"""
   getAccountInfo: AccountInfo
 
+  """check if user has password"""
+  hasPassWord: Boolean
+
   """get all notis"""
   getNotifications(page: Int, limit: Int): [NotificationGql!]
 
@@ -631,6 +634,7 @@ enum ErrorCode {
   INVALID_NEW_PASS
   NOT_VIP_USER
   PROFIT_IS_ZERO
+  WRONG_PASSWORD
 }
 
 type Mutation {
@@ -659,7 +663,7 @@ type Mutation {
   updateAccountInfo(input: AccountInfoUpdateInput!): ProfileGql
 
   """change password"""
-  changePassword(oldPass: String!, newPass: String!): Boolean
+  changePassword(newPass: String!, oldPass: String): Boolean
 
   """claim referral"""
   claimReferral(inviteeId: String!): Wallet

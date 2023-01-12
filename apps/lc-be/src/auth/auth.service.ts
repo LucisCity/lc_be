@@ -47,7 +47,7 @@ export class AuthService {
     }
     const isValid = await PasswordUtils.comparePassword(pass, user.password);
     if (!isValid) {
-      throw new AppError('Bad request', ErrorCode.BAD_REQUEST);
+      throw new AppError('Wrong Password', ErrorCode.WRONG_PASSWORD);
     }
     const jwtToken = this.jwt.sign({
       id: user.id,
