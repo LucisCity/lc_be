@@ -36,12 +36,20 @@ export class UserResolver {
   @UseGuards(CanAclGuard)
   @UseAcls({ actions: [AclAction.Update], subject: 'Kyc' })
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => Boolean, { nullable: true, description: 'update kycs' })
-  async updateKyc(
-    @Args('userId', { nullable: true }) userId: string,
-    @Args('status', { nullable: true, type: () => KycStatus }) status: KycStatus,
-  ): Promise<boolean> {
-    return await this.userService.updateKyc(userId, status);
+  @Mutation(() => String, { nullable: true, description: 'update kycs' })
+  async updatePendingKyc(
+    @Args('userIds', { type: () => [String] }) userIds: string[],
+    @Args('status', { type: () => KycStatus }) status: KycStatus,
+  ): Promise<string> {
+    return await this.userService.updatePendingKyc(userIds, status);
+  }
+
+  @UseGuards(CanAclGuard)
+  @UseAcls({ actions: [AclAction.Update], subject: 'Kyc' })
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => Boolean, { nullable: true, description: 'revert kyc to pending status' })
+  async revertKycToPending(@Args('id', { type: () => Int }) id: number): Promise<boolean> {
+    return await this.userService.revertKycToPending(id);
   }
 
   @UseGuards(CanAclGuard)

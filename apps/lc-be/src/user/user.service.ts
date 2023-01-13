@@ -310,6 +310,9 @@ export class UserService {
       where: {
         user_id: userId,
       },
+      orderBy: {
+        created_at: 'desc',
+      }
     });
     if (userKyc.length > 0) {
       return userKyc.find((i) => i.status !== 'FAILED') ?? userKyc[0];
