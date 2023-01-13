@@ -312,7 +312,7 @@ export class UserService {
       },
       orderBy: {
         created_at: 'desc',
-      }
+      },
     });
     if (userKyc.length > 0) {
       return userKyc.find((i) => i.status !== 'FAILED') ?? userKyc[0];
@@ -380,7 +380,7 @@ export class UserService {
       },
       orderBy: {
         vipCard: {
-          card_value: 'desc',
+          valid_from: 'desc',
         },
       },
       take: 10,
@@ -388,6 +388,34 @@ export class UserService {
   }
 
   async claimProfitForVipUser(userId: string) {
+    const res = await this.getProfitVipUser(userId);
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.transactionLog.create({
+        data: {
+          type: 'VIP_USER_CLAIM_PROFIT',
+          amount: res.profit,
+          user_id: userId,
+          description: 'return profit to vip user quarterly',
+        },
+      });
+      await tx.wallet.update({
+        where: { user_id: userId },
+        data: {
+          balance: { increment: res.profit },
+        },
+      });
+
+      await tx.vipUserClaimProfitChangeLog.updateMany({
+        where: { card_id: res.cardId, is_claim: false },
+        data: {
+          is_claim: true,
+        },
+      });
+    });
+  }
+
+  async getProfitVipUser(userId: string) {
     const vipCard = await this.prisma.vipCard.findUnique({ where: { user_id: userId } });
     if (!vipCard) {
       throw new AppError('vip user not exist!', ErrorCode.NOT_VIP_USER);
@@ -401,30 +429,10 @@ export class UserService {
       throw new AppError('Profit is zero!', ErrorCode.PROFIT_IS_ZERO);
     }
     const profit = listLogHasProfit.reduce((pre, currentItem) => pre.add(currentItem.amount), new Prisma.Decimal(0));
-
-    await this.prisma.$transaction(async (tx) => {
-      await tx.transactionLog.create({
-        data: {
-          type: 'VIP_USER_CLAIM_PROFIT',
-          amount: profit,
-          user_id: userId,
-          description: 'return profit to vip user quarterly',
-        },
-      });
-      await tx.wallet.update({
-        where: { user_id: userId },
-        data: {
-          balance: { increment: profit },
-        },
-      });
-
-      await tx.vipUserClaimProfitChangeLog.updateMany({
-        where: { card_id: vipCard.id, is_claim: false },
-        data: {
-          is_claim: true,
-        },
-      });
-    });
+    return {
+      profit,
+      cardId: vipCard.id,
+    };
   }
 
   async contactUs(name: string, phone: string, email: string, question: string, userId?: string) {
@@ -440,7 +448,7 @@ export class UserService {
   }
 
   async getDashboard(userId: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { vipCard: true } });
     let totalAssetsBalance: Prisma.Decimal = new Prisma.Decimal(0);
     let totalInvestedBalance: Prisma.Decimal = new Prisma.Decimal(0);
     let profitRate: Prisma.Decimal = new Prisma.Decimal(0);
@@ -451,6 +459,18 @@ export class UserService {
         totalAssetsBalance: totalAssetsBalance?.toString() ?? null,
         totalInvestedBalance: totalInvestedBalance?.toString() ?? null,
       };
+    }
+
+    if (user.role === 'VIP_USER') {
+      const vipMemberChangeLog = await this.prisma.vipUserClaimProfitChangeLog.findMany({
+        where: {
+          card_id: user.vipCard.id,
+        },
+      });
+
+      vipMemberChangeLog.forEach((item) => {
+        totalAssetsBalance = totalAssetsBalance.add(item.amount);
+      });
     }
     const nfts = await this.prisma.nft.findMany({
       where: {

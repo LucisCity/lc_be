@@ -63,19 +63,17 @@ export class UserResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Query(() => Boolean, {nullable: true, description: 'check if user has password'})
-  async hasPassWord(
-    @CurrentUser() user: AppAuthUser,
-  ): Promise<boolean> {
+  @Query(() => Boolean, { nullable: true, description: 'check if user has password' })
+  async hasPassWord(@CurrentUser() user: AppAuthUser): Promise<boolean> {
     return await this.userService.hasPassWord(user.id);
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => Boolean, {nullable: true, description: 'change password'})
+  @Mutation(() => Boolean, { nullable: true, description: 'change password' })
   async changePassword(
     @CurrentUser() user: AppAuthUser,
     @Args('newPass') newPass: string,
-    @Args('oldPass', {nullable: true}) oldPass?: string,
+    @Args('oldPass', { nullable: true }) oldPass?: string,
   ): Promise<boolean> {
     await this.userService.changePassword(user.id, newPass, oldPass);
     return true;
@@ -172,7 +170,14 @@ export class UserResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => String, { nullable: true, description: 'claim profit vip user' })
+  @Query(() => String, { nullable: true, description: 'get profit vip user' })
+  async getProfitForVipMember(@CurrentUser() user: AppAuthUser): Promise<string> {
+    const res = await this.userService.getProfitVipUser(user.id);
+    return res.profit.toString();
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => Boolean, { nullable: true, description: 'claim profit vip user' })
   async claimProfitForVipUser(@CurrentUser() user: AppAuthUser): Promise<boolean> {
     await this.userService.claimProfitForVipUser(user.id);
     return true;

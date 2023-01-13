@@ -82,7 +82,7 @@ type VipCard {
 }
 
 enum VipCardTier {
-  GALAXY_PLATINUM
+  GALAXY_PREMIUM
 }
 
 type ProjectNftOwner {
@@ -553,6 +553,9 @@ type Query {
   """get vip user"""
   getVipUsers: [User!]
 
+  """get profit vip user"""
+  getProfitForVipMember: String
+
   """claim profit vip user"""
   getDashboard: DashboardData
 
@@ -679,7 +682,7 @@ type Mutation {
   updateWalletAddress(walletAddress: String!): String
 
   """claim profit vip user"""
-  claimProfitForVipUser: String
+  claimProfitForVipUser: Boolean
 
   """claim profit vip user"""
   contactUs(phone: String!, userId: String, name: String, email: String, question: String): Boolean

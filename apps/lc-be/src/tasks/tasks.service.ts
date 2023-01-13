@@ -277,7 +277,7 @@ export class TasksService {
               },
             });
             if (project?.id) {
-              await this.investService.updateProjectNftOwner(user.id, project.id);
+              await this.investService.updateProjectNftOwner(user.id, project.id, Number(quantity));
             }
             await this.notificationService.createAndPushNoti(
               user.id,
