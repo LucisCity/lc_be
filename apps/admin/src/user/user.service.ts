@@ -30,25 +30,41 @@ export class UserService {
     });
   }
 
-  async updateKyc(user_id: string, status: KycStatus) {
-    await this.prisma.$transaction(async (prisma) => {
-      const pendingUserKyc = await prisma.userKycVerification.findFirst({
+  async updatePendingKyc(user_ids: string[], status: KycStatus): Promise<string> {
+    return await this.prisma.$transaction(async (prisma) => {
+      const pendingUserKycs = await prisma.userKycVerification.findMany({
         where: {
-          user_id,
+          user_id: {
+            in: user_ids,
+          },
           status: 'PENDING',
         },
       });
-      if (!pendingUserKyc) {
-        throw new AppError('No pending kycs with this user id', 'KYC_NOT_FOUND');
+      if (pendingUserKycs.length === 0) {
+        throw new AppError('No pending kycs found with these user_ids', 'KYC_NOT_FOUND');
       }
-      await prisma.userKycVerification.update({
+      await prisma.userKycVerification.updateMany({
         where: {
-          id: pendingUserKyc.id,
+          id: {
+            in: pendingUserKycs.map((i) => i.id),
+          },
         },
         data: {
           status: status,
         },
       });
+      return `pending kycs ${status} for user_ids: ${pendingUserKycs.map((i) => i.user_id)}`;
+    });
+  }
+
+  async revertKycToPending(id: number) {
+    await this.prisma.userKycVerification.update({
+      where: {
+        id,
+      },
+      data: {
+        status: 'PENDING',
+      },
     });
     return true;
   }

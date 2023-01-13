@@ -68,6 +68,14 @@ export class AuthService {
 
   async register(input: RegisterInput) {
     // const isStrong = PasswordUtils.validate(pass);
+    const existedDuplicateEmail = await this.prisma.user.findUnique({
+      where: {
+        email: input.email,
+      },
+    });
+    if (existedDuplicateEmail) {
+      throw new AppError('Email has been registered before', ErrorCode.EMAIL_REGISTERED);
+    }
     try {
       const hashPass = await PasswordUtils.hashPassword(input.password);
       const inviter = await this.getInviter(input.ref_code);
@@ -222,14 +230,14 @@ export class AuthService {
       // console.log("debug_fb: ", response.data)
     } catch (err) {
       this.logger.debug(err);
-      throw new AppError('Bad request', ErrorCode.BAD_REQUEST);
+      throw new AppError('Bad request', ErrorCode.LOGIN_FB_FAILED);
     }
     const data: FbDebugResponse = response.data;
     if (data.error) {
-      throw new AppError(data.error.message || 'Check token error', ErrorCode.ERROR_500);
+      throw new AppError(data.error.message || 'Check token error', ErrorCode.LOGIN_FB_FAILED);
     }
     if (!data.is_valid) {
-      throw new AppError('Bad request', ErrorCode.BAD_REQUEST);
+      throw new AppError('Bad request', ErrorCode.LOGIN_FB_FAILED);
     }
     // get user info
     try {
@@ -242,7 +250,7 @@ export class AuthService {
       // console.log("me_fb: ", response)
     } catch (err) {
       this.logger.debug(err);
-      throw new AppError('Bad request', ErrorCode.BAD_REQUEST);
+      throw new AppError('Bad request', ErrorCode.LOGIN_FB_FAILED);
     }
 
     const facebook_id = response.id;

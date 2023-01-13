@@ -117,7 +117,7 @@ export class RateProjectInput {
   projectId: string;
 
   @Field(() => Float, { nullable: false })
-  @Min(1)
+  @Min(0.5)
   @Max(10)
   value: number;
 }

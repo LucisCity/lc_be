@@ -414,7 +414,7 @@ model Nft {
 }
 
 enum VipCardTier {
-  GALAXY_PREMIUM
+  GALAXY_PLATINUM
 }
 
 model VipCard {
