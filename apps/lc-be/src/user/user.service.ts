@@ -438,9 +438,17 @@ export class UserService {
 
   async getDashboard(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    let totalAssetsBalance: Prisma.Decimal = null;
-    let totalInvestedBalance: Prisma.Decimal = null;
-    let profitRate: Prisma.Decimal = null;
+    let totalAssetsBalance: Prisma.Decimal = new Prisma.Decimal(0);
+    let totalInvestedBalance: Prisma.Decimal = new Prisma.Decimal(0);
+    let profitRate: Prisma.Decimal = new Prisma.Decimal(0);
+
+    if (!user.wallet_address) {
+      return {
+        profitRate: profitRate?.toString() ?? null,
+        totalAssetsBalance: totalAssetsBalance?.toString() ?? null,
+        totalInvestedBalance: totalInvestedBalance?.toString() ?? null,
+      };
+    }
     const nfts = await this.prisma.nft.findMany({
       where: {
         owner: user.wallet_address,
@@ -466,7 +474,6 @@ export class UserService {
       const nftPrice = p?.nft_price ?? new Prisma.Decimal(0);
       totalInvestedBalance = nftPrice.mul(truncateNfts[address]);
     }
-    if (!totalInvestedBalance) totalInvestedBalance = new Prisma.Decimal(0);
 
     const referrals = await this.prisma.referralLog.findMany({ where: { invited_by: userId } });
     const profitProject = await this.prisma.projectProfitBalance.findMany({ where: { user_id: userId } });
@@ -477,7 +484,7 @@ export class UserService {
     const referralsBalance = referrals.length * Number(this.rewardReferral);
 
     totalAssetsBalance = totalInvestedBalance.add(referralsBalance).add(profitProjectBalance);
-    if (totalAssetsBalance.equals(0)) {
+    if (totalInvestedBalance.equals(0)) {
       profitRate = new Prisma.Decimal(0);
     } else {
       profitRate = totalAssetsBalance.sub(totalInvestedBalance).div(totalInvestedBalance).mul(100);
