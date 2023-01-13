@@ -68,6 +68,14 @@ export class AuthService {
 
   async register(input: RegisterInput) {
     // const isStrong = PasswordUtils.validate(pass);
+    const existedDuplicateEmail = await this.prisma.user.findUnique({
+      where: {
+        email: input.email,
+      },
+    });
+    if (existedDuplicateEmail) {
+      throw new AppError('Email has been registered before', ErrorCode.EMAIL_REGISTERED);
+    }
     try {
       const hashPass = await PasswordUtils.hashPassword(input.password);
       const inviter = await this.getInviter(input.ref_code);
