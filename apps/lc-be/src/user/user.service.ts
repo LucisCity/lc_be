@@ -147,7 +147,19 @@ export class UserService {
     return response;
   }
 
-  async changePassword(userId: string, oldPass: string, newPass: string): Promise<boolean> {
+  async hasPassWord(userId): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        password: true,
+      },
+    });
+    return !!user.password;
+  }
+
+  async changePassword(userId: string, newPass: string, oldPass?: string): Promise<boolean> {
     const user = await this.prisma.user.findUnique({
       where: {
         id: userId,
@@ -159,12 +171,14 @@ export class UserService {
     if (!user) {
       throw new AppError('User not found', ErrorCode.USER_NOT_FOUND);
     }
-    if (oldPass === newPass) {
-      throw new AppError('New password must be different from old password', ErrorCode.NEW_PASS_SAME_OLD_PASS);
-    }
-    // check old password
-    if (!(await PasswordUtils.comparePassword(oldPass, user.password))) {
-      throw new AppError('Wrong old password, please try again', ErrorCode.WRONG_OLD_PASS);
+    if (oldPass) {
+      if (oldPass === newPass) {
+        throw new AppError('New password must be different from old password', ErrorCode.NEW_PASS_SAME_OLD_PASS);
+      }
+      // check old password
+      if (!(await PasswordUtils.comparePassword(oldPass, user.password))) {
+        throw new AppError('Wrong old password, please try again', ErrorCode.WRONG_OLD_PASS);
+      }
     }
     // check strong pass
     if (PasswordUtils.validate(newPass) !== true) {
@@ -296,6 +310,9 @@ export class UserService {
       where: {
         user_id: userId,
       },
+      orderBy: {
+        created_at: 'desc',
+      },
     });
     if (userKyc.length > 0) {
       return userKyc.find((i) => i.status !== 'FAILED') ?? userKyc[0];
@@ -363,7 +380,7 @@ export class UserService {
       },
       orderBy: {
         vipCard: {
-          card_value: 'desc',
+          valid_from: 'desc',
         },
       },
       take: 10,
@@ -371,6 +388,34 @@ export class UserService {
   }
 
   async claimProfitForVipUser(userId: string) {
+    const res = await this.getProfitVipUser(userId);
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.transactionLog.create({
+        data: {
+          type: 'VIP_USER_CLAIM_PROFIT',
+          amount: res.profit,
+          user_id: userId,
+          description: 'return profit to vip user quarterly',
+        },
+      });
+      await tx.wallet.update({
+        where: { user_id: userId },
+        data: {
+          balance: { increment: res.profit },
+        },
+      });
+
+      await tx.vipUserClaimProfitChangeLog.updateMany({
+        where: { card_id: res.cardId, is_claim: false },
+        data: {
+          is_claim: true,
+        },
+      });
+    });
+  }
+
+  async getProfitVipUser(userId: string) {
     const vipCard = await this.prisma.vipCard.findUnique({ where: { user_id: userId } });
     if (!vipCard) {
       throw new AppError('vip user not exist!', ErrorCode.NOT_VIP_USER);
@@ -384,30 +429,10 @@ export class UserService {
       throw new AppError('Profit is zero!', ErrorCode.PROFIT_IS_ZERO);
     }
     const profit = listLogHasProfit.reduce((pre, currentItem) => pre.add(currentItem.amount), new Prisma.Decimal(0));
-
-    await this.prisma.$transaction(async (tx) => {
-      await tx.transactionLog.create({
-        data: {
-          type: 'VIP_USER_CLAIM_PROFIT',
-          amount: profit,
-          user_id: userId,
-          description: 'return profit to vip user quarterly',
-        },
-      });
-      await tx.wallet.update({
-        where: { user_id: userId },
-        data: {
-          balance: { increment: profit },
-        },
-      });
-
-      await tx.vipUserClaimProfitChangeLog.updateMany({
-        where: { card_id: vipCard.id, is_claim: false },
-        data: {
-          is_claim: true,
-        },
-      });
-    });
+    return {
+      profit,
+      cardId: vipCard.id,
+    };
   }
 
   async contactUs(name: string, phone: string, email: string, question: string, userId?: string) {
@@ -420,5 +445,78 @@ export class UserService {
         user_id: userId,
       },
     });
+  }
+
+  async getDashboard(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { vipCard: true } });
+    let totalAssetsBalance: Prisma.Decimal = new Prisma.Decimal(0);
+    let totalInvestedBalance: Prisma.Decimal = new Prisma.Decimal(0);
+    let profitRate: Prisma.Decimal = new Prisma.Decimal(0);
+
+    if (!user.wallet_address) {
+      return {
+        profitRate: profitRate?.toString() ?? null,
+        totalAssetsBalance: totalAssetsBalance?.toString() ?? null,
+        totalInvestedBalance: totalInvestedBalance?.toString() ?? null,
+      };
+    }
+
+    if (user.role === 'VIP_USER') {
+      const vipMemberChangeLog = await this.prisma.vipUserClaimProfitChangeLog.findMany({
+        where: {
+          card_id: user.vipCard.id,
+        },
+      });
+
+      vipMemberChangeLog.forEach((item) => {
+        totalAssetsBalance = totalAssetsBalance.add(item.amount);
+      });
+    }
+    const nfts = await this.prisma.nft.findMany({
+      where: {
+        owner: user.wallet_address,
+      },
+    });
+
+    let truncateNfts = {};
+
+    nfts.forEach((item) => {
+      if (!truncateNfts?.[item.address]) {
+        truncateNfts = {
+          ...truncateNfts,
+          [item.address]: 1,
+        };
+        return;
+      }
+
+      truncateNfts[item.address] = truncateNfts[item.address] + 1;
+    });
+
+    for (const address of Object.keys(truncateNfts)) {
+      const p = await this.prisma.project.findUnique({ where: { contract_address: address } });
+      const nftPrice = p?.nft_price ?? new Prisma.Decimal(0);
+      totalInvestedBalance = nftPrice.mul(truncateNfts[address]);
+    }
+
+    const referrals = await this.prisma.referralLog.findMany({ where: { invited_by: userId } });
+    const profitProject = await this.prisma.projectProfitBalance.findMany({ where: { user_id: userId } });
+
+    const profitProjectBalance = profitProject.reduce((pre, current) => {
+      return pre.add(current.balance).add(current.balance_claimed);
+    }, new Prisma.Decimal(0));
+    const referralsBalance = referrals.length * Number(this.rewardReferral);
+
+    totalAssetsBalance = totalInvestedBalance.add(referralsBalance).add(profitProjectBalance);
+    if (totalInvestedBalance.equals(0)) {
+      profitRate = new Prisma.Decimal(0);
+    } else {
+      profitRate = totalAssetsBalance.sub(totalInvestedBalance).div(totalInvestedBalance).mul(100);
+    }
+
+    return {
+      profitRate: profitRate?.toString() ?? null,
+      totalAssetsBalance: totalAssetsBalance?.toString() ?? null,
+      totalInvestedBalance: totalInvestedBalance?.toString() ?? null,
+    };
   }
 }

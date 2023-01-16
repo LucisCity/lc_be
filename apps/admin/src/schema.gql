@@ -82,7 +82,7 @@ type VipCard {
 }
 
 enum VipCardTier {
-  GALAXY_PREMIUM
+  GALAXY_PLATINUM
 }
 
 type ProjectNftOwner {
@@ -92,6 +92,7 @@ type ProjectNftOwner {
   currency_amount: Decimal!
   project_ended: Boolean!
   is_sell_voted: Boolean!
+  is_burned: Boolean!
   user: User!
   created_at: DateTime!
   updated_at: DateTime!
@@ -135,6 +136,7 @@ enum TransactionType {
   BUY_NFT
   WITHDRAW_BALANCE
   VIP_USER_CLAIM_PROFIT
+  BURN_NFT
 }
 
 type UserCount {
@@ -250,7 +252,10 @@ type Mutation {
   register(email: String!, password: String!): Boolean!
 
   """update kycs"""
-  updateKyc(userId: String, status: KycStatus): Boolean
+  updatePendingKyc(userIds: [String!]!, status: KycStatus!): String
+
+  """revert kyc to pending status"""
+  revertKycToPending(id: Int!): Boolean
 
   """create vip card"""
   createVipCard(input: VipCardCreateInputGql): VipCard
@@ -530,6 +535,7 @@ input ProjectNftOwnerCreateWithoutUserInput {
   currency_amount: Decimal!
   project_ended: Boolean
   is_sell_voted: Boolean
+  is_burned: Boolean
   created_at: DateTime
   updated_at: DateTime
 }
@@ -559,6 +565,7 @@ input ProjectNftOwnerCreateManyUserInput {
   currency_amount: Decimal!
   project_ended: Boolean
   is_sell_voted: Boolean
+  is_burned: Boolean
   created_at: DateTime
   updated_at: DateTime
 }
@@ -1030,6 +1037,7 @@ input ProjectNftOwnerUpdateWithoutUserInput {
   currency_amount: DecimalFieldUpdateOperationsInput
   project_ended: BoolFieldUpdateOperationsInput
   is_sell_voted: BoolFieldUpdateOperationsInput
+  is_burned: BoolFieldUpdateOperationsInput
   created_at: DateTimeFieldUpdateOperationsInput
   updated_at: DateTimeFieldUpdateOperationsInput
 }
@@ -1062,6 +1070,7 @@ input ProjectNftOwnerScalarWhereInput {
   currency_amount: DecimalFilter
   project_ended: BoolFilter
   is_sell_voted: BoolFilter
+  is_burned: BoolFilter
   created_at: DateTimeFilter
   updated_at: DateTimeFilter
 }
@@ -1104,6 +1113,7 @@ input ProjectNftOwnerUpdateManyMutationInput {
   currency_amount: DecimalFieldUpdateOperationsInput
   project_ended: BoolFieldUpdateOperationsInput
   is_sell_voted: BoolFieldUpdateOperationsInput
+  is_burned: BoolFieldUpdateOperationsInput
   created_at: DateTimeFieldUpdateOperationsInput
   updated_at: DateTimeFieldUpdateOperationsInput
 }

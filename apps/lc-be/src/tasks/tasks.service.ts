@@ -222,76 +222,72 @@ export class TasksService {
       }
       for (const instance of listNftInstance) {
         const contractAddress = instance.getContract().address;
-        const listEvents = await instance.filterEvents('Transfer', this.startBlock, 'latest');
+        const listEvents = await instance.filterEvents('MintNFT', this.startBlock, 'latest');
 
         for (const event of listEvents) {
-          const from = event.args[0];
-          const to = event.args[1];
-          const tokenId = event.args[2] as BigNumber;
-          // transfer
-          const nft = await this.prismaService.nft.findFirst({
-            where: { token_id: tokenId.toString(), address: contractAddress },
+          const owner = event.args[0];
+          const quantity = event.args[1];
+          const tokenIdFrom = event.args[2];
+          const tokenIdTo = event.args[3];
+          const data = [];
+
+          const nftsDb = await this.prismaService.nft.findMany({
+            where: {
+              address: contractAddress,
+            },
           });
-          if (!nft) {
-            await this.prismaService.nft.create({
-              data: {
-                token_id: tokenId.toString(),
-                owner: to,
+
+          for (let i = Number(tokenIdFrom.toString()); i <= Number(tokenIdTo.toString()); i++) {
+            const index = nftsDb.findIndex((item) => item.token_id == i.toString());
+            if (index === -1) {
+              data.push({
+                token_id: i.toString(),
+                owner: owner,
                 address: contractAddress,
-              },
-            });
-
-            // mint
-            if (from === '0x0000000000000000000000000000000000000000') {
-              const floorPrice = await instance.getContract().floorPrice();
-              const normalizeFloorPrice = Number(ethers.utils.formatUnits(BigNumber.from(floorPrice))).toString();
-
-              const user = await this.prismaService.user.findUnique({ where: { wallet_address: to } });
-              // find and update total sold project
-              const project = await this.prismaService.project.update({
-                where: { contract_address: contractAddress },
-                data: {
-                  total_nft_sold: { increment: 1 },
-                },
               });
-              if (user) {
-                await this.prismaService.transactionLog.create({
-                  data: {
-                    type: TransactionType.BUY_NFT,
-                    user_id: user?.id,
-                    description: `Buy nft ${tokenId} in contract: ${contractAddress}`,
-                    amount: new Prisma.Decimal(normalizeFloorPrice),
-                  },
-                });
-                if (project?.id) {
-                  await this.investService.updateProjectNftOwner(user.id, project.id);
-                }
-                await this.notificationService.createAndPushNoti(
-                  user.id,
-                  'You just bought one nft',
-                  `Buy nft #${tokenId} in contract: ${contractAddress}`,
-                );
-              }
             }
-            // TODO: if transaction is transfer
+          }
+
+          if (data.length === 0) {
             continue;
           }
-          if (nft.owner === from && to !== nft.owner) {
-            await this.prismaService.nft.update({
-              where: {
-                token_id_address: {
-                  token_id: tokenId.toString(),
-                  address: contractAddress,
-                },
-              },
+          await this.prismaService.nft.createMany({
+            data,
+            skipDuplicates: true,
+          });
+
+          const floorPrice = await instance.getContract().floorPrice();
+          const normalizeFloorPrice = Number(ethers.utils.formatUnits(BigNumber.from(floorPrice))).toString();
+
+          const user = await this.prismaService.user.findUnique({ where: { wallet_address: owner } });
+          // find and update total sold project
+          const project = await this.prismaService.project.update({
+            where: { contract_address: contractAddress },
+            data: {
+              total_nft_sold: { increment: Number(quantity) },
+            },
+          });
+          if (user) {
+            await this.prismaService.transactionLog.create({
               data: {
-                owner: to,
+                type: TransactionType.BUY_NFT,
+                user_id: user?.id,
+                description: `Buy ${Number(quantity)} nft(s) of contract: ${contractAddress}`,
+                amount: new Prisma.Decimal(normalizeFloorPrice).mul(Number(quantity)),
               },
             });
+            if (project?.id) {
+              await this.investService.updateProjectNftOwner(user.id, project.id, Number(quantity));
+            }
+            await this.notificationService.createAndPushNoti(
+              user.id,
+              `You just bought ${Number(quantity)} nft`,
+              `Buy ${Number(quantity)} nft(s) of contract: ${contractAddress}`,
+            );
           }
         }
       }
-      this.startBlock = blockNumber;
+      this.startBlock = blockNumber; // always check block
       // unlock process
       this.lockProcess = false;
     } catch (e) {

@@ -262,6 +262,12 @@ type TransactionHistoryResponse {
   transactionHistory: [TransactionLog!]
 }
 
+type DashboardData {
+  totalAssetsBalance: String
+  totalInvestedBalance: String
+  profitRate: String
+}
+
 type NotificationGql {
   id: ID!
   user_id: String!
@@ -517,6 +523,9 @@ type Query {
   """get account info"""
   getAccountInfo: AccountInfo
 
+  """check if user has password"""
+  hasPassWord: Boolean
+
   """get all notis"""
   getNotifications(page: Int, limit: Int): [NotificationGql!]
 
@@ -543,6 +552,12 @@ type Query {
 
   """get vip user"""
   getVipUsers: [User!]
+
+  """get profit vip user"""
+  getProfitForVipMember: String
+
+  """claim profit vip user"""
+  getDashboard: DashboardData
 
   """get OTP"""
   getOneTimePassword(address: String!): String!
@@ -601,8 +616,10 @@ enum ErrorCode {
   INVALID_TIME_VOTE_SELL
   SELL_VOTED
   EMAIL_INVALID
+  EMAIL_REGISTERED
   ERROR_500
   FB_ID_NOT_FOUND
+  LOGIN_FB_FAILED
   TOKEN_INVALID
   NEW_PASS_SAME_OLD_PASS
   SIGNATURE_EXPIRED
@@ -622,6 +639,8 @@ enum ErrorCode {
   INVALID_NEW_PASS
   NOT_VIP_USER
   PROFIT_IS_ZERO
+  WRONG_PASSWORD
+  USER_DONT_HAVE_PASSWORD
 }
 
 type Mutation {
@@ -650,7 +669,7 @@ type Mutation {
   updateAccountInfo(input: AccountInfoUpdateInput!): ProfileGql
 
   """change password"""
-  changePassword(oldPass: String!, newPass: String!): Boolean
+  changePassword(newPass: String!, oldPass: String): Boolean
 
   """claim referral"""
   claimReferral(inviteeId: String!): Wallet
@@ -663,7 +682,7 @@ type Mutation {
   updateWalletAddress(walletAddress: String!): String
 
   """claim profit vip user"""
-  claimProfitForVipUser: String
+  claimProfitForVipUser: Boolean
 
   """claim profit vip user"""
   contactUs(phone: String!, userId: String, name: String, email: String, question: String): Boolean

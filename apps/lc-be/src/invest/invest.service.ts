@@ -537,7 +537,7 @@ export class InvestService {
     return profitRate;
   }
 
-  async updateProjectNftOwner(userId: string, projectId: string) {
+  async updateProjectNftOwner(userId: string, projectId: string, quantity: number) {
     const project = await this.prisma.project.findUnique({ where: { id: projectId } });
     if (!project) {
       return;
@@ -552,12 +552,12 @@ export class InvestService {
       create: {
         project_id: projectId,
         user_id: userId,
-        total_nft: 1,
-        currency_amount: project.nft_price,
+        total_nft: quantity,
+        currency_amount: project.nft_price.mul(quantity),
       },
       update: {
-        total_nft: { increment: 1 },
-        currency_amount: { increment: project.nft_price },
+        total_nft: { increment: quantity },
+        currency_amount: { increment: project.nft_price.mul(quantity) },
       },
     });
   }
