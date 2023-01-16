@@ -54,8 +54,6 @@ export class EmailService {
   }
 
   async sendVerifyMail(input: VerifyInput): Promise<boolean> {
-    console.log('verifyEmail: ', input);
-
     if (!process.env.SENDER_MAIL || !process.env.SENDER_NAME) {
       this.logger.error('SENDER_MAIL or SENDER_NAME not set');
       return;
@@ -64,10 +62,7 @@ export class EmailService {
     sender.email = process.env.SENDER_MAIL;
     sender.name = process.env.SENDER_NAME;
     sender.subject = 'Verify Email Address';
-    const content = verify_email_template(
-      input.userName,
-      `${process.env.WEB_URL}/verify/${input.token}`,
-    );
+    const content = verify_email_template(input.userName, `${process.env.WEB_URL}/verify?token=${input.token}`);
     await this.send(sender, input.email, content);
     return true;
   }
@@ -81,10 +76,7 @@ export class EmailService {
     sender.email = process.env.SENDER_MAIL;
     sender.name = process.env.SENDER_NAME;
     sender.subject = 'Reset password';
-    const content = resetPasswordTemplate(
-      input.userName,
-      `${process.env.WEB_URL}/reset-password?token=${input.token}`,
-    );
+    const content = resetPasswordTemplate(input.userName, `${process.env.WEB_URL}/reset-password?token=${input.token}`);
     await this.send(sender, input.email, content);
     return true;
   }
