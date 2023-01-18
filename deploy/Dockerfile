@@ -9,6 +9,5 @@ RUN yarn install
 COPY . $APP_HOME
 RUN yarn generate
 RUN yarn build
-EXPOSE ${APP_PORT}
 
-CMD ["npm", "run", "start:prod"]
+CMD ["npm", "run", "start:main"]

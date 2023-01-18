@@ -1,6 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["interactiveTransactions"]
+  previewFeatures = ["fullTextSearch"]
 }
 
 generator nestgraphql {
@@ -22,41 +22,73 @@ enum UserStatus {
 enum UserRole {
   ADMIN
   USER
+  VIP_USER
 }
 
 model User {
-  id          String       @id @default(cuid()) @db.VarChar(45)
-  role        UserRole     @default(USER)
-  status      UserStatus   @default(PENDING)
-  email       String?      @unique @db.VarChar(255)
-  ref_code    String       @db.VarChar(255)
-  invite_by   String?      @db.VarChar(255)
-  google_id   String?      @unique @db.VarChar(45)
-  facebook_id String?      @unique @db.VarChar(45)
-  password    String?      @db.VarChar(255)
-  profile     UserProfile?
-  created_at  DateTime     @default(now())
-  updated_at  DateTime     @updatedAt
+  id               String                @id @default(cuid()) @db.VarChar(45)
+  role             UserRole              @default(USER)
+  status           UserStatus            @default(PENDING)
+  email            String?               @unique @db.VarChar(255)
+  ref_code         String                @unique @db.VarChar(10)
+  invited_by       String?               @db.VarChar(45)
+  google_id        String?               @unique @db.VarChar(45)
+  facebook_id      String?               @unique @db.VarChar(45)
+  password         String?               @db.VarChar(255)
+  profile          UserProfile?
+  kyc_verification UserKycVerification[]
+  created_at       DateTime              @default(now())
+  updated_at       DateTime              @updatedAt
+
+  referral_log ReferralLog?
+  wallet       Wallet?
+
+  wallet_address  String?           @unique
+  vipCard         VipCard?
+  projectNfts     ProjectNftOwner[]
+  transaction_log TransactionLog[]
 
   @@map("user")
 }
 
 model UserProfile {
-  user_id      String  @id
-  user_name    String? @unique() @db.VarChar(45)
-  display_name String? @db.VarChar(45)
-  given_name   String? @db.VarChar(45)
-  family_name  String? @db.VarChar(45)
-  phone        String? @db.VarChar(45)
-  avatar       String? @db.VarChar(1024)
-  cover        String? @db.VarChar(512)
-  country_code String? @db.VarChar(45)
-  user         User    @relation(fields: [user_id], references: [id])
+  user_id       String    @id
+  user_name     String?   @unique() @db.VarChar(45)
+  display_name  String?   @db.VarChar(45)
+  given_name    String?   @db.VarChar(45)
+  family_name   String?   @db.VarChar(45)
+  phone         String?   @db.VarChar(45)
+  avatar        String?   @db.VarChar(1024)
+  date_of_birth DateTime? @db.Date
+  cover         String?   @db.VarChar(512)
+  country_code  String?   @db.VarChar(45)
+  user          User      @relation(fields: [user_id], references: [id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   @@map("user_profile")
+}
+
+enum KycStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model UserKycVerification {
+  id         Int       @id @default(autoincrement())
+  user_id    String
+  front_id   String    @db.VarChar(1024)
+  back_id    String    @db.VarChar(1024)
+  holding_id String    @db.VarChar(1024)
+  status     KycStatus @default(PENDING)
+  user       User      @relation(fields: [user_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("user_kyc_verification")
 }
 
 model LoginLog {
@@ -69,4 +101,365 @@ model LoginLog {
   updated_at DateTime @updatedAt
 
   @@map("login_log")
+}
+
+enum ReferralType {
+  REGISTER
+  BUY_GALAXY_CARD
+}
+
+model ReferralLog {
+  user_id    String @id
+  user       User   @relation(fields: [user_id], references: [id])
+  invited_by String @db.VarChar(45)
+
+  type     ReferralType?
+  is_claim Boolean       @default(false) @db.Boolean
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("referral_log")
+}
+
+enum ContractType {
+  TOKEN
+  NFT
+}
+
+model Contract {
+  id            String  @id @default(cuid()) @db.VarChar(45)
+  address       String  @unique() @db.VarChar(45)
+  admin         String? @db.VarChar(45)
+  admin_prv_key String? @db.Text
+  abi           String? @db.Text
+
+  type ContractType?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  project    Project?
+
+  @@map("contract")
+}
+
+model PoolWalletType {
+  code        String       @db.VarChar(100)
+  description String       @db.Text
+  pool_wallet PoolWallet[]
+
+  @@unique([code])
+  @@map("pool_wallet_type")
+}
+
+model PoolWallet {
+  id               String         @id @default(cuid()) @db.VarChar(45)
+  address          String         @db.VarChar(45)
+  type             String         @db.VarChar(100)
+  pool_wallet_type PoolWalletType @relation(fields: [type], references: [code])
+  prv              String?        @db.Text
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("pool_wallet")
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  CONFIRMING
+  SUCCEED
+  FAILED
+}
+
+model BlockchainTransaction {
+  id            String            @id @default(cuid()) @db.VarChar(45)
+  tx_hash       String            @db.VarChar(255)
+  status        TransactionStatus @default(PENDING)
+  message_error String?           @db.Text
+  abi           String?           @db.Text
+
+  transaction_log_id String?         @unique() @db.VarChar(45)
+  transaction_log    TransactionLog? @relation(fields: [transaction_log_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([tx_hash])
+  @@index([status])
+  @@map("blockchain_transaction")
+}
+
+model Wallet {
+  user_id String  @id
+  user    User    @relation(fields: [user_id], references: [id])
+  balance Decimal @default(0)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("wallet")
+}
+
+enum TransactionType {
+  CLAIM_REFERRAL
+  CLAIM_PROFIT
+  BUY_NFT
+  WITHDRAW_BALANCE
+  VIP_USER_CLAIM_PROFIT
+  BURN_NFT
+}
+
+model TransactionLog {
+  id          String          @id @default(cuid()) @db.VarChar(45)
+  type        TransactionType
+  user_id     String          @db.VarChar(45)
+  user        User            @relation(fields: [user_id], references: [id])
+  amount      Decimal
+  description String?
+
+  blockchain_transaction BlockchainTransaction?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index(fields: [type], type: Hash)
+  @@map("transaction_log")
+}
+
+enum ProjectType {
+  HOUSE
+  VILLA
+  HOTEL
+  HOMESTAY
+  TOURIST_VILLAGE
+}
+
+model Project {
+  id                   String      @id @default(cuid()) @db.VarChar(45)
+  title                String      @db.VarChar(512)
+  price                Int
+  nft_price            Decimal     @db.Decimal(8, 4)
+  total_nft            Int         @default(1000)
+  total_nft_sold       Int         @default(0)
+  type                 ProjectType @default(HOUSE)
+  thumbnail            String
+  address              String      @db.VarChar(1024)
+  location             String      @db.VarChar(30) // lat,long
+  policy_link          String
+  enable               Boolean     @default(false)
+  open_sale_at         DateTime
+  take_profit_at       DateTime
+  start_time_vote_sell DateTime?
+  end_time_vote_sell   DateTime?
+  ended                Boolean     @default(false)
+  profit_period        Int         @default(90) // in day
+  profit_period_index  Int         @default(0)
+
+  contract_address String?         @unique() @db.VarChar(45)
+  contract         Contract?       @relation(fields: [contract_address], references: [address])
+  created_at       DateTime        @default(now())
+  updated_at       DateTime        @updatedAt
+  profile          ProjectProfile?
+
+  @@map("project")
+}
+
+model ProjectProfile {
+  project_id    String  @unique
+  reason_invest String?
+  highlight     String?
+  vote          Decimal @default(0) @db.Decimal(3, 1)
+  total_vote    Int     @default(0)
+  follows       Int     @default(0)
+  medias        Json
+  events        Json
+  offers        String?
+  project       Project @relation(fields: [project_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("project_profile")
+}
+
+model ProjectFollower {
+  project_id String
+  user_id    String
+  is_follow  Boolean
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@id([project_id, user_id])
+  @@map("project_follower")
+}
+
+model ProjectVoter {
+  project_id String
+  user_id    String
+  value      Float
+  is_voted   Boolean
+
+  @@id([project_id, user_id])
+  @@map("project_voter")
+}
+
+model ProjectOffer {
+  id Int @id @default(autoincrement())
+
+  icon  String
+  title String
+
+  @@map("project_offer")
+}
+
+model ProjectNftOwner {
+  project_id      String
+  user_id         String
+  total_nft       Int
+  currency_amount Decimal
+  project_ended   Boolean @default(false)
+  is_sell_voted   Boolean @default(false)
+  is_burned       Boolean @default(false)
+  user            User    @relation(fields: [user_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([project_id, user_id])
+  @@map("project_nft_owner")
+}
+
+model ProjectProfitBalance {
+  user_id         String
+  project_id      String
+  balance         Decimal  @default(0)
+  balance_claimed Decimal  @default(0)
+  from            DateTime
+  to              DateTime
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([user_id, project_id])
+  @@map("project_profit_balance")
+}
+
+model ProjectProfitBalanceChangeLog {
+  id           Int     @id @default(autoincrement())
+  project_id   String
+  user_id      String
+  amount       Decimal
+  period_index Int?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([project_id, user_id, period_index])
+  @@map("project_profit_balance_change_log")
+}
+
+model ProjectSellVoter {
+  project_id String
+  user_id    String
+  is_sell    Boolean
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@id([project_id, user_id])
+  @@map("project_sell_voter")
+}
+
+model ProjectSellVoteHistory {
+  project_id String
+  user_id    String
+  is_sell    Boolean
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@id([project_id, user_id])
+  @@map("project_sell_vote_history")
+}
+
+model Notification {
+  id      Int     @id @default(autoincrement())
+  user_id String
+  title   String? @db.VarChar(512)
+  content String? @db.Text
+  is_seen Boolean @default(false)
+  link    String? @db.VarChar(512)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("notification")
+}
+
+model Nft {
+  id String @id @default(cuid())
+
+  owner    String
+  token_id String
+  address  String @db.VarChar(45)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([token_id, address])
+  @@map("nft")
+}
+
+enum VipCardTier {
+  GALAXY_PLATINUM
+}
+
+model VipCard {
+  id         String       @id @default(cuid()) @db.VarChar(45)
+  user_id    String       @unique
+  number     String       @unique @db.VarChar(16)
+  name       String       @db.VarChar(45)
+  tier       VipCardTier?
+  valid_from DateTime?
+  user       User         @relation(fields: [user_id], references: [id])
+
+  card_value Decimal                       @default(200000000)
+  change_log VipUserClaimProfitChangeLog[]
+  created_at DateTime                      @default(now())
+  updated_at DateTime                      @updatedAt
+
+  @@map("vip_card")
+}
+
+model VipUserClaimProfitChangeLog {
+  id      String @id @default(cuid()) @db.VarChar(45)
+  card_id String
+
+  vipCard VipCard @relation(fields: [card_id], references: [id])
+  amount  Decimal
+
+  number_quarter Int
+  is_claim       Boolean @default(false)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("vip_user_claim_profit_change_log")
+}
+
+model ContactData {
+  id       String  @id @default(cuid()) @db.VarChar(45)
+  user_id  String?
+  name     String? @db.VarChar(100)
+  phone    String? @db.VarChar(20)
+  email    String? @db.VarChar(100)
+  question String? @db.Text
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("contact_data")
 }

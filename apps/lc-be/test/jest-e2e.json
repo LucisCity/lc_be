@@ -1,0 +1,23 @@
+{
+  "moduleFileExtensions": [
+    "js",
+    "json",
+    "ts"
+  ],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "@libs/helper/(.*)": "<rootDir>/../libs/helper/src/$1",
+    "@libs/helper": "<rootDir>/../libs/helper/src",
+    "@libs/prisma/(.*)": "<rootDir>/../libs/prisma/src/$1",
+    "@libs/prisma": "<rootDir>/../libs/prisma/src",
+    "@libs/pubsub/(.*)": "<rootDir>/../libs/pubsub/src/$1",
+    "@libs/pubsub": "<rootDir>/../libs/pubsub/src",
+    "@libs/notification/(.*)": "<rootDir>/../libs/notification/src/$1",
+    "@libs/notification": "<rootDir>/../libs/notification/src"
+  }
+}

@@ -29,6 +29,18 @@
       ],
       "@libs/prisma/*": [
         "libs/prisma/src/*"
+      ],
+      "@libs/pubsub": [
+        "libs/pubsub/src"
+      ],
+      "@libs/pubsub/*": [
+        "libs/pubsub/src/*"
+      ],
+      "@libs/subscription": [
+        "libs/subscription/src"
+      ],
+      "@libs/subscription/*": [
+        "libs/subscription/src/*"
       ]
     }
   }

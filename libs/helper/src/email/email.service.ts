@@ -1,9 +1,10 @@
 import { Global, Injectable, Logger } from '@nestjs/common';
-import { EventType, Sender, VerifyInput } from './email.type';
+import { ChangePassInput, EventType, Sender, VerifyInput } from './email.type';
 import * as Sengrid from '@sendgrid/mail';
 import { OnEvent } from '@nestjs/event-emitter';
 import { verify_email_template } from './email-template';
 import { resetPasswordTemplate } from './email-template/reset_password.templates';
+import { passwordUpdatedTemplate } from '@libs/helper/email/email-template/password_updated.templates';
 
 @Global()
 @Injectable()
@@ -47,9 +48,12 @@ export class EmailService {
     this.sendForgotMail(payload);
   }
 
-  async sendVerifyMail(input: VerifyInput): Promise<boolean> {
-    console.log('verifyEmail: ', input);
+  @OnEvent(EventType.changePass)
+  handleChangePassEvent(payload: ChangePassInput) {
+    this.sendChangePassMail(payload);
+  }
 
+  async sendVerifyMail(input: VerifyInput): Promise<boolean> {
     if (!process.env.SENDER_MAIL || !process.env.SENDER_NAME) {
       this.logger.error('SENDER_MAIL or SENDER_NAME not set');
       return;
@@ -58,10 +62,7 @@ export class EmailService {
     sender.email = process.env.SENDER_MAIL;
     sender.name = process.env.SENDER_NAME;
     sender.subject = 'Verify Email Address';
-    const content = verify_email_template(
-      input.userName,
-      `${process.env.WEB_URL}/verify/${input.token}`,
-    );
+    const content = verify_email_template(input.userName, `${process.env.WEB_URL}/verify?token=${input.token}`);
     await this.send(sender, input.email, content);
     return true;
   }
@@ -75,10 +76,21 @@ export class EmailService {
     sender.email = process.env.SENDER_MAIL;
     sender.name = process.env.SENDER_NAME;
     sender.subject = 'Reset password';
-    const content = resetPasswordTemplate(
-      input.userName,
-      `${process.env.WEB_URL}/reset-password?token=${input.token}`,
-    );
+    const content = resetPasswordTemplate(input.userName, `${process.env.WEB_URL}/reset-password?token=${input.token}`);
+    await this.send(sender, input.email, content);
+    return true;
+  }
+
+  async sendChangePassMail(input: ChangePassInput): Promise<boolean> {
+    if (!process.env.SENDER_MAIL || !process.env.SENDER_NAME) {
+      this.logger.error('SENDER_MAIL or SENDER_NAME not set');
+      return;
+    }
+    const sender = new Sender();
+    sender.email = process.env.SENDER_MAIL;
+    sender.name = process.env.SENDER_NAME;
+    sender.subject = 'Password updated';
+    const content = passwordUpdatedTemplate(input.userName);
     await this.send(sender, input.email, content);
     return true;
   }

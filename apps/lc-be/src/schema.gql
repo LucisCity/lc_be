@@ -1,0 +1,726 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type UserKycVerification {
+  id: ID!
+  user_id: String!
+  front_id: String!
+  back_id: String!
+  holding_id: String!
+  status: KycStatus!
+  user: User!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+enum KycStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type ReferralLog {
+  user_id: ID!
+  user: User!
+  invited_by: String!
+  type: ReferralType
+  is_claim: Boolean!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+enum ReferralType {
+  REGISTER
+  BUY_GALAXY_CARD
+}
+
+type Wallet {
+  user_id: ID!
+  user: User!
+  balance: Decimal!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+"""An arbitrary-precision Decimal type"""
+scalar Decimal
+
+type VipUserClaimProfitChangeLog {
+  id: ID!
+  card_id: String!
+  vipCard: VipCard!
+  amount: Decimal!
+  number_quarter: Int!
+  is_claim: Boolean!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+type VipCardCount {
+  change_log: Int!
+}
+
+type VipCard {
+  id: ID!
+  user_id: String!
+  number: String!
+  name: String!
+  tier: VipCardTier
+  valid_from: DateTime
+  user: User!
+  card_value: Decimal!
+  change_log: [VipUserClaimProfitChangeLog!]
+  created_at: DateTime!
+  updated_at: DateTime!
+  _count: VipCardCount!
+}
+
+enum VipCardTier {
+  GALAXY_PREMIUM
+}
+
+type ProjectNftOwner {
+  project_id: String!
+  user_id: String!
+  total_nft: Int!
+  currency_amount: Decimal!
+  project_ended: Boolean!
+  is_sell_voted: Boolean!
+  is_burned: Boolean!
+  user: User!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+type BlockchainTransaction {
+  id: ID!
+  tx_hash: String!
+  status: TransactionStatus!
+  message_error: String
+  abi: String
+  transaction_log_id: String
+  transaction_log: TransactionLog
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  CONFIRMING
+  SUCCEED
+  FAILED
+}
+
+type TransactionLog {
+  id: ID!
+  type: TransactionType!
+  user_id: String!
+  user: User!
+  amount: Decimal!
+  description: String
+  blockchain_transaction: BlockchainTransaction
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+enum TransactionType {
+  CLAIM_REFERRAL
+  CLAIM_PROFIT
+  BUY_NFT
+  WITHDRAW_BALANCE
+  VIP_USER_CLAIM_PROFIT
+  BURN_NFT
+}
+
+type UserCount {
+  kyc_verification: Int!
+  projectNfts: Int!
+  transaction_log: Int!
+}
+
+type User {
+  id: ID!
+  role: UserRole!
+  status: UserStatus!
+  email: String
+  ref_code: String!
+  invited_by: String
+  google_id: String
+  facebook_id: String
+  password: String
+  profile: UserProfile
+  kyc_verification: [UserKycVerification!]
+  created_at: DateTime!
+  updated_at: DateTime!
+  referral_log: ReferralLog
+  wallet: Wallet
+  wallet_address: String
+  vipCard: VipCard
+  projectNfts: [ProjectNftOwner!]
+  transaction_log: [TransactionLog!]
+  _count: UserCount!
+}
+
+enum UserRole {
+  ADMIN
+  USER
+  VIP_USER
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  BANNED
+}
+
+type UserProfile {
+  user_id: ID!
+  user_name: String
+  display_name: String
+  given_name: String
+  family_name: String
+  phone: String
+  avatar: String
+  date_of_birth: DateTime
+  cover: String
+  country_code: String
+  user: User!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+type ProfileGql {
+  user_id: ID!
+  user_name: String
+  display_name: String
+  given_name: String
+  family_name: String
+  avatar: String
+  date_of_birth: DateTime
+  cover: String
+}
+
+type UserGql {
+  id: ID!
+  email: String
+  ref_code: String!
+  kyc_verification: [UserKycVerification!]
+  referral_log: ReferralLog
+  wallet: Wallet
+  wallet_address: String
+  vipCard: VipCard
+  transaction_log: [TransactionLog!]
+  profile: ProfileGql!
+}
+
+type AuthGql {
+  token: String!
+  user: UserGql!
+}
+
+type AccountInfo {
+  user_name: String
+  given_name: String
+  family_name: String
+  date_of_birth: DateTime
+  email: String
+}
+
+type ReferralDataResponse {
+  id: ID!
+  role: UserRole!
+  status: UserStatus!
+  email: String
+  ref_code: String!
+  invited_by: String
+  google_id: String
+  facebook_id: String
+  password: String
+  profile: UserProfile
+  kyc_verification: [UserKycVerification!]
+  created_at: DateTime!
+  updated_at: DateTime!
+  referral_log: ReferralLog
+  wallet: Wallet
+  wallet_address: String
+  vipCard: VipCard
+  projectNfts: [ProjectNftOwner!]
+  transaction_log: [TransactionLog!]
+  _count: UserCount!
+  reward: String
+}
+
+type TransactionHistoryResponse {
+  count: Int
+  transactionHistory: [TransactionLog!]
+}
+
+type DashboardData {
+  totalAssetsBalance: String
+  totalInvestedBalance: String
+  profitRate: String
+}
+
+type NotificationGql {
+  id: ID!
+  user_id: String!
+  title: String
+  content: String
+  is_seen: Boolean!
+  link: String
+  created_at: DateTime!
+}
+
+type UnseenNotifications {
+  user_id: String
+  count: Int
+}
+
+type ProjectProfitBalance {
+  user_id: String!
+  project_id: String!
+  balance: Decimal!
+  balance_claimed: Decimal!
+  from: DateTime!
+  to: DateTime!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+type Contract {
+  id: ID!
+  address: String!
+  admin: String
+  admin_prv_key: String
+  abi: String
+  type: ContractType
+  created_at: DateTime!
+  updated_at: DateTime!
+  project: Project
+}
+
+enum ContractType {
+  TOKEN
+  NFT
+}
+
+type Project {
+  id: ID!
+  title: String!
+  price: Int!
+  nft_price: Decimal!
+  total_nft: Int!
+  total_nft_sold: Int!
+  type: ProjectType!
+  thumbnail: String!
+  address: String!
+  location: String!
+  policy_link: String!
+  enable: Boolean!
+  open_sale_at: DateTime!
+  take_profit_at: DateTime!
+  start_time_vote_sell: DateTime
+  end_time_vote_sell: DateTime
+  ended: Boolean!
+  profit_period: Int!
+  profit_period_index: Int!
+  contract_address: String
+  contract: Contract
+  created_at: DateTime!
+  updated_at: DateTime!
+  profile: ProjectProfile
+}
+
+enum ProjectType {
+  HOUSE
+  VILLA
+  HOTEL
+  HOMESTAY
+  TOURIST_VILLAGE
+}
+
+type ProjectProfile {
+  project_id: String!
+  reason_invest: String
+  highlight: String
+  vote: Decimal!
+  total_vote: Int!
+  follows: Int!
+  medias: JSON!
+  events: JSON!
+  offers: String
+  project: Project!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+type ProjectMediaGql {
+  """Width of image"""
+  width: Int!
+
+  """Height of image"""
+  height: Int!
+
+  """Media url"""
+  url: String!
+
+  """Thumbnail url"""
+  thumbnail: String
+}
+
+type ProjectOfferGql {
+  """Title"""
+  title: String!
+
+  """Icon"""
+  icon: String!
+}
+
+type ProjectEventGql {
+  """Event start time"""
+  start_at: String!
+
+  """Event title"""
+  title: String!
+
+  """Event description"""
+  description: String!
+}
+
+type ProjectProfileGql {
+  project_id: String!
+  reason_invest: String
+  highlight: String
+  vote: Decimal!
+  total_vote: Int!
+  follows: Int!
+
+  """"""
+  events: [ProjectEventGql!]
+
+  """"""
+  offers: [ProjectOfferGql!]
+
+  """"""
+  medias: [ProjectMediaGql!]
+}
+
+type ProjectGql {
+  id: ID!
+  title: String!
+  price: Int!
+  nft_price: Decimal!
+  total_nft: Int!
+  total_nft_sold: Int!
+  type: ProjectType!
+  thumbnail: String!
+  address: String!
+  location: String!
+  policy_link: String!
+  open_sale_at: DateTime!
+  take_profit_at: DateTime!
+  start_time_vote_sell: DateTime
+  end_time_vote_sell: DateTime
+  ended: Boolean!
+  profit_period: Int!
+  profit_period_index: Int!
+  contract_address: String
+  contract: Contract
+
+  """"""
+  profile: ProjectProfileGql!
+}
+
+type ProjectProfitBalanceGql {
+  user_id: String!
+  balance: Decimal!
+  balance_claimed: Decimal!
+  from: DateTime!
+  to: DateTime!
+}
+
+type InvestorProfileGql {
+  user_id: ID!
+  display_name: String
+  given_name: String
+  family_name: String
+  avatar: String
+  cover: String
+}
+
+type InvestorGql {
+  id: ID!
+  vipCard: VipCard
+  transaction_log: [TransactionLog!]
+  profile: InvestorProfileGql!
+}
+
+type ProjectNftOwnerGql {
+  project_id: String!
+  user_id: String!
+  total_nft: Int!
+  currency_amount: Decimal!
+  is_burned: Boolean!
+
+  """"""
+  user: InvestorGql!
+}
+
+type InvestedProjectGql {
+  id: ID!
+  title: String!
+  price: Int!
+  nft_price: Decimal!
+  total_nft: Int!
+  total_nft_sold: Int!
+  type: ProjectType!
+  thumbnail: String!
+  address: String!
+  location: String!
+  policy_link: String!
+  open_sale_at: DateTime!
+  take_profit_at: DateTime!
+  start_time_vote_sell: DateTime
+  end_time_vote_sell: DateTime
+  ended: Boolean!
+  profit_period: Int!
+  profit_period_index: Int!
+  contract_address: String
+  contract: Contract
+
+  """"""
+  profile: ProjectProfileGql!
+
+  """"""
+  profit_balance: ProjectProfitBalanceGql!
+
+  """"""
+  nft_bought: ProjectNftOwnerGql!
+}
+
+type Query {
+  """Auth resolver"""
+  temp: String!
+
+  """Get list referral user"""
+  getListReferralUser: [ReferralDataResponse!]!
+
+  """get balance"""
+  getBalance: Wallet
+
+  """get account info"""
+  getAccountInfo: AccountInfo
+
+  """check if user has password"""
+  hasPassWord: Boolean
+
+  """get all notis"""
+  getNotifications(page: Int, limit: Int): [NotificationGql!]
+
+  """get list transaction history"""
+  getTransactionHistory(skip: Int, take: Int): TransactionHistoryResponse
+
+  """get unseen notis count"""
+  countUnseenNotifications: Int
+
+  """get kyc verification images"""
+  getKycImages: UserKycVerification
+
+  """check if user has vip card"""
+  hasVipCard: Boolean
+
+  """get vip card info"""
+  getVipCard: VipCard
+
+  """get vip card info"""
+  getVipCardFromId(id: String!): VipCard
+
+  """get wallet address"""
+  getWalletAddress: String
+
+  """get vip user"""
+  getVipUsers: [User!]
+
+  """get profit vip user"""
+  getProfitForVipMember: String
+
+  """claim profit vip user"""
+  getDashboard: DashboardData
+
+  """get OTP"""
+  getOneTimePassword(address: String!): String!
+
+  """Get list referral user"""
+  getProject(id: String!): ProjectGql!
+
+  """Get related project"""
+  getProjects(filter: ProjectFilter, search: String): [ProjectGql!]!
+
+  """"""
+  isVoted(projectId: String!): Boolean!
+
+  """get list of projects user has invested"""
+  investedProjects: [InvestedProjectGql!]!
+
+  """get list of projects user is following"""
+  followingProjects: [ProjectGql!]!
+
+  """get list of projects to recommend to user"""
+  recommendedProjects: [ProjectGql!]!
+
+  """get list of hot projects"""
+  hotProjects: [ProjectGql!]!
+
+  """Get profit balance"""
+  getProfitBalance(projectId: String!): ProjectProfitBalance
+
+  """Get nft bought of user"""
+  getNftBought(projectId: String!): ProjectNftOwner
+
+  """Get nft bought of user"""
+  getInvestor(projectId: String!): [ProjectNftOwnerGql!]
+
+  """Get profit rate"""
+  getProfitRate(projectId: String!): Float
+
+  """Test compute profit"""
+  computeProfit: Boolean
+
+  """get user following project state"""
+  isFollowingProject(projectId: String!): Boolean
+  getAppErrorCode(error_code: ErrorCode): Boolean
+}
+
+input ProjectFilter {
+  type: ProjectType
+}
+
+"""all back-end error code"""
+enum ErrorCode {
+  USER_NOT_FOUND
+  BAD_REQUEST
+  PROJECT_NOT_FOUND
+  NOT_ENOUGH_NFT
+  INVALID_TIME_VOTE_SELL
+  SELL_VOTED
+  EMAIL_INVALID
+  EMAIL_REGISTERED
+  ERROR_500
+  FB_ID_NOT_FOUND
+  LOGIN_FB_FAILED
+  TOKEN_INVALID
+  NEW_PASS_SAME_OLD_PASS
+  SIGNATURE_EXPIRED
+  SIGNATURE_WRONG
+  WALLET_NOT_FOUND
+  BALANCE_NOT_ENOUGH
+  BALANCE_POOL_NOT_ENOUGH
+  USERNAME_DUPLICATED
+  DUPLICATE_WALLET_ADDRESS
+  KYC_PENDING_OR_SUCCEED
+  USER_CONNECTED_WALLET
+  TEST_SERVER_ERROR
+  ACCOUNT_EXISTED
+  INVITEE_NOT_EXIST
+  REFERRAL_CLAIMED
+  WRONG_OLD_PASS
+  INVALID_NEW_PASS
+  NOT_VIP_USER
+  PROFIT_IS_ZERO
+  WRONG_PASSWORD
+  USER_DONT_HAVE_PASSWORD
+}
+
+type Mutation {
+  """Login"""
+  login(email: String!, password: String!): AuthGql!
+
+  """Register"""
+  register(email: String!, password: String!, ref_code: String): String!
+
+  """Google login"""
+  loginGoogle(token: String!, refCode: String): AuthGql!
+
+  """Facebook login"""
+  loginFacebook(accessToken: String!, refCode: String): AuthGql!
+
+  """Verify email"""
+  verifyEmail(token: String!): String!
+
+  """Forgot password"""
+  forgotPassword(email: String!): Boolean!
+
+  """Forgot password"""
+  resetPassword(token: String!, password: String!): Boolean!
+
+  """update account info"""
+  updateAccountInfo(input: AccountInfoUpdateInput!): ProfileGql
+
+  """change password"""
+  changePassword(newPass: String!, oldPass: String): Boolean
+
+  """claim referral"""
+  claimReferral(inviteeId: String!): Wallet
+  seenNotification(id: Int!): Boolean
+
+  """mark all notis as read"""
+  markAllNotisSeen: Boolean
+
+  """upadate wallet address"""
+  updateWalletAddress(walletAddress: String!): String
+
+  """claim profit vip user"""
+  claimProfitForVipUser: Boolean
+
+  """claim profit vip user"""
+  contactUs(phone: String!, userId: String, name: String, email: String, question: String): Boolean
+
+  """Send tx transaction"""
+  sendTransaction(txHash: String!, abi: String): Boolean!
+
+  """withdraw balance"""
+  withdrawBalance(address: String!, amount: String!, signatureOTP: String!): TransactionLog!
+
+  """Vote project"""
+  voteProject(input: RateProjectInput!): Boolean
+
+  """Toggle follow project"""
+  toggleFollowProject(projectId: String!): Boolean
+
+  """Claim project profit"""
+  claimProjectProfit(projectId: String!): Boolean
+
+  """Vote sell project"""
+  voteSellProject(projectId: String!, isSell: Boolean!): Boolean
+}
+
+input AccountInfoUpdateInput {
+  user_name: String
+  given_name: String
+  family_name: String
+  date_of_birth: DateTime
+}
+
+input RateProjectInput {
+  projectId: String!
+  value: Float!
+}
+
+type Subscription {
+  profitBalanceChange(projectId: String!): ProjectProfitBalance
+  pushNotification: NotificationGql!
+  unseenNotifications: UnseenNotifications!
+  blockchainWatcher: BlockchainTransaction!
+}

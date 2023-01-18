@@ -1,9 +1,5 @@
 import { PipeTransform, Injectable, ArgumentMetadata } from '@nestjs/common';
-import {
-  ValidatorConstraint,
-  ValidatorConstraintInterface,
-  ValidationArguments,
-} from 'class-validator';
+import { ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments } from 'class-validator';
 import PasswordValidator = require('password-validator');
 
 // --- Create password validator schema
@@ -24,7 +20,7 @@ export class IsStrongPassPipe implements PipeTransform {
 export class IsStrongPass implements ValidatorConstraintInterface {
   validate(text?: string) {
     if (!text) {
-      return true
+      return true;
     }
     return schema.validate(text) === true;
   }
